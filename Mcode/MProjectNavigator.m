@@ -51,10 +51,16 @@ end
         import javax.swing.*
         
         frame = JFrame('Project Navigator');
-        frame.setSize(250, 600);
+        frame.setSize(350, 600);
+        
+        tabbedPane = JTabbedPane;
         
         fileNavigator = mprojectnavigator.FileNavigatorWidget;
-        frame.getContentPane.add(fileNavigator.panel, BorderLayout.CENTER);
+        tabbedPane.add('Files', fileNavigator.panel);
+        codeNavigator = mprojectnavigator.CodeNavigatorWidget;
+        tabbedPane.add('Definitions', codeNavigator.panel);
+        
+        frame.getContentPane.add(tabbedPane, BorderLayout.CENTER);
         registerHotkeyOnComponent(frame.getContentPane);
         frame.setVisible(true);
         
