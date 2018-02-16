@@ -1,7 +1,6 @@
 TODO
 =============
 
-* Detect global functions and classes that are not inside a package
 * Multiple pinned roots in file navigator
 * "New..." action in file navigator
 * Refactor classes to move more common tree functionality up into TreeWidget

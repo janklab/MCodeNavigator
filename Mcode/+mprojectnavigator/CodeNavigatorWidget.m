@@ -74,18 +74,19 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
             
             nd = nodeData;
             if isempty(nd)
-                [isTargetClass,isTargetMethod,isTargetProperty,...
+                [isTargetClass,isTargetMethod,isTargetFunction,isTargetProperty,...
                     isTargetEvent,isTargetEnum] = deal(false);
             else
                 isTargetClass = isequal(nd.type, 'class');
                 isTargetMethod = isequal(nd.type, 'method');
+                isTargetFunction = isequal(nd.type, 'function');
                 isTargetProperty = isequal(nd.type, 'property');
                 isTargetEvent = isequal(nd.type, 'event');
                 isTargetEnum = isequal(nd.type, 'enumeration');
             end
-            isTargetEditable = isTargetClass || isTargetMethod;
+            isTargetEditable = isTargetClass || isTargetMethod || isTargetFunction;
             isTargetDocable = isTargetClass || isTargetMethod || isTargetProperty ...
-                || isTargetEvent || isTargetEnum;
+                || isTargetEvent || isTargetEnum || isTargetFunction;
             isTargetRevealable = isTargetClass;
             menuItemEdit.setEnabled(isTargetEditable);
             
@@ -142,6 +143,29 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
             out = this.createNode(label, nodeData, [], icon);
         end
         
+        function out = codePathsGlobalsNode(this, paths, found)
+            % A node representing global definitions under a codepath set
+            nodeData.type = 'codepaths_globals';
+            nodeData.paths = paths;
+            nodeData.found = found;
+            icon = myIconPath('folder');
+            out = this.createNode('<Global>', nodeData, [], icon);            
+        end
+        
+        function out = globalClassesNode(this, classNames)
+            nodeData.type = 'global_classes';
+            nodeData.classNames = classNames;
+            icon = myIconPath('folder');
+            out = this.createNode('Classes', nodeData, [], icon);
+        end
+        
+        function out = globalFunctionsNode(this, functionNames)
+            nodeData.type = 'global_functions';
+            nodeData.functionNames = functionNames;
+            icon = myIconPath('folder');
+            out = this.createNode('Functions', nodeData, [], icon);
+        end
+        
         function out = packageNode(this, packageName)
             label = ['+' packageName];
             nodeData.type = 'package';
@@ -190,6 +214,13 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
             label = regexprep(strjoin(items, ' '), '  +', ' ');
             icon = myIconPath('dot');
             out = this.createNode(label, nodeData, false, icon);
+        end
+        
+        function out = functionNode(this, functionName)
+            nodeData.type = 'function';
+            nodeData.functionName = functionName;
+            icon = myIconPath('dot');
+            out = this.createNode(functionName, nodeData, false, icon);
         end
         
         function out = propertyGroupNode(this, parentDefinition)
@@ -325,9 +356,34 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
                     % NOP: Shouldn't get here
                 case 'codepaths'
                     listMode = ifthen(this.flatPackageView, 'flat', 'nested');
-                    pkgs = listPackagesInCodeRoots(nodeData.paths, listMode);
+                    found = scanCodeRoots(nodeData.paths, listMode);
+                    if ~isempty(found.mfiles) || ~isempty(found.classdirs)
+                        out{end+1} = this.codePathsGlobalsNode(nodeData.paths, found);
+                    end
+                    pkgs = found.packages;
                     for i = 1:numel(pkgs)
                         out{end+1} = this.packageNode(pkgs{i}); %#ok<AGROW>
+                    end
+                case 'codepaths_globals'
+                    [paths, found] = deal(nodeData.paths, nodeData.found);
+                    % Ugh, now we have to scan the files to see if they're
+                    % classes or functions
+                    probed = scanCodeRootGlobals(paths, found);
+                    if ~isempty(probed.classes)
+                        out{end+1} = this.globalClassesNode(probed.classes);
+                    end
+                    if ~isempty(probed.functions)
+                        out{end+1} = this.globalFunctionsNode(probed.functions);
+                    end
+                case 'global_classes'
+                    classNames = nodeData.classNames;
+                    for i = 1:numel(classNames)
+                        out{end+1} = this.classNode(classNames{i}); %#ok<AGROW>
+                    end
+                case 'global_functions'
+                    functionNames = nodeData.functionNames;
+                    for i = 1:numel(functionNames)
+                        out{end+1} = this.functionNode(functionNames{i}); %#ok<AGROW>
                     end
                 case 'package'
                     pkg = meta.package.fromName(nodeData.packageName);
@@ -472,13 +528,15 @@ out.system = paths(tfSystem);
 out.user = paths(~tfSystem);
 end
 
-function out = listPackagesInCodeRoots(paths, mode)
+function out = scanCodeRoots(paths, mode)
 if nargin < 2 || isempty(mode); mode = 'nested'; end
 assert(ismember(mode, {'nested','flat'}), 'Invalid mode: %s', mode);
 
 paths = cellstr(paths);
 
-out = {};
+allPackages = {};
+allClassDirs = {};
+allMfiles = {};
 for iPath = 1:numel(paths)
     p = paths{iPath};
     if ~isdir(p)
@@ -488,15 +546,73 @@ for iPath = 1:numel(paths)
     subdirNames = {kids([kids.isdir]).name};
     tfLooksLikePackage = ~cellfun(@isempty, regexp(subdirNames, '^\+\w+$'));
     packageNames = strrep(subdirNames(tfLooksLikePackage), '+', '');
-    out = [out; packageNames(:)]; %#ok<AGROW>
+    allPackages = [allPackages; packageNames(:)]; %#ok<AGROW>
+    tfLooksLikeClassDir = ~cellfun(@isempty, regexp(subdirNames, '^@'));
+    classDirNames = subdirNames(tfLooksLikeClassDir);
+    allClassDirs = [allClassDirs; {p classDirNames(:)}]; %#ok<AGROW>
+    kidFiles = {kids(~[kids.isdir]).name};
+    tfMfile = ~cellfun(@isempty, regexpi(kidFiles, '\.m$'));
+    mfiles = kidFiles(tfMfile);
+    allMfiles = [allMfiles; {p mfiles(:)}]; %#ok<AGROW>
 end
 
-out = unique(out);
+allPackages = unique(allPackages);
 
 if isequal(mode, 'flat')
-    out = expandPackageListRecursively(out);
+    allPackages = expandPackageListRecursively(allPackages);
 end
 
+out.packages = allPackages;
+out.classdirs = allClassDirs;
+out.mfiles = allMfiles;
+
+end
+
+function out = scanCodeRootGlobals(paths, found) %#ok<INUSL>
+classNames = {};
+functionNames = {};
+for iRoot = 1:size(found.classdirs, 1)
+    someClassNames = strrep(found.classdirs{iRoot,2}, '@', '');
+    classNames = [classNames someClassNames(:)']; %#ok<AGROW>
+end
+for iRoot = 1:size(found.mfiles, 1)
+    [codeRoot,mfiles] = found.mfiles{iRoot,:};
+    for iFile = 1:numel(mfiles)
+        [~,identifier,~] = fileparts(mfiles{iFile});
+        filePath = [codeRoot '/' mfiles{iFile}];
+        mfileType = probeMfileForType(filePath);
+        switch mfileType
+            case 'class'
+                classNames{end+1} = identifier; %#ok<AGROW>
+            case 'function'
+                functionNames{end+1} = identifier; %#ok<AGROW>
+            otherwise
+                % Silently ignore; it's probably just a script
+        end
+    end
+end
+out.classes = sort(classNames);
+out.functions = sort(functionNames);
+end
+
+function out = probeMfileForType(file)
+[fid,msg] = fopen(file, 'r', 'n', 'UTF-8');
+out = '';
+if fid == -1
+    warning('apj:mprojectnavigator:FileError', 'Could not read file %s: %s', ...
+        fild, msg);
+    return;
+end
+RAII.fid = onCleanup(@() fclose(fid));
+line = fgetl(fid);
+while ~isequal(line, -1)
+    if strncmp(line, 'classdef ', 9)
+        out = 'class';
+    elseif strncmp(line, 'function ', 9)
+        out = 'function';
+    end
+    line = fgetl(fid);
+end
 end
 
 function out = expandPackageListRecursively(names)
@@ -529,6 +645,8 @@ function ctxEditCallback(src, evd, this, nodeData) %#ok<INUSL>
 switch nodeData.type
     case 'class'
         edit(nodeData.className);
+    case 'function'
+        edit(nodeData.functionName);
     case 'method'
         defn = nodeData.defn;
         klassDefn = defn.DefiningClass;
@@ -552,6 +670,8 @@ function ctxViewDocCallback(src, evd, this, nodeData) %#ok<INUSL>
 switch nodeData.type
     case 'class'
         doc(nodeData.className);
+    case 'function'
+        doc(nodeData.functionName);
     case {'method', 'property', 'event', 'enumeration'}
         defn = nodeData.defn;
         klassDefn = defn.DefiningClass;
