@@ -1,6 +1,8 @@
 MProjectNavigator CHANGELOG
 ============================
 
+## Version 0.4.0 (Date TBD)
+
 ## Version 0.3.0 (Date 2018-02-16)
 
 * Added syncing of file navigator to Matlab editor open/front file

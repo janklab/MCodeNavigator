@@ -6,8 +6,8 @@ To make a release:
 * Update `VERSION` with the right version, removing "-SNAPSHOT"
 * Update `doc/CHANGELOG.md` to finalize changes for this version
 * `git commit`
-* Make a git "vX.Y.Z" version tag
-* Create a git "vX.Y-patches" branch if this is a new major or minor version
+* Make a git "vX.Y.Z" version tag (with `git tag -a`)
+* Create a git "vX.Y-fixes" branch if this is a new major or minor version
 * `make dist`
 * Push the tags to create a Release on GitHub
 * Upload the dist tarballs to the release on GitHub
