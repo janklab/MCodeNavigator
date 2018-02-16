@@ -1,6 +1,16 @@
 classdef Utils
     methods (Static)
         function guiRevealFileInDesktopFileBrowser(file)
+            % Reveals the given file in the OS desktop file browser
+            %
+            % guiRevealFileInDesktopFileBrowser(file)
+            %
+            % Reveals the given file in Finder, Windows Explorer, or a Linux
+            % file browser, as appropriate for the current system.
+            %
+            % Linux support is currently unimplemented.
+            %
+            % File (char) is the path to the file.
             if ismac
                 % Have to use single-argument form of system to avoid
                 % "Unrecognized option: -R" error

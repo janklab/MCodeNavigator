@@ -68,6 +68,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
             menuItemEdit = JMenuItem('Edit');
             menuItemViewDoc = JMenuItem('View Doc');
             menuItemRevealInDesktop = JMenuItem(sprintf('Reveal in %s', fileShellName));
+            menuItemFullyExpandNode = JMenuItem('Fully Expand');
             menuOptions = JMenu('Options');
             menuItemFlatPackageView = JCheckBoxMenuItem('Flat Package View');
             menuItemFlatPackageView.setSelected(this.flatPackageView);
@@ -97,6 +98,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
             setCallback(menuItemEdit, {@ctxEditCallback, this, nodeData});
             setCallback(menuItemViewDoc, {@ctxViewDocCallback, this, nodeData});
             setCallback(menuItemRevealInDesktop, {@ctxRevealInDesktopCallback, this, nodeData});
+            setCallback(menuItemFullyExpandNode, {@ctxFullyExpandNodeCallback, this, node, nodeData});
             setCallback(menuItemFlatPackageView, {@ctxFlatPackageViewCallback, this, nodeData});
             setCallback(menuItemShowHidden, {@ctxShowHiddenCallback, this, nodeData});
             
@@ -112,6 +114,11 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
             if isTargetEditable || isTargetDocable || isTargetRevealable
                 jmenu.addSeparator;
             end
+            %TODO: Fix fully-expand. It's currently doing nothing.
+            %if ~isempty(node) && ~node.isLeaf
+            %    jmenu.add(menuItemFullyExpandNode);
+            %    jmenu.addSeparator;
+            %end
             menuOptions.add(menuItemFlatPackageView);
             menuOptions.add(menuItemShowHidden);
             jmenu.add(menuOptions);
@@ -163,10 +170,11 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
             out = this.createNode(label, nodeData, [], icon);
         end
         
-        function out = methodNode(this, defn)
+        function out = methodNode(this, defn, packageName)
             mustBeA(defn, 'meta.method');
             nodeData.type = 'method';
             nodeData.defn = defn;
+            nodeData.packageName = packageName;
             baseLabel = sprintf('%s (%s)', defn.Name, strjoin(defn.OutputNames, ', '));
             items = {baseLabel};
             if ~isempty(defn.OutputNames)
@@ -330,7 +338,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
                     end
                     for i = 1:numel(pkg.FunctionList)
                         % These are really methods, not functions (???)
-                        out{end+1} = this.methodNode(pkg.FunctionList(i)); %#ok<AGROW>
+                        out{end+1} = this.methodNode(pkg.FunctionList(i), nodeData.packageName); %#ok<AGROW>
                     end
                     if ~this.flatPackageView
                         for i = 1:numel(pkg.PackageList)
@@ -367,7 +375,8 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
                                 && methodList(i).Hidden
                             continue;
                         end
-                        out{end+1} = this.methodNode(methodList(i)); %#ok<AGROW>
+                        pkgName = ifthen(isempty(defn.ContainingPackage), '', defn.ContainingPackage.Name);
+                        out{end+1} = this.methodNode(methodList(i), pkgName); %#ok<AGROW>
                     end
                 case 'propertyGroup'
                     defn = nodeData.parentDefinition;
@@ -440,6 +449,7 @@ if isRightClick
     jmenu = this.setupTreeContextMenu(node, nodeData);
     jmenu.show(jtree, clickX, clickY);
     jmenu.repaint;
+    %TODO: Do I need to explicitly dispose of that JMenu?
 elseif eventData.getClickCount == 2
     % Double-click
     if isempty(treePath)
@@ -528,10 +538,14 @@ switch nodeData.type
         defn = nodeData.defn;
         klassDefn = defn.DefiningClass;
         if isempty(klassDefn)
-            errordlg('Cannot edit methods that do not have a defining class.');
-            return;
+            if isempty(nodeData.packageName)
+                qualifiedName = defn.Name;
+            else
+                qualifiedName = [nodeData.packageName '.' defn.Name];
+            end
+        else
+            qualifiedName = [klassDefn.Name '.' defn.Name];
         end
-        qualifiedName = [klassDefn.Name '.' defn.Name];
         edit(qualifiedName);
     otherwise
         % Shouldn't get here
@@ -547,10 +561,14 @@ switch nodeData.type
         defn = nodeData.defn;
         klassDefn = defn.DefiningClass;
         if isempty(klassDefn)
-            errordlg('Cannot view doc on things that do not have a defining class.');
-            return;
+            if isempty(nodeData.packageName)
+                qualifiedName = defn.Name;
+            else
+                qualifiedName = [nodeData.packageName '.' defn.Name];
+            end
+        else
+            qualifiedName = [klassDefn.Name '.' defn.Name];
         end
-        qualifiedName = [klassDefn.Name '.' defn.Name];
         doc(qualifiedName);
     otherwise
         % Shouldn't get here
@@ -571,6 +589,11 @@ switch nodeData.type
     otherwise
         % NOP
 end
+end
+
+function ctxFullyExpandNodeCallback(src, evd, this, node, nodeData)
+fprintf('ctxFullyExpandNodeCallback()\n');
+this.expandNode(node, true);
 end
 
 function out = rejectInheritedDefinitions(defnList, parentDefn)

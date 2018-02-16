@@ -16,6 +16,13 @@ classdef FileNavigatorWidget < mprojectnavigator.TreeWidget
             if ~isdir(newRootPath) %#ok
                 warning('''%s'' is not a directory', newRootPath);
             end
+            % HACK: Resolve "." to real path name.
+            % Can't use Java to do this, because it has a different notion of
+            % the current directory
+            %newRootPath = char(getCanonicalPath(java.io.File(newRootPath)));
+            if isequal(newRootPath, '.')
+                newRootPath = pwd;
+            end
             if isReallyDir(newRootPath)
                 this.rootPath = newRootPath;
                 this.refreshGuiForNewPath();
@@ -90,8 +97,10 @@ classdef FileNavigatorWidget < mprojectnavigator.TreeWidget
             isTargetFileOrDir = (~isempty(nodeData) && (nodeData.isFile || nodeData.isDir));
             isTargetEditable =  isTargetFile || ~isempty(this.treePeer.getSelectedNodes);
             isTargetMfile = isTargetFile && endsWith(nodeData.path, '.m', 'IgnoreCase',true);
+            isDocable = isTargetDir || isTargetMfile;
+            isMlintable = isTargetDir || isTargetMfile;
             menuItemEdit.setEnabled(isTargetEditable);
-            menuItemViewDoc.setEnabled(isTargetFileOrDir);
+            menuItemViewDoc.setEnabled(isTargetDir || isTargetMfile);
             menuItemMlintReport.setEnabled(isTargetDir || isTargetMfile);
             menuItemRevealInDesktop.setEnabled(isTargetFileOrDir);
             menuItemCopyPath.setEnabled(isTargetFileOrDir);
@@ -112,8 +121,12 @@ classdef FileNavigatorWidget < mprojectnavigator.TreeWidget
             setCallback(menuItemPinThis, {@ctxPinThisCallback, this, nodeData});
             
             jmenu.add(menuItemEdit);
-            jmenu.add(menuItemViewDoc);
-            jmenu.add(menuItemMlintReport);
+            if isDocable
+                jmenu.add(menuItemViewDoc);
+            end
+            if isMlintable
+                jmenu.add(menuItemMlintReport);
+            end
             if isTargetFileOrDir
                 jmenu.addSeparator;
                 jmenu.add(menuItemCdToHere);
