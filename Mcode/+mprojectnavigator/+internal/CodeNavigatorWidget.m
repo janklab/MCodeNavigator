@@ -592,14 +592,14 @@ if fid == -1
     return;
 end
 RAII.fid = onCleanup(@() fclose(fid));
-line = fgetl(fid);
+line = fgets(fid);
 while ~isequal(line, -1)
     if strncmp(line, 'classdef ', 9)
         out = 'class';
     elseif strncmp(line, 'function ', 9)
         out = 'function';
     end
-    line = fgetl(fid);
+    line = fgets(fid);
 end
 end
 
