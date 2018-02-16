@@ -78,6 +78,7 @@ classdef FileNavigatorWidget < mprojectnavigator.TreeWidget
             menuItemViewDoc = JMenuItem('View Doc');
             menuItemMlintReport = JMenuItem('M-Lint Report');
             menuItemCdToHere = JMenuItem('CD to Here');
+            menuItemTerminalHere = JMenuItem('Terminal Here');
             menuItemRevealInDesktop = JMenuItem(sprintf('Reveal in %s', fileShellName));
             menuItemCopyPath = JMenuItem('Copy Path');
             menuItemCopyRelativePath = JMenuItem('Copy Relative Path');
@@ -104,6 +105,8 @@ classdef FileNavigatorWidget < mprojectnavigator.TreeWidget
             menuItemCopyPath.setEnabled(isTargetFileOrDir);
             menuItemCopyRelativePath.setEnabled(isTargetFileOrDir);
             
+            hasUsableTerminal = mprojectnavigator.Utils.isSupportedTerminalInstalled;
+            
             function setCallback(item, callback)
                 set(handle(item,'CallbackProperties'), 'ActionPerformedCallback', callback);
             end
@@ -111,6 +114,7 @@ classdef FileNavigatorWidget < mprojectnavigator.TreeWidget
             setCallback(menuItemViewDoc, {@ctxViewDocCallback, this, nodeData});
             setCallback(menuItemMlintReport, {@ctxMlintReportCallback, this, nodeData});
             setCallback(menuItemCdToHere, {@ctxCdToHereCallback, this, nodeData});
+            setCallback(menuItemTerminalHere, {@ctxTerminalHereCallback, this, nodeData});
             setCallback(menuItemRevealInDesktop, {@ctxRevealInDesktopCallback, this, nodeData});
             setCallback(menuItemCopyPath, {@ctxCopyPathCallback, this, nodeData, 'absolute'});
             setCallback(menuItemCopyRelativePath, {@ctxCopyPathCallback, this, nodeData, 'relative'});
@@ -118,22 +122,33 @@ classdef FileNavigatorWidget < mprojectnavigator.TreeWidget
             setCallback(menuItemDirUp, {@ctxDirUpCallback, this});
             setCallback(menuItemPinThis, {@ctxPinThisCallback, this, nodeData});
             
-            jmenu.add(menuItemEdit);
+            if isTargetEditable
+                jmenu.add(menuItemEdit);
+            end
             if isDocable
                 jmenu.add(menuItemViewDoc);
             end
             if isMlintable
                 jmenu.add(menuItemMlintReport);
             end
-            if isTargetFileOrDir
+            if isTargetEditable || isDocable || isMlintable
                 jmenu.addSeparator;
+            end
+            if isTargetFileOrDir
+                jmenu.add(menuItemRevealInDesktop);
+                jmenu.add(menuItemCopyPath);
+                jmenu.add(menuItemCopyRelativePath);
+                jmenu.addSeparator;
+            end
+            if isTargetFileOrDir
                 jmenu.add(menuItemCdToHere);
             end
-            jmenu.addSeparator;
-            jmenu.add(menuItemRevealInDesktop);
-            jmenu.add(menuItemCopyPath);
-            jmenu.add(menuItemCopyRelativePath);
-            jmenu.addSeparator;
+            if hasUsableTerminal && isTargetFileOrDir
+                jmenu.add(menuItemTerminalHere);
+            end
+            if isTargetFileOrDir || (hasUsableTerminal && isTargetFileOrDir)
+                jmenu.addSeparator;
+            end
             jmenu.add(menuItemDirUp);
             if isTargetDir
                 jmenu.add(menuItemPinThis);
@@ -332,6 +347,11 @@ end
 
 function ctxRevealInDesktopCallback(src, evd, this, nodeData) %#ok<INUSL>
 mprojectnavigator.Utils.guiRevealFileInDesktopFileBrowser(nodeData.path);
+end
+
+function ctxTerminalHereCallback(src, evd, this, nodeData) %#ok<INUSL>
+dir = ifthen(nodeData.isDir, nodeData.path, fileparts(nodeData.path));
+mprojectnavigator.Utils.openTerminalSessionAtDir(dir);
 end
 
 function ctxCopyPathCallback(src, evd, this, nodeData, mode) %#ok<INUSL>

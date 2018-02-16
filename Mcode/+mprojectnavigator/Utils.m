@@ -10,6 +10,16 @@ classdef Utils
 			end
         end
         
+        function out = isSupportedTerminalInstalled()
+            persistent answer
+            if ~isempty(answer)
+                out = answer;
+                return;
+            end
+            answer = ismac && exist('/Applications/iTerm.app', 'file');
+            out = answer;
+        end
+        
 		function guiRevealFileInDesktopFileBrowser(file)
 			% Reveals the given file in the OS desktop file browser
 			%
@@ -39,7 +49,20 @@ classdef Utils
 				end
 				uiwait(errordlg({sprintf('Could not open file in %s.', browserName) msg}, 'Error'));
 			end
-		end
+        end
+        
+        function openTerminalSessionAtDir(path)
+            if ismac && mprojectnavigator.Utils.isSupportedTerminalInstalled
+                % I can only figure out how to get iTerm working, not Terminal
+                resourceDir = [fileparts(mfilename('fullpath')) '/resources'];
+                launcher = [resourceDir '/open_iterm_to_dir.applescript'];
+                cmd = sprintf('osascript "%s" "%s"', launcher, path);
+                system(cmd);
+            else
+                % No other platforms supported
+                error('No supported terminal program found');
+            end
+        end
 	end
 	
 	methods (Access=private)
