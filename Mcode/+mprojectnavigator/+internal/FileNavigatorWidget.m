@@ -21,13 +21,13 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
                 newRootPath = pwd;
             end
             realPath = [];
-            if isReallyDir(newRootPath)
+            if isFolder(newRootPath)
                 realPath = newRootPath;
             else
                 mp = strsplit(path, ':');
                 for i = 1:numel(mp)
                     candidatePath = fullfile(mp{i}, newRootPath);
-                    if isReallyDir(candidatePath)
+                    if isFolder(candidatePath)
                         realPath = candidatePath;
                     end
                 end
@@ -178,7 +178,7 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
         function out = fileTreenode(this, path)
             [~,basename,ext] = fileparts(path);
             basename = [basename ext];
-            isDir = isReallyDir(path);
+            isDir = isFolder(path);
             if isDir
                 icon = myIconPath('folder');
             else

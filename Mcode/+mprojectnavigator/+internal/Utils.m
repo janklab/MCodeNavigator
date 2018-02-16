@@ -58,7 +58,7 @@ classdef Utils
 				cmd = sprintf('explorer.exe /n /root,"%s", /select,"%s"', ...
 					file, file);
 			else
-				target = ifthen(isReallyDir(file), file, fileparts(file));
+				target = ifthen(isFolder(file), file, fileparts(file));
 				cmd = sprintf('xdg-open "%s"', target);
 			end
 			[status,msg] = system(cmd);
