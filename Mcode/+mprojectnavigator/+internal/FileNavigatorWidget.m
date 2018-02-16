@@ -206,7 +206,7 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
                 return;
             end
             if ~strncmpi(file, this.rootPath, numel(this.rootPath))
-                fprintf('Ignoring file outside of file navigator root: %s\n', file);
+                % fprintf('Ignoring file outside of file navigator root: %s\n', file);
                 return;
             end
             relPath = file(numel(this.rootPath)+2:end);
