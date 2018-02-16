@@ -459,7 +459,7 @@ elseif eventData.getClickCount == 2
     end
     node = treePath.getLastPathComponent;
     nodeData = get(node, 'userdata');
-    if nodeData.isDummy
+    if isfield(nodeData, 'isDummy') && nodeData.isDummy
         return;
     end
     if ~nodeData.isDir
@@ -613,7 +613,7 @@ function out = sortDefnsByName(defns)
 if isempty(defns)
 	out = defns;
 else
-	[~,ix] = sort({defns.Name});
+	[~,ix] = sort(lower({defns.Name}));
 	out = defns(ix);
 end
 end
