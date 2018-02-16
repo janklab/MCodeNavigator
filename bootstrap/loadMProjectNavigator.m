@@ -23,6 +23,9 @@ function loadMProjectNavigator(varargin)
     
     addpath(mcodeDir);
     javaaddpath(jarFile);
+    
+    MProjectNavigator -registerhotkey
+    
     if doDevKit
         devKitPath = fullfile(distDir, 'dev-tools');
         addpath(fullfile(devKitPath, 'Mcode'));
