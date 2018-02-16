@@ -192,7 +192,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             nodeData.type = 'method';
             nodeData.defn = defn;
             nodeData.packageName = packageName;
-            baseLabel = sprintf('%s (%s)', defn.Name, strjoin(defn.OutputNames, ', '));
+            baseLabel = sprintf('%s (%s)', defn.Name, strjoin(defn.InputNames, ', '));
             items = {baseLabel};
             if ~isempty(defn.OutputNames)
                 items{end+1} = sprintf(':[%s]', strjoin(defn.OutputNames, ', '));
