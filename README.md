@@ -1,6 +1,8 @@
 MProjectNavigator
 =====================
 
+![MProjectNavigator Screnshots](doc/images/combined-macOS.png)
+
 MProjectNavigator is a GUI tool for viewing a Matlab project's source tree. This is for use within the Matlab desktop IDE.
 
 When working in an IDE, I like having a tool that displays the entire source tree of the project I'm working on. Matlab's "Current Directory" window comes close, but not quite, because its file location isn't fixed, and I tend to bounce around a lot of directories when doing Matlab development. MProjectNavigator provides a view of your source tree that is fixed and independent of the current working directory. It also provides a view that lets you browse in terms of the Matlab package/namespace hierarchy, instead of the filesystem layout.
