@@ -33,6 +33,12 @@ classdef TreeWidget < handle
             this.jTree = jTreeObj;
             this.jTreeHandle = handle(jTreeObj, 'CallbackProperties');
             
+            % Set callback functions
+            set(this.treePeerHandle, 'NodeExpandedCallback', {@nodeExpandedCallback, this});
+            set(this.treePeerHandle, 'NodeSelectedCallback', {@nodeSelectedCallback, this});
+            set(this.jTreeHandle, 'MousePressedCallback', {@treeMousePressedCallback, this});
+            set(this.jTreeHandle, 'MouseMovedCallback', {@treeMouseMovedCallback, this});
+            
             this.panel = JPanel(BorderLayout);
             this.panel.add(peer.getScrollPane);
         end
@@ -76,5 +82,34 @@ classdef TreeWidget < handle
             end
         end
         
+        function treeMousePressed(this, src, evd) %#ok<INUSD>
+        end
+        
+        function treeMouseMoved(this, src, evd) %#ok<INUSD>
+        end
+        
+        function nodeExpanded(this, src, evd) %#ok<INUSD>
+        end
+        
+        function nodeSelected(this, src, evd) %#ok<INUSD>
+        end
     end
 end
+
+function treeMousePressedCallback(src, evd, this)
+this.treeMousePressed(src, evd)
+end
+
+function treeMouseMovedCallback(src, evd, this)
+% Handle tree mouse movement callback - used to set the tooltip & context-menu
+this.treeMouseMoved(src, evd);
+end
+
+function nodeExpandedCallback(src, evd, this)
+this.nodeExpanded(src, evd);
+end
+
+function nodeSelectedCallback(src, evd, this)
+this.nodeSelected(src, evd);
+end
+

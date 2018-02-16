@@ -54,23 +54,12 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
             this.jTree.setShowsRootHandles(true);
             this.jTree.getSelectionModel.setSelectionMode(javax.swing.tree.TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
             
-            % Set callback functions
-            set(this.treePeerHandle, 'NodeExpandedCallback', {@nodeExpandedCallback, this});
-            set(this.treePeerHandle, 'NodeSelectedCallback', {@nodeSelectedCallback, this});
-            set(this.jTreeHandle, 'MousePressedCallback', {@treeMousePressed, this});
-            set(this.jTreeHandle, 'MouseMovedCallback', {@treeMouseMoved, this});
-            
             this.completeRefreshGui;
         end
         
         
         function out = setupTreeContextMenu(this, node, nodeData) %#ok<INUSL>
             import javax.swing.*
-            
-            % EDIT: Edit click target or selected nodes
-            % CHANGEPIN: Change the pinned root directory
-            % REFRESH: Force a refresh
-            % EXPAND_ALL: Recursively expand all tree nodes
             
             fileShellName = mprojectnavigator.internal.Utils.osFileBrowserName;
             
@@ -80,15 +69,15 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
             menuItemMlintReport = JMenuItem('M-Lint Report');
             menuItemCdToHere = JMenuItem('CD to Here');
             menuItemTerminalHere = JMenuItem('Terminal Here');
-			menuItemPowerShellHere = JMenuItem('PowerShell Here');
+            menuItemPowerShellHere = JMenuItem('PowerShell Here');
             menuItemRevealInDesktop = JMenuItem(sprintf('Reveal in %s', fileShellName));
             menuItemCopyPath = JMenuItem('Copy Path');
             menuItemCopyRelativePath = JMenuItem('Copy Relative Path');
             menuItemExpandAll = JMenuItem('Expand All');
             %TODO: Implement the "New" items
-            menuNew = JMenu('New');
-            menuItemNewFile = JMenuItem('File...');
-            menuItemNewDir = JMenuItem('Directory...');
+            %menuNew = JMenu('New');
+            %menuItemNewFile = JMenuItem('File...');
+            %menuItemNewDir = JMenuItem('Directory...');
             menuItemDirUp = JMenuItem('Go Up a Directory');
             menuItemPinThis = JMenuItem('Pin This Directory');
             
@@ -117,7 +106,7 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
             setCallback(menuItemMlintReport, {@ctxMlintReportCallback, this, nodeData});
             setCallback(menuItemCdToHere, {@ctxCdToHereCallback, this, nodeData});
             setCallback(menuItemTerminalHere, {@ctxTerminalHereCallback, this, nodeData});
-			setCallback(menuItemPowerShellHere, {@ctxPowerShellHereCallback, this, nodeData});
+            setCallback(menuItemPowerShellHere, {@ctxPowerShellHereCallback, this, nodeData});
             setCallback(menuItemRevealInDesktop, {@ctxRevealInDesktopCallback, this, nodeData});
             setCallback(menuItemCopyPath, {@ctxCopyPathCallback, this, nodeData, 'absolute'});
             setCallback(menuItemCopyRelativePath, {@ctxCopyPathCallback, this, nodeData, 'relative'});
@@ -145,12 +134,12 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
             end
             if isTargetFileOrDir
                 jmenu.add(menuItemCdToHere);
-				if hasUsableTerminal
-	                jmenu.add(menuItemTerminalHere);
-				end
-				if mprojectnavigator.internal.Utils.isPowerShellInstalled
-					jmenu.add(menuItemPowerShellHere);
-				end
+                if hasUsableTerminal
+                    jmenu.add(menuItemTerminalHere);
+                end
+                if mprojectnavigator.internal.Utils.isPowerShellInstalled
+                    jmenu.add(menuItemPowerShellHere);
+                end
                 jmenu.addSeparator;
             end
             jmenu.add(menuItemDirUp);
@@ -243,64 +232,52 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
             tree.setLoaded(node, true);
         end
         
+        function treeMousePressed(this, hTree, eventData) %#ok<INUSL>
+            % Mouse click callback
+            import javax.swing.*
+            
+            %fprintf('mousePressed()\n');
+            % Get the clicked node
+            clickX = eventData.getX;
+            clickY = eventData.getY;
+            jtree = eventData.getSource;
+            treePath = jtree.getPathForLocation(clickX, clickY);
+            % This method of detecting right-clicks avoids confusion with Cmd-clicks on Mac
+            isRightClick = eventData.getButton == java.awt.event.MouseEvent.BUTTON3;
+            if isRightClick
+                % Right-click
+                if ~isempty(treePath)
+                    node = treePath.getLastPathComponent;
+                    nodeData = get(node, 'userdata');
+                else
+                    node = [];
+                    nodeData = [];
+                end
+                jmenu = this.setupTreeContextMenu(node, nodeData);
+                jmenu.show(jtree, clickX, clickY);
+                jmenu.repaint;
+            elseif eventData.getClickCount == 2
+                % Double-click
+                if isempty(treePath)
+                    % Click was not on a node
+                    return;
+                end
+                node = treePath.getLastPathComponent;
+                nodeData = get(node, 'userdata');
+                if nodeData.isDummy
+                    return;
+                end
+                if nodeData.isDir
+                    this.setRootPath(nodeData.path);
+                else
+                    % File node was double-clicked
+                    edit(nodeData.path);
+                end
+            end
+        end
     end
-    
 end
 
-function treeMousePressed(hTree, eventData, this) %#ok<INUSL>
-% Mouse click callback
-import javax.swing.*
-
-%fprintf('mousePressed()\n');
-% Get the clicked node
-clickX = eventData.getX;
-clickY = eventData.getY;
-jtree = eventData.getSource;
-treePath = jtree.getPathForLocation(clickX, clickY);
-% This method of detecting right-clicks avoids confusion with Cmd-clicks on Mac
-isRightClick = eventData.getButton == java.awt.event.MouseEvent.BUTTON3;
-if isRightClick
-    % Right-click
-    if ~isempty(treePath)
-        node = treePath.getLastPathComponent;
-        nodeData = get(node, 'userdata');
-    else
-        node = [];
-        nodeData = [];
-    end
-    jmenu = this.setupTreeContextMenu(node, nodeData);
-    jmenu.show(jtree, clickX, clickY);
-    jmenu.repaint;
-elseif eventData.getClickCount == 2
-    % Double-click
-    if isempty(treePath)
-        % Click was not on a node
-        return;
-    end
-    node = treePath.getLastPathComponent;
-    nodeData = get(node, 'userdata');
-    if nodeData.isDummy
-        return;
-    end
-    if ~nodeData.isDir
-        % File node was double-clicked
-        edit(nodeData.path);
-    end
-end
-end
-
-function treeMouseMoved(hTree, eventData, this) %#ok<INUSD>
-% Handle tree mouse movement callback - used to set the tooltip & context-menu
-end
-
-function nodeExpandedCallback(src, evd, this)
-this.nodeExpanded(src, evd);
-end
-
-function nodeSelectedCallback(src, evd, tree) %#ok<INUSL,INUSD>
-evdnode = evd.getCurrentNode;
-node = evdnode; %#ok<NASGU>  DEBUG
-end
 
 function ctxEditCallback(src, evd, this, nodeData) %#ok<INUSL>
 selected = this.treePeer.getSelectedNodes;

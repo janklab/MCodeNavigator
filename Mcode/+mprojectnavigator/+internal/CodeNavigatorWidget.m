@@ -18,14 +18,10 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             
             initializeGui@mprojectnavigator.internal.TreeWidget(this);
             
-            % Don't show root handle; we're using it for namespaces
+            % Don't show root node; we're using it for namespaces
             this.jTree.setShowsRootHandles(true);
             this.jTree.setRootVisible(false);
-            
-            % Set callback functions
-            set(this.treePeerHandle, 'NodeExpandedCallback', {@nodeExpandedCallback, this});
-            set(this.jTreeHandle, 'MousePressedCallback', {@treeMousePressed, this});
-            
+                        
             this.completeRefreshGui;
         end
         
@@ -475,53 +471,42 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             end
         end
         
+        function treeMousePressed(this, hTree, eventData) %#ok<INUSL>
+            % Mouse click callback
+            
+            %fprintf('mousePressed()\n');
+            % Get the clicked node
+            clickX = eventData.getX;
+            clickY = eventData.getY;
+            jtree = eventData.getSource;
+            treePath = jtree.getPathForLocation(clickX, clickY);
+            % This method of detecting right-clicks avoids confusion with Cmd-clicks on Mac
+            isRightClick = eventData.getButton == java.awt.event.MouseEvent.BUTTON3;
+            if isRightClick
+                % Right-click
+                if ~isempty(treePath)
+                    node = treePath.getLastPathComponent;
+                    nodeData = get(node, 'userdata');
+                else
+                    node = [];
+                    nodeData = [];
+                end
+                jmenu = this.setupTreeContextMenu(node, nodeData);
+                jmenu.show(jtree, clickX, clickY);
+                jmenu.repaint;
+                %TODO: Do I need to explicitly dispose of that JMenu?
+            elseif eventData.getClickCount == 2
+                % Double-click
+                if isempty(treePath)
+                    % Click was not on a node
+                    return;
+                end
+                % Haven't decided on an action for double-click yet. Do nothing.
+            end
+        end
         
-        
     end
 end
-
-function treeMousePressed(hTree, eventData, this) %#ok<INUSL>
-% Mouse click callback
-
-%fprintf('mousePressed()\n');
-% Get the clicked node
-clickX = eventData.getX;
-clickY = eventData.getY;
-jtree = eventData.getSource;
-treePath = jtree.getPathForLocation(clickX, clickY);
-% This method of detecting right-clicks avoids confusion with Cmd-clicks on Mac
-isRightClick = eventData.getButton == java.awt.event.MouseEvent.BUTTON3;
-if isRightClick
-    % Right-click
-    if ~isempty(treePath)
-        node = treePath.getLastPathComponent;
-        nodeData = get(node, 'userdata');
-    else
-        node = [];
-        nodeData = [];
-    end
-    jmenu = this.setupTreeContextMenu(node, nodeData);
-    jmenu.show(jtree, clickX, clickY);
-    jmenu.repaint;
-    %TODO: Do I need to explicitly dispose of that JMenu?
-elseif eventData.getClickCount == 2
-    % Double-click
-    if isempty(treePath)
-        % Click was not on a node
-        return;
-    end
-    node = treePath.getLastPathComponent;
-    nodeData = get(node, 'userdata');
-    if isfield(nodeData, 'isDummy') && nodeData.isDummy
-        return;
-    end
-    if ~nodeData.isDir
-        % File node was double-clicked
-        edit(nodeData.path);
-    end
-end
-end
-
 
 function out = matlabPathInfo()
 mlRoot = matlabroot;
@@ -630,10 +615,6 @@ out = {pkgDefn.Name};
 for i = 1:numel(pkgDefn.PackageList)
     out = [out allSubpackagesUnderPackage(pkgDefn.PackageList(i))]; %#ok<AGROW>
 end
-end
-
-function nodeExpandedCallback(src, evd, this)
-this.nodeExpanded(src, evd);
 end
 
 function ctxFlatPackageViewCallback(src, evd, this, nodeData) %#ok<INUSD,INUSL>
