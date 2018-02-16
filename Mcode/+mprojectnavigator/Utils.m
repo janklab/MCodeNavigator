@@ -12,8 +12,6 @@ classdef Utils
             %
             % File (char) is the path to the file.
             if ismac
-                % Have to use single-argument form of system to avoid
-                % "Unrecognized option: -R" error
                 [status,msg] = system(sprintf('%s %s "%s"', 'open', '-R', file));
                 if status ~= 0
                     if numel(msg) > 256
@@ -22,9 +20,15 @@ classdef Utils
                     uiwait(errordlg({'Could not open file in Finder.' msg}, 'Error'));
                 end
             elseif ispc
-                parentDir = fileparts(file);
-                system('explorer.exe', '/n', sprintf('/root,"%s"', parentDir), ...
-                    sprintf('/select,"%s"', file));
+				cmd = sprintf('explorer.exe /n /root,"%s", /select,"%s"', ...
+					file, file);
+                [~,msg] = system(cmd);
+                if ~isempty(msg)
+                    if numel(msg) > 256
+                        msg = [msg(1:256) '...'];
+                    end
+                    uiwait(errordlg({'Could not open file in Windows Explorer.' msg}, 'Error'));
+                end
             else
                 %TODO: I don't know how to do this on Linux
                 uiwait(errordlg({
