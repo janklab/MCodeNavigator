@@ -32,19 +32,19 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
         end
         
         function setFlatPackageView(this, newState)
-        if newState == this.flatPackageView
-            return;
-        end
-        this.flatPackageView = newState;
-        this.completeRefreshGui;
+            if newState == this.flatPackageView
+                return;
+            end
+            this.flatPackageView = newState;
+            this.completeRefreshGui;
         end
         
         function setShowHidden(this, newState)
-        if newState == this.showHidden
-            return;
-        end
-        this.showHidden = newState;
-        this.completeRefreshGui;
+            if newState == this.showHidden
+                return;
+            end
+            this.showHidden = newState;
+            this.completeRefreshGui;
         end
         
         function completeRefreshGui(this)
@@ -56,9 +56,9 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
             this.expandNode(root.getChildAt(0), false);
         end
         
-        function out = setupTreeContextMenu(this, node, nodeData) %#ok<INUSL>
+        function out = setupTreeContextMenu(this, node, nodeData)
             import javax.swing.*
-                        
+            
             if      ismac;    fileShellName = 'Finder';
             elseif  ispc;     fileShellName = 'Windows Explorer';
             else;              fileShellName = 'File Browser';
@@ -288,7 +288,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
         function out = createNode(this, label, nodeData, allowsChildren, icon)
             if nargin < 4 || isempty(allowsChildren); allowsChildren = true; end
             if nargin < 5 || isempty(icon);  icon = [];  end
-                
+            
             out = this.oldUitreenode('<dummy>', label, icon, true);
             out.setAllowsChildren(allowsChildren);
             set(out, 'userdata', nodeData);
@@ -306,19 +306,20 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
             if isequal(nodeData.type, 'root')
                 return;
             end
-            if ~tree.isLoaded(node)
-                newChildNodes = this.buildChildNodes(node);
-                % Only this array-based adding method seems to work properly
-                jChildNodes = javaArray('com.mathworks.hg.peer.UITreeNode', numel(newChildNodes));
-                for i = 1:numel(newChildNodes)
-                    jChildNodes(i) = java(newChildNodes{i});
-                end
-                tree.removeAllChildren(node);
-                tree.add(node, jChildNodes);
-                tree.setLoaded(node, true);
+            % We could check ~tree.isLoaded(node) to avoid re-loading nodes.
+            % But that could end up with stale definitions. For now, just always
+            % reload nodes, so user can refresh them by re-expanding.
+            newChildNodes = this.buildChildNodes(node);
+            % Only this array-based adding method seems to work properly
+            jChildNodes = javaArray('com.mathworks.hg.peer.UITreeNode', numel(newChildNodes));
+            for i = 1:numel(newChildNodes)
+                jChildNodes(i) = java(newChildNodes{i});
             end
+            tree.removeAllChildren(node);
+            tree.add(node, jChildNodes);
+            tree.setLoaded(node, true);
         end
-                
+        
         function out = buildChildNodes(this, node)
             out = {};
             nodeData = get(node, 'userdata');
@@ -394,7 +395,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
                     end
                 case 'enumerationGroup'
                     defn = nodeData.parentDefinition;
-					enumList = sortDefnsByName(defn.EnumerationMemberList);
+                    enumList = sortDefnsByName(defn.EnumerationMemberList);
                     for i = 1:numel(enumList)
                         out{end+1} = this.enumerationNode(enumList(i)); %#ok<AGROW>
                     end
@@ -411,7 +412,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
         end
         
         function out = mlIconFile(this, name)
-            out = [this.iconPath '/' name];            
+            out = [this.iconPath '/' name];
         end
         
         function out = maybeRejectHidden(this, defns)
@@ -592,7 +593,7 @@ switch nodeData.type
 end
 end
 
-function ctxFullyExpandNodeCallback(src, evd, this, node, nodeData)
+function ctxFullyExpandNodeCallback(src, evd, this, node, nodeData) %#ok<INUSD,INUSL>
 fprintf('ctxFullyExpandNodeCallback()\n');
 this.expandNode(node, true);
 end
@@ -611,10 +612,10 @@ end
 
 function out = sortDefnsByName(defns)
 if isempty(defns)
-	out = defns;
+    out = defns;
 else
-	[~,ix] = sort(lower({defns.Name}));
-	out = defns(ix);
+    [~,ix] = sort(lower({defns.Name}));
+    out = defns(ix);
 end
 end
 

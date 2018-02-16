@@ -15,6 +15,7 @@ classdef FileNavigatorWidget < mprojectnavigator.TreeWidget
         function setRootPath(this, newRootPath)
             if ~isdir(newRootPath) %#ok
                 warning('''%s'' is not a directory', newRootPath);
+                return;
             end
             % HACK: Resolve "." to real path name.
             % Can't use Java to do this, because it has a different notion of
@@ -210,17 +211,18 @@ classdef FileNavigatorWidget < mprojectnavigator.TreeWidget
         function nodeExpanded(this, src, evd) %#ok<INUSL>
             tree = this.treePeer;
             node = evd.getCurrentNode;
-            if ~tree.isLoaded(node)
-                newChildNodes = this.buildChildNodes(node, tree);
-                % Only this array-based adding method seems to work properly
-                jChildNodes = javaArray('com.mathworks.hg.peer.UITreeNode', numel(newChildNodes));
-                for i = 1:numel(newChildNodes)
-                    jChildNodes(i) = java(newChildNodes{i});
-                end
-                tree.removeAllChildren(node);
-                tree.add(node, jChildNodes);
-                tree.setLoaded(node, true);
+            % We could check ~tree.isLoaded(node) to avoid re-loading nodes.
+            % But that could end up with stale definitions. For now, just always
+            % reload nodes, so user can refresh them by re-expanding.
+            newChildNodes = this.buildChildNodes(node, tree);
+            % Only this array-based adding method seems to work properly
+            jChildNodes = javaArray('com.mathworks.hg.peer.UITreeNode', numel(newChildNodes));
+            for i = 1:numel(newChildNodes)
+                jChildNodes(i) = java(newChildNodes{i});
             end
+            tree.removeAllChildren(node);
+            tree.add(node, jChildNodes);
+            tree.setLoaded(node, true);
         end
         
     end
