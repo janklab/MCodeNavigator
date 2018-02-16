@@ -79,6 +79,7 @@ classdef FileNavigatorWidget < mprojectnavigator.TreeWidget
             menuItemMlintReport = JMenuItem('M-Lint Report');
             menuItemCdToHere = JMenuItem('CD to Here');
             menuItemTerminalHere = JMenuItem('Terminal Here');
+			menuItemPowerShellHere = JMenuItem('PowerShell Here');
             menuItemRevealInDesktop = JMenuItem(sprintf('Reveal in %s', fileShellName));
             menuItemCopyPath = JMenuItem('Copy Path');
             menuItemCopyRelativePath = JMenuItem('Copy Relative Path');
@@ -115,6 +116,7 @@ classdef FileNavigatorWidget < mprojectnavigator.TreeWidget
             setCallback(menuItemMlintReport, {@ctxMlintReportCallback, this, nodeData});
             setCallback(menuItemCdToHere, {@ctxCdToHereCallback, this, nodeData});
             setCallback(menuItemTerminalHere, {@ctxTerminalHereCallback, this, nodeData});
+			setCallback(menuItemPowerShellHere, {@ctxPowerShellHereCallback, this, nodeData});
             setCallback(menuItemRevealInDesktop, {@ctxRevealInDesktopCallback, this, nodeData});
             setCallback(menuItemCopyPath, {@ctxCopyPathCallback, this, nodeData, 'absolute'});
             setCallback(menuItemCopyRelativePath, {@ctxCopyPathCallback, this, nodeData, 'relative'});
@@ -142,11 +144,12 @@ classdef FileNavigatorWidget < mprojectnavigator.TreeWidget
             end
             if isTargetFileOrDir
                 jmenu.add(menuItemCdToHere);
-            end
-            if hasUsableTerminal && isTargetFileOrDir
-                jmenu.add(menuItemTerminalHere);
-            end
-            if isTargetFileOrDir || (hasUsableTerminal && isTargetFileOrDir)
+				if hasUsableTerminal
+	                jmenu.add(menuItemTerminalHere);
+				end
+				if mprojectnavigator.Utils.isPowerShellInstalled
+					jmenu.add(menuItemPowerShellHere);
+				end
                 jmenu.addSeparator;
             end
             jmenu.add(menuItemDirUp);
@@ -353,6 +356,12 @@ function ctxTerminalHereCallback(src, evd, this, nodeData) %#ok<INUSL>
 dir = ifthen(nodeData.isDir, nodeData.path, fileparts(nodeData.path));
 mprojectnavigator.Utils.openTerminalSessionAtDir(dir);
 end
+
+function ctxPowerShellHereCallback(src, evd, this, nodeData) %#ok<INUSL>
+dir = ifthen(nodeData.isDir, nodeData.path, fileparts(nodeData.path));
+mprojectnavigator.Utils.openPowerShellAtDir(dir);
+end
+
 
 function ctxCopyPathCallback(src, evd, this, nodeData, mode) %#ok<INUSL>
 path = nodeData.path;
