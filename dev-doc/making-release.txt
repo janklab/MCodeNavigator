@@ -5,6 +5,7 @@ To make a release:
 
 * Update `VERSION` with the right version, removing "-SNAPSHOT"
 * Update `doc/CHANGELOG.md` to finalize changes for this version
+* `git commit`
 * Make a git "vX.Y.Z" version tag
 * Create a git "vX.Y-patches" branch if this is a new major or minor version
 * `make dist`
