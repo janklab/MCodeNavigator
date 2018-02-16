@@ -149,7 +149,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
             nodeData.paths = paths;
             nodeData.found = found;
             icon = myIconPath('folder');
-            out = this.createNode('<Global>', nodeData, [], icon);            
+            out = this.createNode('<Global>', nodeData, [], icon);
         end
         
         function out = globalClassesNode(this, classNames)
@@ -388,16 +388,19 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
                 case 'package'
                     pkg = meta.package.fromName(nodeData.packageName);
                     if ~this.flatPackageView
-                        for i = 1:numel(pkg.PackageList)
-                            out{end+1} = this.packageNode(pkg.PackageList(i).Name); %#ok<AGROW>
+                        pkgList = sortDefnsByName(pkg.PackageList);
+                        for i = 1:numel(pkgList)
+                            out{end+1} = this.packageNode(pkgList(i).Name); %#ok<AGROW>
                         end
                     end
-                    for i = 1:numel(pkg.ClassList)
-                        out{end+1} = this.classNode(pkg.ClassList(i).Name); %#ok<AGROW>
+                    classList = sortDefnsByName(pkg.ClassList);
+                    for i = 1:numel(classList)
+                        out{end+1} = this.classNode(classList(i).Name); %#ok<AGROW>
                     end
-                    for i = 1:numel(pkg.FunctionList)
+                    functionList = sortDefnsByName(pkg.FunctionList);
+                    for i = 1:numel(functionList)
                         % These are really methods, not functions (???)
-                        out{end+1} = this.methodNode(pkg.FunctionList(i), nodeData.packageName); %#ok<AGROW>
+                        out{end+1} = this.methodNode(functionList(i), nodeData.packageName); %#ok<AGROW>
                     end
                 case 'class'
                     klass = meta.class.fromName(nodeData.className);
@@ -600,7 +603,7 @@ function out = probeMfileForType(file)
 out = '';
 if fid == -1
     warning('apj:mprojectnavigator:FileError', 'Could not read file %s: %s', ...
-        fild, msg);
+        file, msg);
     return;
 end
 RAII.fid = onCleanup(@() fclose(fid));
