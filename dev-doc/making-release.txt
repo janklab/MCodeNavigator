@@ -9,9 +9,9 @@ To make a release:
 * Make a git "vX.Y.Z" version tag
 * Create a git "vX.Y-patches" branch if this is a new major or minor version
 * `make dist`
-* Create a Release on GitHub
+* Push the tags to create a Release on GitHub
 * Upload the dist tarballs to the release on GitHub
-* Update `VERSION` with new "vX.Y.Z-SNAPSHOT" to open development on the next version
+* Update `VERSION` and `CHANGELOG` with new "vX.Y.Z-SNAPSHOT" to open development on the next version
 
 To add later:
 * Upload tarballs to the Matlab File Exchange page
