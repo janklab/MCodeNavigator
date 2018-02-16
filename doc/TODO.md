@@ -16,7 +16,6 @@ TODO
 * Better error reporting for the `FevalAction`. Right now errors are silently swallowed.
 * Multi-column tree view using JIDE's widgets
  * Licensing situation is unclear here
-* Move all the implementation classes to an `+internal` package, to make it clear they're private?
 * About screen
 * Auto-detect new versions and notify user
 

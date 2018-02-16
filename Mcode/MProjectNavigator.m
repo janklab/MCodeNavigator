@@ -45,7 +45,7 @@ else
     elseif isequal(varargin{1}, '-hotkeyinvoked')
         hotkeyInvoked();
     elseif isequal(varargin{1}, '-deletesettings')
-        mprojectnavigator.Persistence.deleteAllSettings();
+        mprojectnavigator.internal.Persistence.deleteAllSettings();
         fprintf('MProjectNavigator: All settings deleted.\n');
     elseif isequal(varargin{1}(1), '-')
         warning('MProjectNavigator: Unrecognized option: %s', varargin{1});
@@ -77,9 +77,9 @@ end
         
         tabbedPane = JTabbedPane;
         
-        fileNavigator = mprojectnavigator.FileNavigatorWidget;
+        fileNavigator = mprojectnavigator.internal.FileNavigatorWidget;
         tabbedPane.add('Files', fileNavigator.panel);
-        codeNavigator = mprojectnavigator.CodeNavigatorWidget;
+        codeNavigator = mprojectnavigator.internal.CodeNavigatorWidget;
         tabbedPane.add('Definitions', codeNavigator.panel);
         
         frame.getContentPane.add(tabbedPane, BorderLayout.CENTER);

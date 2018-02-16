@@ -51,7 +51,7 @@ classdef Utils
 			% Linux support is currently unimplemented.
 			%
 			% File (char) is the path to the file.
-            browserName = mprojectnavigator.Utils.osFileBrowserName;
+            browserName = mprojectnavigator.internal.Utils.osFileBrowserName;
 			if ismac
 				cmd = sprintf('%s %s "%s"', 'open', '-R', file);
 			elseif ispc

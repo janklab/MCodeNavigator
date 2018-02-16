@@ -1,4 +1,4 @@
-classdef FileNavigatorWidget < mprojectnavigator.TreeWidget
+classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
     
     properties
         rootPath = getpref(PREFGROUP, 'files_pinnedDir', pwd);
@@ -45,7 +45,7 @@ classdef FileNavigatorWidget < mprojectnavigator.TreeWidget
             import java.awt.*
             import javax.swing.*
             
-            initializeGui@mprojectnavigator.TreeWidget(this);
+            initializeGui@mprojectnavigator.internal.TreeWidget(this);
             
             tree = this.treePeer;
             treePane = tree.getScrollPane;
@@ -72,7 +72,7 @@ classdef FileNavigatorWidget < mprojectnavigator.TreeWidget
             % REFRESH: Force a refresh
             % EXPAND_ALL: Recursively expand all tree nodes
             
-            fileShellName = mprojectnavigator.Utils.osFileBrowserName;
+            fileShellName = mprojectnavigator.internal.Utils.osFileBrowserName;
             
             jmenu = JPopupMenu;
             menuItemEdit = JMenuItem('Edit');
@@ -107,7 +107,7 @@ classdef FileNavigatorWidget < mprojectnavigator.TreeWidget
             menuItemCopyPath.setEnabled(isTargetFileOrDir);
             menuItemCopyRelativePath.setEnabled(isTargetFileOrDir);
             
-            hasUsableTerminal = mprojectnavigator.Utils.isSupportedTerminalInstalled;
+            hasUsableTerminal = mprojectnavigator.internal.Utils.isSupportedTerminalInstalled;
             
             function setCallback(item, callback)
                 set(handle(item,'CallbackProperties'), 'ActionPerformedCallback', callback);
@@ -148,7 +148,7 @@ classdef FileNavigatorWidget < mprojectnavigator.TreeWidget
 				if hasUsableTerminal
 	                jmenu.add(menuItemTerminalHere);
 				end
-				if mprojectnavigator.Utils.isPowerShellInstalled
+				if mprojectnavigator.internal.Utils.isPowerShellInstalled
 					jmenu.add(menuItemPowerShellHere);
 				end
                 jmenu.addSeparator;
@@ -350,17 +350,17 @@ fprintf('cded to %s\n', path);
 end
 
 function ctxRevealInDesktopCallback(src, evd, this, nodeData) %#ok<INUSL>
-mprojectnavigator.Utils.guiRevealFileInDesktopFileBrowser(nodeData.path);
+mprojectnavigator.internal.Utils.guiRevealFileInDesktopFileBrowser(nodeData.path);
 end
 
 function ctxTerminalHereCallback(src, evd, this, nodeData) %#ok<INUSL>
 dir = ifthen(nodeData.isDir, nodeData.path, fileparts(nodeData.path));
-mprojectnavigator.Utils.openTerminalSessionAtDir(dir);
+mprojectnavigator.internal.Utils.openTerminalSessionAtDir(dir);
 end
 
 function ctxPowerShellHereCallback(src, evd, this, nodeData) %#ok<INUSL>
 dir = ifthen(nodeData.isDir, nodeData.path, fileparts(nodeData.path));
-mprojectnavigator.Utils.openPowerShellAtDir(dir);
+mprojectnavigator.internal.Utils.openPowerShellAtDir(dir);
 end
 
 

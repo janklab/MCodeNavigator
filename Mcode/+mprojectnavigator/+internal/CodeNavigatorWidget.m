@@ -1,4 +1,4 @@
-classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
+classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
     % A navigator for Mcode definitions (packages/classes/functions)
     
     properties (SetAccess = private)
@@ -16,7 +16,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
             import java.awt.*
             import javax.swing.*
             
-            initializeGui@mprojectnavigator.TreeWidget(this);
+            initializeGui@mprojectnavigator.internal.TreeWidget(this);
             
             % Don't show root handle; we're using it for namespaces
             this.jTree.setShowsRootHandles(true);
@@ -59,7 +59,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
         function out = setupTreeContextMenu(this, node, nodeData)
             import javax.swing.*
             
-            fileShellName = mprojectnavigator.Utils.osFileBrowserName;
+            fileShellName = mprojectnavigator.internal.Utils.osFileBrowserName;
             
             jmenu = JPopupMenu;
             menuItemEdit = JMenuItem('Edit');
@@ -702,7 +702,7 @@ switch nodeData.type
             uiwait(errordlg({sprintf('Cannot reveal %s because it is a built-in', ...
                 nodeData.className)}, 'Error'));
         else
-            mprojectnavigator.Utils.guiRevealFileInDesktopFileBrowser(w);
+            mprojectnavigator.internal.Utils.guiRevealFileInDesktopFileBrowser(w);
         end
     otherwise
         % NOP
