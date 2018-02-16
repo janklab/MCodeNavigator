@@ -1,9 +1,9 @@
 MProjectNavigator
 =====================
 
-MProjectNavigator is a tool for viewing a Matlab project's source tree.
+MProjectNavigator is a tool for viewing a Matlab project's source tree. This is for use within the Matlab desktop IDE.
 
-This is intended for use within the Matlab desktop IDE.
+When working in an IDE, I like having a tool that displays the entire source tree of the project I'm working on. Matlab's "Current Directory" window comes close, but not quite, because its file location isn't fixed, and I tend to bounce around a lot of directories when doing Matlab development. MProjectNavigator provides a view of your source tree that is fixed and independent of the current working directory. It also provides a view that lets you browse in terms of the Matlab package/namespace hierarchy, instead of the filesystem layout.
 
 ## Caution: Undocumented Features!
 
@@ -46,6 +46,8 @@ MProjectNavigator is written by <a href="https://apjanke.net">Andrew Janke</a>. 
 
 Bug reports, feedback, and minor bug fix PRs are welcome. Please ask first (by [submitting an issue](https://github.com/apjanke/MProjectNavigator/issues)) before doing PRs for new features or behavior changes. This is a personal project, and I'm finicky about its behavior, so I wouldn't want you to waste time writing code that won't be accepted.
 
+See [Developing](doc/Developing.md) for details on hacking MProjectNavigator itself.
+
 ## Acknowledgments
 
 I learned how to do the Matlab/Java tree programming from Yair Altman's <a href="https://www.mathworks.com/matlabcentral/fileexchange/14317-findjobj-find-java-handles-of-matlab-graphic-objects">findjobj</a> tool, and articles on his <a href="https://undocumentedmatlab.com/">Undocumented Matlab</a> site.
@@ -59,3 +61,7 @@ This program uses icons from the <a href="http://www.famfamfam.com/lab/icons/sil
 ## Bugs
 
 I think I have a memory leak somewhere. I occasionally get a Java out of memory error when I've been running it for a while. (Though this usually happens when I've viewed large trees, like the MATLAB class definitions in flat package view.)
+
+## Wishlist
+
+Ideally, I'd like the navigators to be dockable Matlab desktop things, like Matlab's Workspace and Current Directory tools are. But I can't figure out how to do that. If you know how, drop me a line!
