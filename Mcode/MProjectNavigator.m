@@ -103,7 +103,7 @@ end
         pFileNavigator = fileNavigator;
     end
 
-    function framePositionCallback(frame, evd)
+    function framePositionCallback(frame, evd) %#ok<INUSD>
         loc = frame.getLocation;
         siz = frame.getSize;
         framePosn = [loc.x loc.y siz.width siz.height];
