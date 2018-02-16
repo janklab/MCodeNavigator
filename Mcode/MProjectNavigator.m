@@ -97,7 +97,7 @@ end
         
         hFrame = handle(frame, 'CallbackProperties');
         hFrame.ComponentMovedCallback = @framePositionCallback;
-        hFrame.ComponentResizedCallback = @framepositionCallback;
+        hFrame.ComponentResizedCallback = @framePositionCallback;
 
         pFrame = frame;
         pFileNavigator = fileNavigator;
