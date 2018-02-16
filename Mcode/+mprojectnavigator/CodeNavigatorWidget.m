@@ -1,10 +1,6 @@
 classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
     % A navigator for Mcode definitions (packages/classes/functions)
     
-    properties (Constant, Hidden)
-        iconPath = [matlabroot '/toolbox/matlab/icons'];
-    end
-    
     properties (SetAccess = private)
         flatPackageView = false;
         showHidden = false;
@@ -409,10 +405,6 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
                 otherwise
                     fprintf('No expansion handler for node type %s\n', nodeData.type);
             end
-        end
-        
-        function out = mlIconFile(this, name)
-            out = [this.iconPath '/' name];
         end
         
         function out = maybeRejectHidden(this, defns)

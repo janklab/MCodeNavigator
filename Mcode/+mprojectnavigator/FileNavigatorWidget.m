@@ -1,9 +1,5 @@
 classdef FileNavigatorWidget < mprojectnavigator.TreeWidget
     
-    properties (Constant, Hidden)
-        iconPath = [matlabroot '/toolbox/matlab/icons'];
-    end
-    
     properties
         rootPath = pwd;
     end
