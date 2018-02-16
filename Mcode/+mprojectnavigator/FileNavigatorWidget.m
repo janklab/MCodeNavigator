@@ -198,6 +198,8 @@ classdef FileNavigatorWidget < mprojectnavigator.TreeWidget
             childNodes = {};
             if nodeData.isDir
                 d = dir2(file);
+                [~,ix] = sort(lower({d.name})); % Case-insensitive sort
+                d = d(ix);
                 childNodes = cell(1, numel(d));
                 for i = 1:numel(d)
                     childPath = fullfile(file, d(i).name);
