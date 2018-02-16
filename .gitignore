@@ -1,5 +1,7 @@
 # Temp files
 *.swp
+*.tmp
+*~
 
 # Mac OS X
 .DS_Store
@@ -25,4 +27,5 @@ Thumbs.db
 /src/java/MProjectNavigator/.idea/workspace.xml
 /src/java/MProjectNavigator/.idea/misc.xml
 
-
+# Build artifacts
+dist/
