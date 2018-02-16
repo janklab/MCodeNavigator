@@ -30,6 +30,8 @@ loadMProjectNavigator
 
 Alternately, if you don't want to modify your `startup.m` file, you can just run `loadMProjectNavigator` each time you want to use the tool. That function takes care of adding all the paths and other initialization. See it for details.
 
+MLProjectNavigator saves some of its settings in Matlab's prefs() database. If your program state seems to get messed up and you're having problems that persist between Matlab session restarts, you can do a `MLProjectNavigator -deletesettings` to delete all the settings and start over fresh.
+
 ## Usage
 
 All usage is done through a single function, `MProjectNavigator`. Call it to display the navigator window, hide it, or configure it.

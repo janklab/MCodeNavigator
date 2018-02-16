@@ -7,6 +7,7 @@ function MProjectNavigator(varargin)
 %
 % MProjectNavigator
 % MProjectNavigator -pin <path>
+% MProjectNavigator -deletesettings
 %
 % For this to work, its JAR dependencies must be on the Java classpath. You can
 % set this up by running loadMProjectNavigator(), found in this project's
@@ -43,6 +44,9 @@ else
         registerHotkey();
     elseif isequal(varargin{1}, '-hotkeyinvoked')
         hotkeyInvoked();
+    elseif isequal(varargin{1}, '-deletesettings')
+        mprojectnavigator.Persistence.deleteAllSettings();
+        fprintf('MProjectNavigator: All settings deleted.\n');
     elseif isequal(varargin{1}(1), '-')
         warning('MProjectNavigator: Unrecognized option: %s', varargin{1});
     else

@@ -2,9 +2,6 @@ TODO
 =============
 
 * Detect global functions and classes that are not inside a package
-* Persist preferences/state across Matlab restarts
- * View options like flat package view and Show Hidden
- * Window position
 * Multiple pinned roots in file navigator
 * "New..." action in file navigator
 * Refactor classes to move more common tree functionality up into TreeWidget

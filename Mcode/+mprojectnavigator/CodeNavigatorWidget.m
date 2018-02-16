@@ -2,12 +2,14 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
     % A navigator for Mcode definitions (packages/classes/functions)
     
     properties (SetAccess = private)
-        flatPackageView = false;
-        showHidden = false;
+        flatPackageView;
+        showHidden;
     end
     
     methods
         function this = CodeNavigatorWidget()
+            this.flatPackageView = getpref(PREFGROUP, 'code_flatPackageView', false);
+            this.showHidden = getpref(PREFGROUP, 'code_showHidden', false);
         end
         
         function initializeGui(this)
@@ -32,6 +34,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
                 return;
             end
             this.flatPackageView = newState;
+            setpref(PREFGROUP, 'code_flatPackageView', this.flatPackageView);
             this.completeRefreshGui;
         end
         
@@ -40,6 +43,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
                 return;
             end
             this.showHidden = newState;
+            setpref(PREFGROUP, 'code_showHidden', this.showHidden);
             this.completeRefreshGui;
         end
         
@@ -55,10 +59,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
         function out = setupTreeContextMenu(this, node, nodeData)
             import javax.swing.*
             
-            if      ismac;    fileShellName = 'Finder';
-            elseif  ispc;     fileShellName = 'Windows Explorer';
-            else;              fileShellName = 'File Browser';
-            end
+            fileShellName = mprojectnavigator.Utils.osFileBrowserName;
             
             jmenu = JPopupMenu;
             menuItemEdit = JMenuItem('Edit');

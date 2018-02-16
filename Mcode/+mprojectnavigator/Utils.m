@@ -1,5 +1,15 @@
 classdef Utils
 	methods (Static)
+        function out = osFileBrowserName()
+			if ismac
+				out = 'Finder';
+			elseif ispc
+				out = 'Windows Explorer';
+			else
+				out = 'File Manager';
+			end
+        end
+        
 		function guiRevealFileInDesktopFileBrowser(file)
 			% Reveals the given file in the OS desktop file browser
 			%
@@ -11,17 +21,15 @@ classdef Utils
 			% Linux support is currently unimplemented.
 			%
 			% File (char) is the path to the file.
+            browserName = mprojectnavigator.Utils.osFileBrowserName;
 			if ismac
 				cmd = sprintf('%s %s "%s"', 'open', '-R', file);
-				browserName = 'Finder';
 			elseif ispc
 				cmd = sprintf('explorer.exe /n /root,"%s", /select,"%s"', ...
 					file, file);
-				browserName = 'Windows Explorer';
 			else
 				target = ifthen(isReallyDir(file), file, fileparts(file));
 				cmd = sprintf('xdg-open "%s"', target);
-				browserName = 'File Manager';
 			end
 			[status,msg] = system(cmd);
 			isOk = ifthen(ispc, isempty(msg), status == 0);

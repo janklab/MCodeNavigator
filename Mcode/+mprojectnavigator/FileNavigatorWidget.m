@@ -20,20 +20,24 @@ classdef FileNavigatorWidget < mprojectnavigator.TreeWidget
             if isequal(newRootPath, '.')
                 newRootPath = pwd;
             end
+            realPath = [];
             if isReallyDir(newRootPath)
-                this.rootPath = newRootPath;
-                this.refreshGuiForNewPath();
+                realPath = newRootPath;
             else
                 mp = strsplit(path, ':');
                 for i = 1:numel(mp)
-                    resolvedPath = fullfile(mp{i}, newRootPath);
-                    if isReallyDir(resolvedPath)
-                        this.rootPath = resolvedPath;
-                        this.refreshGuiForNewPath();
+                    candidatePath = fullfile(mp{i}, newRootPath);
+                    if isReallyDir(candidatePath)
+                        realPath = candidatePath;
                     end
                 end
-                warning('Could not resolve directory ''%s''', newRootPath);
+                if isempty(realPath)
+                    warning('Could not resolve directory ''%s''', newRootPath);
+                    return;
+                end
             end
+            this.rootPath = realPath;
+            this.refreshGuiForNewPath();
         end
         
         function initializeGui(this)
@@ -67,10 +71,7 @@ classdef FileNavigatorWidget < mprojectnavigator.TreeWidget
             % REFRESH: Force a refresh
             % EXPAND_ALL: Recursively expand all tree nodes
             
-            if      ismac;    fileShellName = 'Finder';
-            elseif  ispc;     fileShellName = 'Windows Explorer';
-            else;             fileShellName = 'File Browser';
-            end
+            fileShellName = mprojectnavigator.Utils.osFileBrowserName;
             
             jmenu = JPopupMenu;
             menuItemEdit = JMenuItem('Edit');
