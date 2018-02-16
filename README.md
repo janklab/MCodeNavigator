@@ -40,6 +40,8 @@ MProjectNavigator -pin <path>   % Change the pinned directory in the file naviga
 
 There's also a keyboard shortcut! Press `Ctrl-Shift-P` to show or hide the navigator window.
 
+All the classes and functions in the `+mprojectnavigator` package are internal implementation details. Don't call them directly.
+
 ## Author
 
 MProjectNavigator is written by <a href="https://apjanke.net">Andrew Janke</a>. Source code is available in the <a href="https://github.com/apjanke/MProjectNavigator">MProjectNavigator repo on GitHub</a>.

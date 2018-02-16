@@ -333,17 +333,17 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
                     end
                 case 'package'
                     pkg = meta.package.fromName(nodeData.packageName);
+                    if ~this.flatPackageView
+                        for i = 1:numel(pkg.PackageList)
+                            out{end+1} = this.packageNode(pkg.PackageList(i).Name); %#ok<AGROW>
+                        end
+                    end
                     for i = 1:numel(pkg.ClassList)
                         out{end+1} = this.classNode(pkg.ClassList(i).Name); %#ok<AGROW>
                     end
                     for i = 1:numel(pkg.FunctionList)
                         % These are really methods, not functions (???)
                         out{end+1} = this.methodNode(pkg.FunctionList(i), nodeData.packageName); %#ok<AGROW>
-                    end
-                    if ~this.flatPackageView
-                        for i = 1:numel(pkg.PackageList)
-                            out{end+1} = this.packageNode(pkg.PackageList(i).Name); %#ok<AGROW>
-                        end
                     end
                 case 'class'
                     klass = meta.class.fromName(nodeData.className);
@@ -368,7 +368,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
                 case 'methodGroup'
                     defn = nodeData.parentDefinition;
                     methodList = rejectInheritedDefinitions(defn.MethodList, defn);
-                    methodList = this.maybeRejectHidden(methodList);
+                    methodList = sortDefnsByName(this.maybeRejectHidden(methodList));
                     for i = 1:numel(methodList)
                         % Hide well-known auto-defined methods
                         if isequal(methodList(i).Name, 'empty') && methodList(i).Static ...
@@ -381,21 +381,22 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
                 case 'propertyGroup'
                     defn = nodeData.parentDefinition;
                     propList = rejectInheritedDefinitions(defn.PropertyList, defn);
-                    propList = this.maybeRejectHidden(propList);
+                    propList = sortDefnsByName(this.maybeRejectHidden(propList));
                     for i = 1:numel(propList)
                         out{end+1} = this.propertyNode(propList(i), defn); %#ok<AGROW>
                     end
                 case 'eventGroup'
                     defn = nodeData.parentDefinition;
                     eventList = rejectInheritedDefinitions(defn.EventList, defn);
-                    eventList = this.maybeRejectHidden(eventList);
+                    eventList = sortDefnsByName(this.maybeRejectHidden(eventList));
                     for i = 1:numel(eventList)
                         out{end+1} = this.eventNode(eventList(i)); %#ok<AGROW>
                     end
                 case 'enumerationGroup'
                     defn = nodeData.parentDefinition;
-                    for i = 1:numel(defn.EnumerationMemberList)
-                        out{end+1} = this.enumerationNode(defn.EnumerationMemberList(i)); %#ok<AGROW>
+					enumList = sortDefnsByName(defn.EnumerationMemberList);
+                    for i = 1:numel(enumList)
+                        out{end+1} = this.enumerationNode(enumList(i)); %#ok<AGROW>
                     end
                 case 'superclassGroup'
                     defn = nodeData.parentDefinition;
@@ -471,7 +472,7 @@ end
 
 function out = matlabPathInfo()
 mlRoot = matlabroot;
-paths = strsplit(path, ':');
+paths = strsplit(path, pathsep);
 tfSystem = strncmpi(paths, mlRoot, numel(mlRoot));
 out.system = paths(tfSystem);
 out.user = paths(~tfSystem);
@@ -606,5 +607,14 @@ definer = [ defnList.DefiningClass ];
 definerName = { definer.Name };
 tfInherited = ~strcmp(definerName, parentDefn.Name);
 out = defnList(~tfInherited);
+end
+
+function out = sortDefnsByName(defns)
+if isempty(defns)
+	out = defns;
+else
+	[~,ix] = sort({defns.Name});
+	out = defns(ix);
+end
 end
 

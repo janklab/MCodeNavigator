@@ -37,5 +37,11 @@ classdef Utils
                     }, 'Error: Not Supported'));
             end
         end
-    end
+	end
+	
+	methods (Access=private)
+		function this = Utils()
+		% Private constructor to suppress helptext
+		end
+	end
 end
