@@ -1,4 +1,4 @@
-function MProjectNavigator2(varargin)
+function MProjectNavigator(varargin)
 % OOP version of MProjectNavigator
 
 error(javachk('awt'));

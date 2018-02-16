@@ -1,6 +1,10 @@
 classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
     % A navigator for Mcode definitions (packages/classes/functions)
     
+    properties (Constant, Hidden)
+        iconPath = [matlabroot '/toolbox/matlab/icons'];
+    end
+    
     properties
     end
     
@@ -49,14 +53,16 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
             nodeData.type = 'codepaths';
             nodeData.label = label;
             nodeData.paths = paths;
-            out = this.createNode(label, nodeData);
+            icon = myIconPath('topfolder');
+            out = this.createNode(label, nodeData, [], icon);
         end
         
         function out = packageNode(this, packageName)
             label = ['+' packageName];
             nodeData.type = 'package';
             nodeData.packageName = packageName;
-            out = this.createNode(label, nodeData);
+            icon = myIconPath('folder');
+            out = this.createNode(label, nodeData, [], icon);
         end
         
         function out = classNode(this, className)
@@ -64,7 +70,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
             nodeData.type = 'class';
             nodeData.className = className;
             nodeData.classBaseName = classBaseName;
-            label = ['@' classBaseName];                
+            label = ['@' classBaseName];
             out = this.createNode(label, nodeData);
         end
         
@@ -72,7 +78,8 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
             nodeData.type = 'methodGroup';
             nodeData.parentDefinition = parentDefinition;
             label = 'Methods';
-            out = this.createNode(label, nodeData);
+            icon = myIconPath('none');
+            out = this.createNode(label, nodeData, [], icon);
         end
         
         function out = methodNode(this, defn)
@@ -91,18 +98,20 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
             quals = {'Static' 'Abstract' 'Sealed' 'Hidden'};
             for i = 1:numel(quals)
                 if defn.(quals{i})
-                    items{end+1} = lower(quals{i});
+                    items{end+1} = lower(quals{i}); %#ok<AGROW>
                 end
             end
             label = regexprep(strjoin(items, ' '), '  +', ' ');
-            out = this.createNode(label, nodeData, false);
+            icon = myIconPath('dot');
+            out = this.createNode(label, nodeData, false, icon);
         end
         
         function out = propertyGroupNode(this, parentDefinition)
             nodeData.type = 'propertyGroup';
             nodeData.parentDefinition = parentDefinition;
             label = 'Properties';
-            out = this.createNode(label, nodeData);
+            icon = myIconPath('none');
+            out = this.createNode(label, nodeData, [], icon);
         end
         
         function out = propertyNode(this, defn, klassDefn)
@@ -110,7 +119,8 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
             nodeData.type = 'property';
             nodeData.defn = defn;
             label = this.propertyLabel(defn, klassDefn);
-            out = this.createNode(label, nodeData, false);
+            icon = myIconPath('dot');
+            out = this.createNode(label, nodeData, false, icon);
         end
         
         function out = propertyLabel(this, defn, klassDefn)
@@ -144,7 +154,8 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
             nodeData.type = 'eventGroup';
             nodeData.parentDefinition = parentDefinition;
             label = 'Events';
-            out = this.createNode(label, nodeData);
+            icon = myIconPath('none');
+            out = this.createNode(label, nodeData, [], icon);
         end
         
         function out = eventNode(this, defn)
@@ -152,14 +163,16 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
             nodeData.type = 'event';
             nodeData.defn = defn;
             label = defn.Name;
-            out = this.createNode(label, nodeData, false);
+            icon = myIconPath('dot');
+            out = this.createNode(label, nodeData, false, icon);
         end
         
         function out = superclassGroupNode(this, parentDefinition)
             nodeData.type = 'superclassGroup';
             nodeData.parentDefinition = parentDefinition;
             label = 'Superclasses';
-            out = this.createNode(label, nodeData);
+            icon = myIconPath('none');
+            out = this.createNode(label, nodeData, [], icon);
         end
         
         function out = superclassNode(this, defn)
@@ -183,13 +196,15 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
             out = this.createNode(label, nodeData, false);
         end
         
-        function out = createNode(this, label, nodeData, allowsChildren)
+        function out = createNode(this, label, nodeData, allowsChildren, icon)
             if nargin < 4 || isempty(allowsChildren); allowsChildren = true; end
-            out = this.oldUitreenode('<dummy>', label, [], true);
+            if nargin < 5 || isempty(icon);  icon = [];  end
+                
+            out = this.oldUitreenode('<dummy>', label, icon, true);
             out.setAllowsChildren(allowsChildren);
             set(out, 'userdata', nodeData);
             if allowsChildren
-                dummyNode = this.oldUitreenode('<dummy>', 'Loading...', [], true);
+                dummyNode = this.oldUitreenode('<dummy>', 'Loading...', icon, true);
                 out.add(dummyNode);
             end
         end
@@ -296,6 +311,12 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
                     fprintf('No expansion handler for node type %s\n', nodeData.type);
             end
         end
+        
+        function out = mlIconFile(this, name)
+            out = [this.iconPath '/' name];            
+        end
+        
+        
     end
 end
 

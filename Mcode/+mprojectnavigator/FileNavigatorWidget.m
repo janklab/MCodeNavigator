@@ -1,8 +1,11 @@
 classdef FileNavigatorWidget < mprojectnavigator.TreeWidget
     
+    properties (Constant, Hidden)
+        iconPath = [matlabroot '/toolbox/matlab/icons'];
+    end
+    
     properties
         rootPath = pwd;
-        iconPath = [matlabroot '/toolbox/matlab/icons'];
     end
     
     methods
@@ -140,9 +143,9 @@ classdef FileNavigatorWidget < mprojectnavigator.TreeWidget
             basename = [basename ext];
             isDir = isReallyDir(path);
             if isDir
-                icon = [this.iconPath '/foldericon.gif'];
+                icon = myIconPath('folder');
             else
-                icon = [this.iconPath '/pageicon.gif'];
+                icon = myIconPath('file');
             end
             out = this.oldUitreenode('Some Dummy Text', basename, icon, true);
             nodeData.isDummy = false;
