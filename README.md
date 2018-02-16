@@ -52,7 +52,7 @@ See [Developing](doc/Developing.md) for details on hacking MProjectNavigator its
 
 ## Acknowledgments
 
-I learned how to do the Matlab/Java tree programming from Yair Altman's <a href="https://www.mathworks.com/matlabcentral/fileexchange/14317-findjobj-find-java-handles-of-matlab-graphic-objects">findjobj</a> tool, and articles on his <a href="https://undocumentedmatlab.com/">Undocumented Matlab</a> site.
+I learned how to do the Matlab/Java tree programming from Yair Altman's <a href="https://www.mathworks.com/matlabcentral/fileexchange/14317-findjobj-find-java-handles-of-matlab-graphic-objects">findjobj</a> tool and articles on his <a href="https://undocumentedmatlab.com/">Undocumented Matlab</a> site.
 
 ## License
 
