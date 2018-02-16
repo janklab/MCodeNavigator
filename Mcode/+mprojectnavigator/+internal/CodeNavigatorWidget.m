@@ -319,7 +319,8 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             out.setAllowsChildren(allowsChildren);
             set(out, 'userdata', nodeData);
             if allowsChildren
-                dummyNode = this.oldUitreenode('<dummy>', 'Loading...', icon, true);
+                dummyIcon = myIconPath('none');
+                dummyNode = this.oldUitreenode('<dummy>', 'Loading...', dummyIcon, true);
                 out.add(dummyNode);
             end
         end

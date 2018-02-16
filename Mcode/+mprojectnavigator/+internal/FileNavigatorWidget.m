@@ -287,7 +287,8 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
             nodeData.isDir = false;
             nodeData.isPopulated = true;
             nodeData.isFile = false;
-            out = this.oldUitreenode('Some Dummy Text', 'Loading...', [], true);
+            icon = myIconPath('none');
+            out = this.oldUitreenode('Some Dummy Text', 'Loading...', icon, true);
             set(out, 'userdata', nodeData);
         end
         
