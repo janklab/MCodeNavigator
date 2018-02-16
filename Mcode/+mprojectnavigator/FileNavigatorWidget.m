@@ -47,7 +47,6 @@ classdef FileNavigatorWidget < mprojectnavigator.TreeWidget
             
             % Set callback functions
             set(this.treePeerHandle, 'NodeExpandedCallback', {@nodeExpandedCallback, this});
-            set(this.treePeerHandle, 'NodeWillExpandCallback', {@nodeWillExpandCallback, this});
             set(this.treePeerHandle, 'NodeSelectedCallback', {@nodeSelectedCallback, this});
             set(this.jTreeHandle, 'MousePressedCallback', {@treeMousePressed, this});
             set(this.jTreeHandle, 'MouseMovedCallback', {@treeMouseMoved, this});
@@ -56,7 +55,7 @@ classdef FileNavigatorWidget < mprojectnavigator.TreeWidget
         end
         
         
-        function out = setupTreeContextMenu(this, node, nodeData, tree_h) %#ok<INUSL>
+        function out = setupTreeContextMenu(this, node, nodeData) %#ok<INUSL>
             import javax.swing.*
             
             % EDIT: Edit click target or selected nodes
@@ -64,14 +63,21 @@ classdef FileNavigatorWidget < mprojectnavigator.TreeWidget
             % REFRESH: Force a refresh
             % EXPAND_ALL: Recursively expand all tree nodes
             
+            if      ismac;    fileShellName = 'Finder';
+            elseif  ispc;     fileShellName = 'Windows Explorer';
+            else;             fileShellName = 'File Browser';
+            end
+            
             jmenu = JPopupMenu;
             menuItemEdit = JMenuItem('Edit');
             menuItemViewDoc = JMenuItem('View Doc');
             menuItemMlintReport = JMenuItem('M-Lint Report');
             menuItemCdToHere = JMenuItem('CD to Here');
+            menuItemRevealInDesktop = JMenuItem(sprintf('Reveal in %s', fileShellName));
             menuItemCopyPath = JMenuItem('Copy Path');
             menuItemCopyRelativePath = JMenuItem('Copy Relative Path');
             menuItemExpandAll = JMenuItem('Expand All');
+            %TODO: Implement the "New" items
             menuNew = JMenu('New');
             menuItemNewFile = JMenuItem('File...');
             menuItemNewDir = JMenuItem('Directory...');
@@ -87,8 +93,9 @@ classdef FileNavigatorWidget < mprojectnavigator.TreeWidget
             menuItemEdit.setEnabled(isTargetEditable);
             menuItemViewDoc.setEnabled(isTargetFileOrDir);
             menuItemMlintReport.setEnabled(isTargetDir || isTargetMfile);
+            menuItemRevealInDesktop.setEnabled(isTargetFileOrDir);
             menuItemCopyPath.setEnabled(isTargetFileOrDir);
-            menuItemCopyRelativePath.setEnabled(isTargetFileOrDir);            
+            menuItemCopyRelativePath.setEnabled(isTargetFileOrDir);
             
             function setCallback(item, callback)
                 set(handle(item,'CallbackProperties'), 'ActionPerformedCallback', callback);
@@ -97,6 +104,7 @@ classdef FileNavigatorWidget < mprojectnavigator.TreeWidget
             setCallback(menuItemViewDoc, {@ctxViewDocCallback, this, nodeData});
             setCallback(menuItemMlintReport, {@ctxMlintReportCallback, this, nodeData});
             setCallback(menuItemCdToHere, {@ctxCdToHereCallback, this, nodeData});
+            setCallback(menuItemRevealInDesktop, {@ctxRevealInDesktopCallback, this, nodeData});
             setCallback(menuItemCopyPath, {@ctxCopyPathCallback, this, nodeData, 'absolute'});
             setCallback(menuItemCopyRelativePath, {@ctxCopyPathCallback, this, nodeData, 'relative'});
             setCallback(menuItemExpandAll, {@ctxExpandAllCallback, this});
@@ -111,6 +119,7 @@ classdef FileNavigatorWidget < mprojectnavigator.TreeWidget
                 jmenu.add(menuItemCdToHere);
             end
             jmenu.addSeparator;
+            jmenu.add(menuItemRevealInDesktop);
             jmenu.add(menuItemCopyPath);
             jmenu.add(menuItemCopyRelativePath);
             jmenu.addSeparator;
@@ -121,8 +130,6 @@ classdef FileNavigatorWidget < mprojectnavigator.TreeWidget
             jmenu.addSeparator;
             jmenu.add(menuItemExpandAll);
             
-            jmenu.add(JMenuItem('Edit'));
-            jmenu.addSeparator;
             out = jmenu;
         end
         
@@ -131,7 +138,7 @@ classdef FileNavigatorWidget < mprojectnavigator.TreeWidget
             this.treePeer.setRoot(root);
             pause(0.005); % Allow widgets to catch up
             % Expand the root node one level
-            this.expandNode(root, this.jTree, false);
+            this.expandNode(root, false);
         end
         
         function refreshGuiForNewPath(this)
@@ -187,7 +194,7 @@ classdef FileNavigatorWidget < mprojectnavigator.TreeWidget
             out = childNodes;
         end
         
-        function nodeExpanded(this, src, evd)
+        function nodeExpanded(this, src, evd) %#ok<INUSL>
             tree = this.treePeer;
             node = evd.getCurrentNode;
             if ~tree.isLoaded(node)
@@ -203,15 +210,13 @@ classdef FileNavigatorWidget < mprojectnavigator.TreeWidget
             end
         end
         
-        function nodeWillExpand(this, src, evd)
-        end
-                
     end
     
 end
 
 function treeMousePressed(hTree, eventData, this) %#ok<INUSL>
 % Mouse click callback
+import javax.swing.*
 
 %fprintf('mousePressed()\n');
 % Get the clicked node
@@ -219,7 +224,9 @@ clickX = eventData.getX;
 clickY = eventData.getY;
 jtree = eventData.getSource;
 treePath = jtree.getPathForLocation(clickX, clickY);
-if eventData.isMetaDown
+% This method of detecting right-clicks avoids confusion with Cmd-clicks on Mac
+isRightClick = eventData.getButton == java.awt.event.MouseEvent.BUTTON3;
+if isRightClick
     % Right-click
     if ~isempty(treePath)
         node = treePath.getLastPathComponent;
@@ -228,7 +235,7 @@ if eventData.isMetaDown
         node = [];
         nodeData = [];
     end
-    jmenu = this.setupTreeContextMenu(node, nodeData, this.treePeer);
+    jmenu = this.setupTreeContextMenu(node, nodeData);
     jmenu.show(jtree, clickX, clickY);
     jmenu.repaint;
 elseif eventData.getClickCount == 2
@@ -253,16 +260,11 @@ function treeMouseMoved(hTree, eventData, this) %#ok<INUSD>
 % Handle tree mouse movement callback - used to set the tooltip & context-menu
 end
 
-function nodeExpandedCallback(src, evd, this) %#ok<INUSL>
+function nodeExpandedCallback(src, evd, this)
 this.nodeExpanded(src, evd);
 end
 
-function nodeWillExpandCallback(src, evd, this) %#ok<INUSD>
-this.nodeWillExpand();
-end
-
 function nodeSelectedCallback(src, evd, tree) %#ok<INUSL,INUSD>
-fprintf('nodeSelected()\n');
 evdnode = evd.getCurrentNode;
 node = evdnode; %#ok<NASGU>  DEBUG
 end
@@ -314,6 +316,10 @@ cd(path);
 fprintf('cded to %s\n', path);
 end
 
+function ctxRevealInDesktopCallback(src, evd, this, nodeData) %#ok<INUSL>
+mprojectnavigator.Utils.guiRevealFileInDesktopFileBrowser(nodeData.path);
+end
+
 function ctxCopyPathCallback(src, evd, this, nodeData, mode) %#ok<INUSL>
 path = nodeData.path;
 switch mode
@@ -334,14 +340,14 @@ clipboard('copy', path);
 end
 
 function ctxExpandAllCallback(src, evd, this) %#ok<INUSL>
-expandNode(this.treePeer.getRoot, this.jTree, true);
+this.expandNode(this.treePeer.getRoot, true);
 end
 
-function ctxDirUpCallback(src, evd, this)
+function ctxDirUpCallback(src, evd, this) %#ok<INUSL>
 this.setRootPath(fileparts(this.rootPath));
 end
 
-function ctxPinThisCallback(src, evd, this, nodeData)
+function ctxPinThisCallback(src, evd, this, nodeData) %#ok<INUSL>
 if ~nodeData.isDir
     return;
 end

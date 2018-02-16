@@ -5,7 +5,9 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
         iconPath = [matlabroot '/toolbox/matlab/icons'];
     end
     
-    properties
+    properties (SetAccess = private)
+        flatPackageView = false;
+        showHidden = false;
     end
     
     methods
@@ -24,8 +26,25 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
             
             % Set callback functions
             set(this.treePeerHandle, 'NodeExpandedCallback', {@nodeExpandedCallback, this});
+            set(this.jTreeHandle, 'MousePressedCallback', {@treeMousePressed, this});
             
             this.completeRefreshGui;
+        end
+        
+        function setFlatPackageView(this, newState)
+        if newState == this.flatPackageView
+            return;
+        end
+        this.flatPackageView = newState;
+        this.completeRefreshGui;
+        end
+        
+        function setShowHidden(this, newState)
+        if newState == this.showHidden
+            return;
+        end
+        this.showHidden = newState;
+        this.completeRefreshGui;
         end
         
         function completeRefreshGui(this)
@@ -33,8 +52,70 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
             this.treePeer.setRoot(root);
             pause(0.005); % Allow widgets to catch up
             % Expand the root node one level, and expand the USER node
-            this.expandNode(root, this.jTree, false);
-            this.expandNode(root.getChildAt(0), this.jTree, false);
+            this.expandNode(root, false);
+            this.expandNode(root.getChildAt(0), false);
+        end
+        
+        function out = setupTreeContextMenu(this, node, nodeData) %#ok<INUSL>
+            import javax.swing.*
+                        
+            if      ismac;    fileShellName = 'Finder';
+            elseif  ispc;     fileShellName = 'Windows Explorer';
+            else;              fileShellName = 'File Browser';
+            end
+            
+            jmenu = JPopupMenu;
+            menuItemEdit = JMenuItem('Edit');
+            menuItemViewDoc = JMenuItem('View Doc');
+            menuItemRevealInDesktop = JMenuItem(sprintf('Reveal in %s', fileShellName));
+            menuOptions = JMenu('Options');
+            menuItemFlatPackageView = JCheckBoxMenuItem('Flat Package View');
+            menuItemFlatPackageView.setSelected(this.flatPackageView);
+            menuItemShowHidden = JCheckBoxMenuItem('Show Hidden Items');
+            menuItemShowHidden.setSelected(this.showHidden);
+            
+            nd = nodeData;
+            if isempty(nd)
+                [isTargetClass,isTargetMethod,isTargetProperty,...
+                    isTargetEvent,isTargetEnum] = deal(false);
+            else
+                isTargetClass = isequal(nd.type, 'class');
+                isTargetMethod = isequal(nd.type, 'method');
+                isTargetProperty = isequal(nd.type, 'property');
+                isTargetEvent = isequal(nd.type, 'event');
+                isTargetEnum = isequal(nd.type, 'enumeration');
+            end
+            isTargetEditable = isTargetClass || isTargetMethod;
+            isTargetDocable = isTargetClass || isTargetMethod || isTargetProperty ...
+                || isTargetEvent || isTargetEnum;
+            isTargetRevealable = isTargetClass;
+            menuItemEdit.setEnabled(isTargetEditable);
+            
+            function setCallback(item, callback)
+                set(handle(item,'CallbackProperties'), 'ActionPerformedCallback', callback);
+            end
+            setCallback(menuItemEdit, {@ctxEditCallback, this, nodeData});
+            setCallback(menuItemViewDoc, {@ctxViewDocCallback, this, nodeData});
+            setCallback(menuItemRevealInDesktop, {@ctxRevealInDesktopCallback, this, nodeData});
+            setCallback(menuItemFlatPackageView, {@ctxFlatPackageViewCallback, this, nodeData});
+            setCallback(menuItemShowHidden, {@ctxShowHiddenCallback, this, nodeData});
+            
+            if isTargetEditable
+                jmenu.add(menuItemEdit);
+            end
+            if isTargetDocable
+                jmenu.add(menuItemViewDoc);
+            end
+            if isTargetRevealable
+                jmenu.add(menuItemRevealInDesktop);
+            end
+            if isTargetEditable || isTargetDocable || isTargetRevealable
+                jmenu.addSeparator;
+            end
+            menuOptions.add(menuItemFlatPackageView);
+            menuOptions.add(menuItemShowHidden);
+            jmenu.add(menuOptions);
+            out = jmenu;
         end
         
         function out = rootTreenode(this)
@@ -85,7 +166,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
         function out = methodNode(this, defn)
             mustBeA(defn, 'meta.method');
             nodeData.type = 'method';
-            nodeData.fcnDefn = defn;
+            nodeData.defn = defn;
             baseLabel = sprintf('%s (%s)', defn.Name, strjoin(defn.OutputNames, ', '));
             items = {baseLabel};
             if ~isempty(defn.OutputNames)
@@ -123,7 +204,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
             out = this.createNode(label, nodeData, false, icon);
         end
         
-        function out = propertyLabel(this, defn, klassDefn)
+        function out = propertyLabel(this, defn, klassDefn) %#ok<INUSL>
             items = {};
             items{end+1} = defn.Name;
             if isequal(defn.GetAccess, defn.SetAccess)
@@ -209,7 +290,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
             end
         end
         
-        function nodeExpanded(this, src, evd)
+        function nodeExpanded(this, src, evd) %#ok<INUSL>
             tree = this.treePeer;
             node = evd.getCurrentNode;
             nodeData = get(node, 'userdata');
@@ -237,7 +318,8 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
                 case 'root'
                     % NOP: Shouldn't get here
                 case 'codepaths'
-                    pkgs = listPackagesInCodeRoots(nodeData.paths);
+                    listMode = ifthen(this.flatPackageView, 'flat', 'nested');
+                    pkgs = listPackagesInCodeRoots(nodeData.paths, listMode);
                     for i = 1:numel(pkgs)
                         out{end+1} = this.packageNode(pkgs{i}); %#ok<AGROW>
                     end
@@ -250,20 +332,23 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
                         % These are really methods, not functions (???)
                         out{end+1} = this.methodNode(pkg.FunctionList(i)); %#ok<AGROW>
                     end
-                    for i = 1:numel(pkg.PackageList)
-                        out{end+1} = this.packageNode(pkg.PackageList(i).Name); %#ok<AGROW>
+                    if ~this.flatPackageView
+                        for i = 1:numel(pkg.PackageList)
+                            out{end+1} = this.packageNode(pkg.PackageList(i).Name); %#ok<AGROW>
+                        end
                     end
-                case 'function'
-                    % NOP: No expansion                    
                 case 'class'
                     klass = meta.class.fromName(nodeData.className);
-                    if ~isempty(dropInheritedDefinitions(klass.PropertyList, klass))
+                    if ~isempty(this.maybeRejectHidden(...
+                            rejectInheritedDefinitions(klass.PropertyList, klass)))
                         out{end+1} = this.propertyGroupNode(klass);
                     end
-                    if ~isempty(dropInheritedDefinitions(klass.MethodList, klass))
+                    if ~isempty(this.maybeRejectHidden(...
+                            rejectInheritedDefinitions(klass.MethodList, klass)))
                         out{end+1} = this.methodGroupNode(klass);
                     end
-                    if ~isempty(dropInheritedDefinitions(klass.EventList, klass))
+                    if ~isempty(this.maybeRejectHidden(...
+                            rejectInheritedDefinitions(klass.EventList, klass)))
                         out{end+1} = this.eventGroupNode(klass);
                     end
                     if ~isempty(klass.EnumerationMemberList)
@@ -274,7 +359,8 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
                     end
                 case 'methodGroup'
                     defn = nodeData.parentDefinition;
-                    methodList = dropInheritedDefinitions(defn.MethodList, defn);
+                    methodList = rejectInheritedDefinitions(defn.MethodList, defn);
+                    methodList = this.maybeRejectHidden(methodList);
                     for i = 1:numel(methodList)
                         % Hide well-known auto-defined methods
                         if isequal(methodList(i).Name, 'empty') && methodList(i).Static ...
@@ -285,13 +371,15 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
                     end
                 case 'propertyGroup'
                     defn = nodeData.parentDefinition;
-                    propList = dropInheritedDefinitions(defn.PropertyList, defn);
+                    propList = rejectInheritedDefinitions(defn.PropertyList, defn);
+                    propList = this.maybeRejectHidden(propList);
                     for i = 1:numel(propList)
                         out{end+1} = this.propertyNode(propList(i), defn); %#ok<AGROW>
                     end
                 case 'eventGroup'
                     defn = nodeData.parentDefinition;
-                    eventList = dropInheritedDefinitions(defn.EventList, defn);
+                    eventList = rejectInheritedDefinitions(defn.EventList, defn);
+                    eventList = this.maybeRejectHidden(eventList);
                     for i = 1:numel(eventList)
                         out{end+1} = this.eventNode(eventList(i)); %#ok<AGROW>
                     end
@@ -316,9 +404,60 @@ classdef CodeNavigatorWidget < mprojectnavigator.TreeWidget
             out = [this.iconPath '/' name];            
         end
         
+        function out = maybeRejectHidden(this, defns)
+            if this.showHidden
+                out = defns;
+            else
+                out = defns(~[defns.Hidden]);
+            end
+        end
+        
+        
         
     end
 end
+
+function treeMousePressed(hTree, eventData, this) %#ok<INUSL>
+% Mouse click callback
+
+%fprintf('mousePressed()\n');
+% Get the clicked node
+clickX = eventData.getX;
+clickY = eventData.getY;
+jtree = eventData.getSource;
+treePath = jtree.getPathForLocation(clickX, clickY);
+% This method of detecting right-clicks avoids confusion with Cmd-clicks on Mac
+isRightClick = eventData.getButton == java.awt.event.MouseEvent.BUTTON3;
+if isRightClick
+    % Right-click
+    if ~isempty(treePath)
+        node = treePath.getLastPathComponent;
+        nodeData = get(node, 'userdata');
+    else
+        node = [];
+        nodeData = [];
+    end
+    jmenu = this.setupTreeContextMenu(node, nodeData);
+    jmenu.show(jtree, clickX, clickY);
+    jmenu.repaint;
+elseif eventData.getClickCount == 2
+    % Double-click
+    if isempty(treePath)
+        % Click was not on a node
+        return;
+    end
+    node = treePath.getLastPathComponent;
+    nodeData = get(node, 'userdata');
+    if nodeData.isDummy
+        return;
+    end
+    if ~nodeData.isDir
+        % File node was double-clicked
+        edit(nodeData.path);
+    end
+end
+end
+
 
 function out = matlabPathInfo()
 mlRoot = matlabroot;
@@ -328,7 +467,10 @@ out.system = paths(tfSystem);
 out.user = paths(~tfSystem);
 end
 
-function out = listPackagesInCodeRoots(paths)
+function out = listPackagesInCodeRoots(paths, mode)
+if nargin < 2 || isempty(mode); mode = 'nested'; end
+assert(ismember(mode, {'nested','flat'}), 'Invalid mode: %s', mode);
+
 paths = cellstr(paths);
 
 out = {};
@@ -346,13 +488,92 @@ end
 
 out = unique(out);
 
+if isequal(mode, 'flat')
+    out = expandPackageListRecursively(out);
 end
 
-function nodeExpandedCallback(src, evd, this) %#ok<INUSL>
+end
+
+function out = expandPackageListRecursively(names)
+out = {};
+for i = 1:numel(names)
+    out = [out allSubpackagesUnderPackage(meta.package.fromName(names{i}))]; %#ok<AGROW>
+end
+end
+
+function out = allSubpackagesUnderPackage(pkgDefn)
+out = {pkgDefn.Name};
+for i = 1:numel(pkgDefn.PackageList)
+    out = [out allSubpackagesUnderPackage(pkgDefn.PackageList(i))]; %#ok<AGROW>
+end
+end
+
+function nodeExpandedCallback(src, evd, this)
 this.nodeExpanded(src, evd);
 end
 
-function out = dropInheritedDefinitions(defnList, parentDefn)
+function ctxFlatPackageViewCallback(src, evd, this, nodeData) %#ok<INUSD,INUSL>
+this.setFlatPackageView(src.isSelected);
+end
+
+function ctxShowHiddenCallback(src, evd, this, nodeData) %#ok<INUSD,INUSL>
+this.setShowHidden(src.isSelected);
+end
+
+function ctxEditCallback(src, evd, this, nodeData) %#ok<INUSL>
+switch nodeData.type
+    case 'class'
+        edit(nodeData.className);
+    case 'method'
+        defn = nodeData.defn;
+        klassDefn = defn.DefiningClass;
+        if isempty(klassDefn)
+            errordlg('Cannot edit methods that do not have a defining class.');
+            return;
+        end
+        qualifiedName = [klassDefn.Name '.' defn.Name];
+        edit(qualifiedName);
+    otherwise
+        % Shouldn't get here
+        fprintf('Editing not supported for node type %s\n', nodeData.type);
+end
+end
+
+function ctxViewDocCallback(src, evd, this, nodeData) %#ok<INUSL>
+switch nodeData.type
+    case 'class'
+        doc(nodeData.className);
+    case {'method', 'property', 'event', 'enumeration'}
+        defn = nodeData.defn;
+        klassDefn = defn.DefiningClass;
+        if isempty(klassDefn)
+            errordlg('Cannot view doc on things that do not have a defining class.');
+            return;
+        end
+        qualifiedName = [klassDefn.Name '.' defn.Name];
+        doc(qualifiedName);
+    otherwise
+        % Shouldn't get here
+        fprintf('Editing not supported for node type %s\n', nodeData.type);
+end
+end
+
+function ctxRevealInDesktopCallback(src, evd, this, nodeData) %#ok<INUSL>
+switch nodeData.type
+    case 'class'
+        w = which(nodeData.className);
+        if strfind(w, 'is a built-in')
+            uiwait(errordlg({sprintf('Cannot reveal %s because it is a built-in', ...
+                nodeData.className)}, 'Error'));
+        else
+            mprojectnavigator.Utils.guiRevealFileInDesktopFileBrowser(w);
+        end
+    otherwise
+        % NOP
+end
+end
+
+function out = rejectInheritedDefinitions(defnList, parentDefn)
 % Filters out definitions that were inherited from another class/definer
 if isempty(defnList)
     out = defnList;

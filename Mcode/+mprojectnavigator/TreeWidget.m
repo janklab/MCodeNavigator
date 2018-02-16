@@ -37,26 +37,24 @@ classdef TreeWidget < handle
             this.panel.add(peer.getScrollPane);
         end
         
-        function out = getJTreeFromUiPeer(this, peer)
+        function out = getJTreeFromUiPeer(this, peer) %#ok<INUSL>
             mustBeA(peer, 'com.mathworks.hg.peer.UITreePeer');
             treeScrollPane = peer.getScrollPane;
             out = treeScrollPane.getViewport.getComponent(0);
         end
         
-        function expandNode(this, node, jTreeObj, recurse)
-            mustBeA(jTreeObj, 'javax.swing.JTree');
-            tree = jTreeObj;
-            nodePath = this.treePathForNode(node, tree);
-            tree.expandPath(nodePath);
+        function expandNode(this, node, recurse)
+            nodePath = this.treePathForNode(node, this.jTree);
+            this.jTree.expandPath(nodePath);
             if recurse
                 pause(0.0005); % Pause to allow lazy-loaded children to be filled in
                 for i = 1:node.getChildCount
-                    expandNode(node.getChildAt(i-1), jTreeObj, recurse);
+                    this.expandNode(node.getChildAt(i-1), recurse);
                 end
             end
         end
         
-        function out = treePathForNode(this, node, tree)
+        function out = treePathForNode(this, node, tree) %#ok<INUSL>
             % Get the TreePath to a node
             
             % This is a hack needed because the straight TreePath(rawNodePath)
@@ -69,11 +67,11 @@ classdef TreeWidget < handle
             out = nodePath;
         end
         
-        function out = oldUitreenode(this, x, text, icon, hasChildren)
+        function out = oldUitreenode(this, x, text, icon, hasChildren) %#ok<INUSL>
             % Use the old style uitreenode because it plays well with plain JFrames
             try
                 out = uitreenode('v0', x, text, icon, hasChildren);
-            catch  % old matlab version don't have the 'v0' option
+            catch  % old Matlab versions don't have the 'v0' option
                 out = uitreenode(x, text, icon, hasChildren);
             end
         end
