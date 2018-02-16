@@ -8,6 +8,7 @@ TODO
 * Transparent icons/greyed text for Hidden items
  * Requires a custom variant of the Silk icon set
 * An inheritance hierarchy browser for classes
+* Packages with only package children should not show up in the code navigator flat view
 
 # To Maybe Do
 
