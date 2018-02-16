@@ -72,12 +72,18 @@ classdef Utils
         end
         
         function openTerminalSessionAtDir(dir)
-            if ismac && mprojectnavigator.Utils.isSupportedTerminalInstalled
-                % I can only figure out how to get iTerm working, not Terminal
+            if ismac
+                % Assume that if user bothered to install iTerm, they'd prefer
+                % using it over Terminal.app.
+                useIterm = exist('/Applications/iTerm.app', 'file');
                 resourceDir = [fileparts(mfilename('fullpath')) '/resources'];
-                launcher = [resourceDir '/open_iterm_to_dir.applescript'];
+                if useIterm
+                    launcher = [resourceDir '/open_iterm_to_dir.applescript'];
+                else
+                    launcher = [resourceDir '/open_terminal_to_dir.applescript'];
+                end
                 cmd = sprintf('osascript "%s" "%s"', launcher, dir);
-                system(cmd);
+                [~,~] = system(cmd);
 			elseif ispc
 				% Prefer cygwin, since this is a tool for developers and if they have
 				% it installed, they probably want to use it
@@ -90,14 +96,27 @@ classdef Utils
 					% user's default login shell.
 					cmd = sprintf('start %s\\mintty.exe %s\\bash.exe -l -c "cd ''%s''; exec bash"', ...
 						cygBin, cygBin, cygPath);
-					system(cmd);
+					[~,~] = system(cmd);
 				else
 					% Fall back to Command Prompt
 					launchWindowsCommandPromptAt(dir);
 				end
             else
-                % No other platforms supported
-                error('No supported terminal program found');
+                % Linux: try a couple popular terminals
+                if isUnixCommandOnPath('gnome-terminal')
+                    cmd = sprintf('gnome-terminal --working-directory=''%s''', dir);
+                elseif isUnixCommandOnPath('lxterminal')
+                    cmd = sprintf('lxterminal --working-directory=''%s''', dir);
+                elseif isUnixCommandOnPath('urxvt')
+                    cmd = sprintf('urxvt -c ''%s''', dir);
+                else
+                    % They've gotta at least have xterm
+                    cmd = sprintf('bash -c "cd ''%s''; xterm &"', dir);
+                end
+                [status,msg] = system(cmd);
+                if status ~= 0
+                    error('Failed to launch terminal: %s', msg);
+                end
             end
 		end
 		
@@ -116,5 +135,10 @@ end
 
 function launchWindowsCommandPromptAt(dir)
 cmd = sprintf('start cmd /K "cd /d %s"', dir);
-system(cmd);
+[~,~] = system(cmd);
+end
+
+function out = isUnixCommandOnPath(cmd)
+[status,~] = system('which ''%s''', cmd);
+out = status == 0;
 end

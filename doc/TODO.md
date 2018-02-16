@@ -4,8 +4,6 @@ TODO
 * Multiple pinned roots in file navigator
 * "New..." action in file navigator
 * Refactor classes to move more common tree functionality up into TreeWidget
-* "Terminal Here" action
- * This is surprisingly hard on macOS!
 * Transparent icons/greyed text for Hidden items
  * Requires a custom variant of the Silk icon set
 * Delete files from file navigator
