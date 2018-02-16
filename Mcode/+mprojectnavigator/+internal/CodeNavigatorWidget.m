@@ -359,7 +359,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
                     if ~isempty(found.mfiles) || ~isempty(found.classdirs)
                         out{end+1} = this.codePathsGlobalsNode(nodeData.paths, found);
                     end
-                    pkgs = found.packages;
+                    pkgs = sortCaseInsensitive(found.packages);                    
                     for i = 1:numel(pkgs)
                         out{end+1} = this.packageNode(pkgs{i}); %#ok<AGROW>
                     end
@@ -717,5 +717,10 @@ else
     [~,ix] = sort(lower({defns.Name}));
     out = defns(ix);
 end
+end
+
+function out = sortCaseInsensitive(x)
+[~,ix] = sort(lower(x));
+out = x(ix);
 end
 
