@@ -66,7 +66,7 @@ public class EditorFileTracker implements EditorApplicationListener {
 
     public void newFrontFile(String path) {
         if (path.startsWith("untitled")) {
-            System.out.println("Ignoring untitled file brought to front.");
+            //System.out.println("Ignoring untitled file brought to front.");
             return;
         }
         fireFrontFileChanged(path);
