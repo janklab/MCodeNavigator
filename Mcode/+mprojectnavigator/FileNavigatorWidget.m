@@ -1,7 +1,7 @@
 classdef FileNavigatorWidget < mprojectnavigator.TreeWidget
     
     properties
-        rootPath = pwd;
+        rootPath = getpref(PREFGROUP, 'files_pinnedDir', pwd);
     end
     
     methods
@@ -13,7 +13,7 @@ classdef FileNavigatorWidget < mprojectnavigator.TreeWidget
                 warning('''%s'' is not a directory', newRootPath);
                 return;
             end
-            % HACK: Resolve "." to real path name.
+            % HACK: Resolve "." and Matlab-path-relative paths to real path name.
             % Can't use Java to do this, because it has a different notion of
             % the current directory
             %newRootPath = char(getCanonicalPath(java.io.File(newRootPath)));
@@ -37,6 +37,7 @@ classdef FileNavigatorWidget < mprojectnavigator.TreeWidget
                 end
             end
             this.rootPath = realPath;
+            setpref(PREFGROUP, 'files_pinnedDir', realPath);
             this.refreshGuiForNewPath();
         end
         
