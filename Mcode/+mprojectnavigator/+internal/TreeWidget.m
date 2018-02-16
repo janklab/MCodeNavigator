@@ -50,23 +50,24 @@ classdef TreeWidget < handle
         end
         
         function expandNode(this, node, recurse)
-            nodePath = this.treePathForNode(node, this.jTree);
-            javaMethodEDT('expandPath', this.jTree, nodePath);
+            nodePath = this.treePathForNode(node);
+            EDT('expandPath', this.jTree, nodePath);
+            drawnow(); % Let lazy-loaded children be filled in
             if recurse
-                pause(0.0005); % Pause to allow lazy-loaded children to be filled in
+                %pause(0.0005); % Pause to allow lazy-loaded children to be filled in
                 for i = 1:node.getChildCount
                     this.expandNode(node.getChildAt(i-1), recurse);
                 end
             end
         end
         
-        function out = treePathForNode(this, node, tree) %#ok<INUSL>
-            % Get the TreePath to a node
+        function out = treePathForNode(this, node)
+            % Get the TreePath to a node in this tree
             
             % This is a hack needed because the straight TreePath(rawNodePath)
             % constructor doesn't work, probably due to Matlab/Java autoboxing issues
             rawNodePath = node.getPath;
-            nodePath = tree.getPathForRow(0);
+            nodePath = this.jTree.getPathForRow(0);
             for i = 2:numel(rawNodePath)
                 nodePath = nodePath.pathByAddingChild(rawNodePath(i));
             end

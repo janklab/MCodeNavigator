@@ -106,6 +106,18 @@ public class EditorFileTracker implements EditorApplicationListener {
                 case "CLOSED":
                     dispose();
                     break;
+                case "AUTOSAVE_OPTIONS_CHANGED":
+                    // ignore
+                    break;
+                case "DIRTY_STATE_CHANGED":
+                    // ignore
+                    break;
+                case "DEBUG_MODE_CHANGED":
+                    // ignore
+                    break;
+                case "AUTOSAVED":
+                    // ignore
+                    break;
                 default:
                     System.out.println("Unhandled event from editor "+editor
                     +", event="+editorEvent+", name="+editorEvent.name());

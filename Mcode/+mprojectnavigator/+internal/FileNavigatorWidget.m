@@ -78,7 +78,7 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
         function setUpEditorTracking(this)
             tracker = javaObjectEDT('net.apjanke.mprojectnavigator.swing.EditorFileTracker');
             tracker.setMatlabCallback('mprojectnavigator.internal.editorFileTrackerCallback');
-            javaMethodEDT('attachToMatlab', tracker);
+            EDT('attachToMatlab', tracker);
             this.editorTracker = tracker;
             fprintf('Editor tracking set up\n');
         end
@@ -88,7 +88,7 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
                 return;
             end
             % Currently broken with a ConcurrentModificationException
-            %javaMethodEDT('detachFromMatlab', this.editorTracker);
+            %EDT('detachFromMatlab', this.editorTracker);
             this.editorTracker = [];
         end        
         
@@ -212,34 +212,48 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
             relPath = file(numel(this.rootPath)+2:end);
             relPathParts = strsplit(relPath, filesep);
             % Expand to that file
+            function [found,foundChild] = findPathComponentInChildren(parentNode, part, iPathPart, nPathParts)
+                found = false;
+                foundChild = [];
+                for iChild = 1:parentNode.getChildCount
+                    child = parentNode.getChildAt(iChild-1);
+                    childData = get(child, 'userdata');
+                    if isequal(part, childData.basename)
+                        % Found the next step in the path. Expand it so its
+                        % children are loaded.
+                        if iPathPart < nPathParts
+                            this.expandNode(child, false);
+                        end
+                        foundChild = child;
+                        found = true;
+                        break;
+                    end
+                end
+            end
             node = this.treePeer.getRoot();
             for iPathPart = 1:numel(relPathParts)
                 nodeData = get(node, 'userdata');
                 if ~nodeData.isPopulated
                     this.rePopulateNode(node);
+                    nodeData = get(node, 'userdata'); %#ok<NASGU>
                 end
                 part = relPathParts{iPathPart};
-                found = false;
-                for iChild = 1:node.getChildCount
-                    child = node.getChildAt(iChild-1);
-                    childData = get(child, 'userdata');
-                    if isequal(part, childData.basename)
-                        % Found the next step in the path. Expand it so its
-                        % children are loaded.
-                        if iPathPart < numel(relPathParts)
-                            this.expandNode(child, false);
-                        end
-                        node = child;
-                        found = true;
-                        break;
-                    end
+                [found,foundChild] = findPathComponentInChildren(node, part, ...
+                    iPathPart, numel(relPathParts));
+                if ~found
+                    % Second chance: repopulate in case a file was newly added
+                    this.rePopulateNode(node);
+                    [found,foundChild] = findPathComponentInChildren(node, part, ...
+                        iPathPart, numel(relPathParts));
                 end
                 if ~found
                     fprintf('Could not find file path in tree: %s\n', path);
                     return;
                 end
+                node = foundChild;
             end
             this.treePeer.setSelectedNode(node);
+            EDT('scrollPathToVisible', this.jTree, this.treePathForNode(node));
             % Scroll to make that node visible
         end
         
