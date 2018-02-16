@@ -2,7 +2,7 @@ TODO
 =============
 
 * Delete files from file navigator
-* Detect global functions that are not inside a package
+* Detect global functions and classes that are not inside a package
 * Multiple pinned roots in file navigator
 * Transparent icons/greyed text for Hidden items
  * Requires a custom variant of the Silk icon set
