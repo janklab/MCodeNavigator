@@ -2,6 +2,8 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
     
     properties
         rootPath = getpref(PREFGROUP, 'files_pinnedDir', pwd);
+        syncToEditor = getpref(PREFGROUP, 'files_syncToEditor', false);
+        editorTracker;
     end
     
     methods
@@ -40,6 +42,19 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
             setpref(PREFGROUP, 'files_pinnedDir', realPath);
             this.refreshGuiForNewPath();
         end
+
+        function setSyncToEditor(this, newState)
+            if newState == this.syncToEditor
+                return
+            end
+            this.syncToEditor = newState;
+            if this.syncToEditor
+                this.setUpEditorTracking();
+            else
+                this.tearDownEditorTracking();
+            end
+            setpref(PREFGROUP, 'files_syncToEditor', true);
+        end
         
         function initializeGui(this)
             import java.awt.*
@@ -55,8 +70,27 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
             this.jTree.getSelectionModel.setSelectionMode(javax.swing.tree.TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
             
             this.completeRefreshGui;
+            if this.syncToEditor
+                this.setUpEditorTracking();
+            end
         end
         
+        function setUpEditorTracking(this)
+            tracker = javaObjectEDT('net.apjanke.mprojectnavigator.swing.EditorFileTracker');
+            tracker.setMatlabCallback('mprojectnavigator.internal.editorFileTrackerCallback');
+            javaMethodEDT('attachToMatlab', tracker);
+            this.editorTracker = tracker;
+            fprintf('Editor tracking set up\n');
+        end
+        
+        function tearDownEditorTracking(this)
+            if isempty(this.editorTracker)
+                return;
+            end
+            % Currently broken with a ConcurrentModificationException
+            %javaMethodEDT('detachFromMatlab', this.editorTracker);
+            this.editorTracker = [];
+        end        
         
         function out = setupTreeContextMenu(this, node, nodeData) %#ok<INUSL>
             import javax.swing.*
@@ -76,6 +110,9 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
             menuItemExpandAll = JMenuItem('Expand All');
             menuItemDirUp = JMenuItem('Go Up a Directory');
             menuItemPinThis = JMenuItem('Pin This Directory');
+            menuOptions = JMenu('Options');
+            menuItemSyncToEditor = JCheckBoxMenuItem('Sync to Editor');
+            menuItemSyncToEditor.setSelected(this.syncToEditor);
             
             % Only enable edit if there is a selection or click target
             isTargetFile = (~isempty(nodeData) && nodeData.isFile);
@@ -109,6 +146,7 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
             setCallback(menuItemExpandAll, {@ctxExpandAllCallback, this});
             setCallback(menuItemDirUp, {@ctxDirUpCallback, this});
             setCallback(menuItemPinThis, {@ctxPinThisCallback, this, nodeData});
+            setCallback(menuItemSyncToEditor, {@ctxSyncToEditorCallback, this});
             
             if isTargetEditable
                 jmenu.add(menuItemEdit);
@@ -144,6 +182,9 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
             end
             jmenu.addSeparator;
             jmenu.add(menuItemExpandAll);
+            jmenu.addSeparator;
+            menuOptions.add(menuItemSyncToEditor);
+            jmenu.add(menuOptions);
             
             out = jmenu;
         end
@@ -160,6 +201,48 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
             this.completeRefreshGui;
         end
         
+        function syncToFile(this, file)
+            if ~this.syncToEditor
+                return;
+            end
+            if ~strncmpi(file, this.rootPath, numel(this.rootPath))
+                fprintf('Ignoring file outside of file navigator root: %s\n', file);
+                return;
+            end
+            relPath = file(numel(this.rootPath)+2:end);
+            relPathParts = strsplit(relPath, filesep);
+            % Expand to that file
+            node = this.treePeer.getRoot();
+            for iPathPart = 1:numel(relPathParts)
+                nodeData = get(node, 'userdata');
+                if ~nodeData.isPopulated
+                    this.rePopulateNode(node);
+                end
+                part = relPathParts{iPathPart};
+                found = false;
+                for iChild = 1:node.getChildCount
+                    child = node.getChildAt(iChild-1);
+                    childData = get(child, 'userdata');
+                    if isequal(part, childData.basename)
+                        % Found the next step in the path. Expand it so its
+                        % children are loaded.
+                        if iPathPart < numel(relPathParts)
+                            this.expandNode(child, false);
+                        end
+                        node = child;
+                        found = true;
+                        break;
+                    end
+                end
+                if ~found
+                    fprintf('Could not find file path in tree: %s\n', path);
+                    return;
+                end
+            end
+            this.treePeer.setSelectedNode(node);
+            % Scroll to make that node visible
+        end
+        
         function out = fileTreenode(this, path)
             [~,basename,ext] = fileparts(path);
             basename = [basename ext];
@@ -172,6 +255,7 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
             out = this.oldUitreenode('Some Dummy Text', basename, icon, true);
             nodeData.isDummy = false;
             nodeData.path = path;
+            nodeData.basename = basename;
             nodeData.isDir = isDir;
             nodeData.isFile = ~isDir;
             nodeData.isPopulated = ~isDir;
@@ -211,9 +295,9 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
             out = childNodes;
         end
         
-        function nodeExpanded(this, src, evd) %#ok<INUSL>
+        function rePopulateNode(this, node)
+            nodeData = get(node, 'userdata');
             tree = this.treePeer;
-            node = evd.getCurrentNode;
             % We could check ~tree.isLoaded(node) to avoid re-loading nodes.
             % But that could end up with stale definitions. For now, just always
             % reload nodes, so user can refresh them by re-expanding.
@@ -226,6 +310,13 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
             tree.removeAllChildren(node);
             tree.add(node, jChildNodes);
             tree.setLoaded(node, true);
+            nodeData.isPopulated = true;
+            set(node, 'userdata', nodeData);
+        end
+        
+        function nodeExpanded(this, src, evd) %#ok<INUSL>
+            node = evd.getCurrentNode;
+            this.rePopulateNode(node);
         end
         
         function treeMousePressed(this, hTree, eventData) %#ok<INUSL>
@@ -371,4 +462,6 @@ end
 this.setRootPath(nodeData.path);
 end
 
-
+function ctxSyncToEditorCallback(src, evd, this)
+this.setSyncToEditor(src.isSelected);
+end

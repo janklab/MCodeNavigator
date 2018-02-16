@@ -51,7 +51,7 @@ classdef TreeWidget < handle
         
         function expandNode(this, node, recurse)
             nodePath = this.treePathForNode(node, this.jTree);
-            this.jTree.expandPath(nodePath);
+            javaMethodEDT('expandPath', this.jTree, nodePath);
             if recurse
                 pause(0.0005); % Pause to allow lazy-loaded children to be filled in
                 for i = 1:node.getChildCount

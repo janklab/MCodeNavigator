@@ -47,6 +47,8 @@ else
     elseif isequal(varargin{1}, '-deletesettings')
         mprojectnavigator.internal.Persistence.deleteAllSettings();
         fprintf('MProjectNavigator: All settings deleted.\n');
+    elseif isequal(varargin{1}, '-editorfrontfile')
+        editorFrontFile(varargin{2});
     elseif isequal(varargin{1}(1), '-')
         warning('MProjectNavigator: Unrecognized option: %s', varargin{1});
     else
@@ -102,6 +104,13 @@ end
             % Toggle visibility
             pFrame.setVisible(~pFrame.isVisible);
         end
+    end
+
+    function editorFrontFile(file)
+        if isempty(pFrame)
+            return;
+        end
+        pFileNavigator.syncToFile(file);
     end
 
 end
