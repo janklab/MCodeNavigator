@@ -1,0 +1,16 @@
+Release Process
+===============
+
+To make a release:
+
+* Update VERSION with the right version, removing "-SNAPSHOT"
+* Make a git "vX.Y.Z" version tag
+* Create a git "vX.Y-patches" branch if this is a new major or minor version
+* `make dist`
+* Create a Release on GitHub
+* Upload the dist tarballs to the release
+* Update VERSION with "vX.Y.Z-SNAPSHOT" to open development on the next version
+
+To add later:
+* Upload tarballs to the Matlab File Exchange page
+* Update File Exchange page with release notes

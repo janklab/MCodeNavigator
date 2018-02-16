@@ -1,7 +1,7 @@
 MProjectNavigator
 =====================
 
-MProjectNavigator is a tool for viewing a Matlab project's source tree. This is for use within the Matlab desktop IDE.
+MProjectNavigator is a GUI tool for viewing a Matlab project's source tree. This is for use within the Matlab desktop IDE.
 
 When working in an IDE, I like having a tool that displays the entire source tree of the project I'm working on. Matlab's "Current Directory" window comes close, but not quite, because its file location isn't fixed, and I tend to bounce around a lot of directories when doing Matlab development. MProjectNavigator provides a view of your source tree that is fixed and independent of the current working directory. It also provides a view that lets you browse in terms of the Matlab package/namespace hierarchy, instead of the filesystem layout.
 
@@ -46,7 +46,7 @@ All the classes and functions in the `+mprojectnavigator` package are internal i
 
 MProjectNavigator is written by <a href="https://apjanke.net">Andrew Janke</a>. Source code is available in the <a href="https://github.com/apjanke/MProjectNavigator">MProjectNavigator repo on GitHub</a>.
 
-Bug reports, feedback, and minor bug fix PRs are welcome. Please ask first (by [submitting an issue](https://github.com/apjanke/MProjectNavigator/issues)) before doing PRs for new features or behavior changes. This is a personal project, and I'm finicky about its behavior, so I wouldn't want you to waste time writing code that won't be accepted.
+Bug reports, feedback, feature requests, and minor bug fix PRs are welcome. Please ask first (by [submitting an issue](https://github.com/apjanke/MProjectNavigator/issues)) before doing PRs for new features or behavior changes. This is a personal project, and I'm finicky about its behavior, so I wouldn't want you to waste time writing code that won't be accepted.
 
 See [Developing](doc/Developing.md) for details on hacking MProjectNavigator itself.
 
