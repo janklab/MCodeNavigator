@@ -74,8 +74,15 @@ end
         import java.awt.*
         import javax.swing.*
         
+        framePosn = getpref('MProjectNavigator', 'nav_Position', []);
+        if isempty(framePosn)
+            framePosn = [NaN NaN 350 600];
+        end
         frame = JFrame('Project Navigator');
-        frame.setSize(350, 600);
+        frame.setSize(framePosn(3), framePosn(4));
+        if ~isnan(framePosn(1))
+            frame.setLocation(framePosn(1), framePosn(2));
+        end
         
         tabbedPane = JTabbedPane;
         
@@ -88,8 +95,19 @@ end
         registerHotkeyOnComponent(frame.getContentPane);
         frame.setVisible(true);
         
+        hFrame = handle(frame, 'CallbackProperties');
+        hFrame.ComponentMovedCallback = @framePositionCallback;
+        hFrame.ComponentResizedCallback = @framepositionCallback;
+
         pFrame = frame;
         pFileNavigator = fileNavigator;
+    end
+
+    function framePositionCallback(frame, evd)
+        loc = frame.getLocation;
+        siz = frame.getSize;
+        framePosn = [loc.x loc.y siz.width siz.height];
+        setpref('MProjectNavigator', 'nav_Position', framePosn);
     end
 
     function registerHotkey()
