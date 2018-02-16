@@ -74,10 +74,6 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
             menuItemCopyPath = JMenuItem('Copy Path');
             menuItemCopyRelativePath = JMenuItem('Copy Relative Path');
             menuItemExpandAll = JMenuItem('Expand All');
-            %TODO: Implement the "New" items
-            %menuNew = JMenu('New');
-            %menuItemNewFile = JMenuItem('File...');
-            %menuItemNewDir = JMenuItem('Directory...');
             menuItemDirUp = JMenuItem('Go Up a Directory');
             menuItemPinThis = JMenuItem('Pin This Directory');
             

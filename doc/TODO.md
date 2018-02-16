@@ -3,11 +3,10 @@ TODO
 
 * Multiple pinned roots in file navigator
 * "New..." action in file navigator
-* Refactor classes to move more common tree functionality up into TreeWidget
-* Transparent icons/greyed text for Hidden items
- * Requires a custom variant of the Silk icon set
 * Delete files from file navigator
 * Open files in external programs from file navigator
+* Transparent icons/greyed text for Hidden items
+ * Requires a custom variant of the Silk icon set
 
 # To Maybe Do
 
@@ -16,7 +15,6 @@ TODO
 * Better error reporting for the `FevalAction`. Right now errors are silently swallowed.
 * Multi-column tree view using JIDE's widgets
  * Licensing situation is unclear here
-* About screen
 * Auto-detect new versions and notify user
 
 # TO NOT DO
