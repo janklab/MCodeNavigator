@@ -7,6 +7,7 @@ TODO
 * Open files in external programs from file navigator
 * Transparent icons/greyed text for Hidden items
  * Requires a custom variant of the Silk icon set
+* An inheritance hierarchy browser for classes
 
 # To Maybe Do
 
@@ -16,6 +17,7 @@ TODO
 * Multi-column tree view using JIDE's widgets
  * Licensing situation is unclear here
 * Auto-detect new versions and notify user
+* Text search/filtering on the class/file navigators?
 
 # TO NOT DO
 
