@@ -42,13 +42,15 @@ There's also a keyboard shortcut! Press `Ctrl-Shift-P` to show or hide the navig
 
 All the classes and functions in the `+mprojectnavigator` package are internal implementation details. Don't call them directly.
 
-## Author
+## Author and Development
 
 MProjectNavigator is written by <a href="https://apjanke.net">Andrew Janke</a>. Source code is available in the <a href="https://github.com/apjanke/MProjectNavigator">MProjectNavigator repo on GitHub</a>.
 
 Bug reports, feedback, feature requests, and minor bug fix PRs are welcome. Please ask first (by [submitting an issue](https://github.com/apjanke/MProjectNavigator/issues)) before doing PRs for new features or behavior changes. This is a personal project, and I'm finicky about its behavior, so I wouldn't want you to waste time writing code that won't be accepted.
 
 See [Developing](doc/Developing.md) for details on hacking MProjectNavigator itself.
+
+See the [CHANGELOG](doc/CHANGELOG.md) for release history details.
 
 ## Acknowledgments
 
@@ -63,6 +65,8 @@ This program uses icons from the <a href="http://www.famfamfam.com/lab/icons/sil
 ## Bugs
 
 I think I have a memory leak somewhere. I occasionally get a Java out of memory error when I've been running it for a while. (Though this usually happens when I've viewed large trees, like the MATLAB class definitions in flat package view.)
+
+The icons don't look quite right on Windows in HiDPI mode (e.g. on a 27" Retina 5K iMac). They're too small.
 
 ## Wishlist
 
