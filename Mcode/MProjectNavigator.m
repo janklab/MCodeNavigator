@@ -1,5 +1,18 @@
 function MProjectNavigator(varargin)
-% OOP version of MProjectNavigator
+%MProjectNavigator Viewer GUI tool for a Matlab project structure
+%
+% MProjectNavigator(varargin)
+%
+% Usage:
+%
+% MProjectNavigator
+% MProjectNavigator -pin <path>
+%
+% For this to work, its JAR dependencies must be on the Java classpath. You can
+% set this up by running loadMProjectNavigator(), found in this project's
+% "bootstrap/" directory.
+%
+% Alternately, you can invoke MProjectNavigator with its hotkey, Ctrl-Shift-P.
 
 error(javachk('awt'));
 
@@ -17,6 +30,11 @@ else
         newPinnedPath = varargin{2};
         maybeInitializeGui();
         pFileNavigator.setRootPath(newPinnedPath);
+    elseif isequal(varargin{1}, '-hide')
+        if isempty(pFrame)
+            return;
+        end
+        pFrame.setVisible(false);
     elseif isequal(varargin{1}, '-fresh')
         disposeGui();
         maybeInitializeGui();

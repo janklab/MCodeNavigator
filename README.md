@@ -28,6 +28,18 @@ loadMProjectNavigator
 
 Alternately, if you don't want to modify your `startup.m` file, you can just run `loadMProjectNavigator` each time you want to use the tool. That function takes care of adding all the paths and other initialization. See it for details.
 
+## Usage
+
+All usage is done through a single function, `MProjectNavigator`. Call it to display the navigator window, hide it, or configure it.
+
+```
+MProjectNavigator               % Displays the tool
+MProjectNavigator -hide         % Hides the tool
+MProjectNavigator -pin <path>   % Change the pinned directory in the file navigator
+```
+
+There's also a keyboard shortcut! Press `Ctrl-Shift-P` to show or hide the navigator window.
+
 ## Author
 
 MProjectNavigator is written by <a href="https://apjanke.net">Andrew Janke</a>. Source code is available in the <a href="https://github.com/apjanke/MProjectNavigator">MProjectNavigator repo on GitHub</a>.
