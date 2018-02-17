@@ -24,6 +24,8 @@ function loadMProjectNavigator(varargin)
     addpath(mcodeDir);
     javaaddpath(jarFile);
     
+    mprojectnavigator.Log4jConfigurator.configureBasicConsoleLogging;
+    
     MProjectNavigator -registerhotkey
     
     if doDevKit

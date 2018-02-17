@@ -4,6 +4,8 @@ import com.mathworks.matlab.api.editor.*;
 import com.mathworks.mde.desk.MLDesktop;
 import com.mathworks.mde.editor.MatlabEditorApplication;
 import com.mathworks.jmi.Matlab;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.List;
@@ -16,6 +18,8 @@ import static java.util.Objects.requireNonNull;
  * Tracks which file is frontmost in the Matlab editor, and notifies a Matlab clients upon changes.
  */
 public class EditorFileTracker implements EditorApplicationListener {
+
+    private static final Logger log = LoggerFactory.getLogger(EditorFileTracker.class);
 
     private EditorApplication editorApplication;
     private Map<Editor,EditorListener> editors = new HashMap<>();
@@ -103,12 +107,14 @@ public class EditorFileTracker implements EditorApplicationListener {
 
         @Override
         public void eventOccurred(EditorEvent editorEvent) {
+            log.debug("Editor {}: {}", editorEvent.name(), editor);
             switch (editorEvent.name()) {
                 case "ACTIVATED":
                     String path = editor.getLongName();
                     newFrontFile(path);
                     break;
                 case "CLOSED":
+                    log.debug("Editor CLOSED: {}", editor);
                     dispose();
                     break;
                 case "AUTOSAVE_OPTIONS_CHANGED":
@@ -124,8 +130,7 @@ public class EditorFileTracker implements EditorApplicationListener {
                     // ignore
                     break;
                 default:
-                    System.err.println("Unhandled event from editor "+editor
-                    +", event="+editorEvent+", name="+editorEvent.name());
+                    log.warn("Unrecognized editor event: {}: {}", editorEvent.name(), editor);
             }
         }
     }

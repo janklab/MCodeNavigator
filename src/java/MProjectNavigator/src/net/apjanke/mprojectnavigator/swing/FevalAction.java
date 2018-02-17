@@ -3,11 +3,13 @@ package net.apjanke.mprojectnavigator.swing;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import com.mathworks.jmi.Matlab;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
 
 /**
- * An Action which performs an mtFeval() upon invocation.
+ * An Action which performs an feval() upon invocation.
  *
  * This is used in the construction of hybrid Matlab/Java Swing GUIs.
  *
@@ -15,6 +17,8 @@ import static java.util.Objects.requireNonNull;
  * define Java subclasses from it.
  */
 public class FevalAction extends AbstractAction {
+    private static final Logger log = LoggerFactory.getLogger(FevalAction.class);
+
     final String functionName;
     final Object[] functionArgs;
     final int nFunctionOutputs;
@@ -46,12 +50,14 @@ public class FevalAction extends AbstractAction {
         try {
             Matlab ml = new Matlab();
             if (isDisplayConsoleOutput()) {
+                log.debug("invokeFunction(): fevalConsoleOutput({}, {})", functionName, functionArgs);
                 ml.fevalConsoleOutput(functionName, functionArgs);
             } else {
+                log.debug("invokeFunction(): fevalNoOutput({}, {})", functionName, functionArgs);
                 ml.fevalNoOutput(functionName, functionArgs);
             }
-            //System.err.format("FevalAction.invokeFunction(): success: %s(%s)\n", functionName, functionArgs);
         } catch (Exception err) {
+            //TODO: Should this be converted to an SLFJ call?
             System.err.println("Error in FevalAction callback");
             System.err.format("  Failed calling %s with arguments %s, %d outputs",
                     functionName, functionArgs, nFunctionOutputs);

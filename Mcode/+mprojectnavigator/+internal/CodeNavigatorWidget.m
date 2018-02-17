@@ -368,6 +368,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         end
         
         function nodeExpanded(this, src, evd) %#ok<INUSL>
+            logdebug('nodeExpanded');
             node = evd.getCurrentNode;
             this.populateNode(node);
         end
@@ -415,9 +416,11 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         function out = buildChildNodes(this, node)
             out = {};
             nodeData = get(node, 'userdata');
+            logdebug('buildChildNodes: {}', nodeData.type);
             switch nodeData.type
                 case 'root'
                     % NOP: Shouldn't get here
+                    logwarn('buildChildNodes: attempt to build nodes for root node. Shouldn''t happen');
                 case 'codepaths'
                     listMode = ifthen(this.flatPackageView, 'flat', 'nested');
                     found = scanCodeRoots(nodeData.paths, listMode);
@@ -608,7 +611,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
                         for i = 1:numel(pkgEls)
                             parentNode = getChildNodeByName(parentNode, ['+' pkgEls{i}]);
                             if isempty(parentNode)
-                                fprintf('Definition not found in code base: missing parent package for %s\n', ...
+                                logwarn('Definition not found in code base: missing parent package for %s\n', ...
                                     defn.name);
                                 return;
                             end

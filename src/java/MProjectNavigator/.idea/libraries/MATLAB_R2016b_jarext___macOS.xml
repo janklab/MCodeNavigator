@@ -1,0 +1,149 @@
+<component name="libraryTable">
+  <library name="MATLAB_R2016b-jarext - macOS">
+    <CLASSES>
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/access-bridge.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/annotations.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/ant-launcher.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/ant.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/antlr.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/avalon-framework-api.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/avalon-framework-impl.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/batik-anim.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/batik-awt-util.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/batik-bridge.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/batik-codec.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/batik-css.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/batik-dom.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/batik-ext.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/batik-extension.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/batik-gui-util.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/batik-gvt.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/batik-parser.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/batik-script.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/batik-svg-dom.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/batik-svggen.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/batik-swing.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/batik-transcoder.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/batik-util.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/batik-xml.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/bluecove-emu.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/bluecove.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/commons-cli.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/commons-codec.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/commons-collections-generic.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/commons-collections.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/commons-compress.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/commons-io.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/commons-lang.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/commons-logging.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/commons-net.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/dom4j.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/dws_client.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/felix.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/fontbox.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/fop.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/foxtrot.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/glazedlists_java15.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/gluegen-rt.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/google-collect.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/helpsearch.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/jaccess-1_4.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/jaxen.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/jdom.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/jempbox.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/jgoodies-forms.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/jgoodies-looks.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/jogl-all.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/jsch.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/log4j.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/lucene-analyzers-common.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/lucene-core.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/lucene-highlighter.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/lucene-memory.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/lucene-queries.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/lucene-queryparser.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/lucene-sandbox.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/mwaws_client.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/nekohtml.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/openxml4j.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/pdfbox.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/RXTXcomm.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/saxon.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/saxon9-ant.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/saxon9-dom.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/saxon9-dom4j.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/saxon9-jdom.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/saxon9-s9api.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/saxon9-sql.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/saxon9-xom.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/saxon9-xpath.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/saxon9-xqj.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/saxon9.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/scr.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/search.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/tablelayout.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/TimingFramework.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/xercesImpl.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/xml-apis-ext.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/xml-apis.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/xmlgraphics-commons.jar!/" />
+      <root url="file:///Applications/MATLAB_R2016b.app/java/jarext/axis2" />
+      <root url="file:///Applications/MATLAB_R2016b.app/java/jarext/guice" />
+      <root url="file:///Applications/MATLAB_R2016b.app/java/jarext/ice" />
+      <root url="file:///Applications/MATLAB_R2016b.app/java/jarext/jgit" />
+      <root url="file:///Applications/MATLAB_R2016b.app/java/jarext/jide" />
+      <root url="file:///Applications/MATLAB_R2016b.app/java/jarext/jung" />
+      <root url="file:///Applications/MATLAB_R2016b.app/java/jarext/jxbrowser" />
+      <root url="file:///Applications/MATLAB_R2016b.app/java/jarext/jxbrowser-chromium" />
+      <root url="file:///Applications/MATLAB_R2016b.app/java/jarext/lais_server_impl" />
+      <root url="file:///Applications/MATLAB_R2016b.app/java/jarext/lais_server_java_api" />
+      <root url="file:///Applications/MATLAB_R2016b.app/java/jarext/slf4j" />
+      <root url="file:///Applications/MATLAB_R2016b.app/java/jarext/sqlite4java" />
+      <root url="file:///Applications/MATLAB_R2016b.app/java/jarext/svnkit" />
+      <root url="file:///Applications/MATLAB_R2016b.app/java/jarext/webservices" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/aps_api/pubsub_api_java/pubsub_api_java.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/aps_impl/pubsub_impl_java/pubsub_impl.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/connector_api/connector_api_java/connector_interface.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/connector_api/connector_api_java/message_service_interface.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/connector_api/cosg_api_java/cosg_java_api.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/connector_api/file_service_api_java/file_service_java_api.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/connector_api/msscommon/msscommon.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/connector_api/peer_model_api_java/peer_model_java_api.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/connector_impl/connector_impl_java/connector-bundle.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/connector_impl/cosg_impl_java/cosg_impl.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/connector_impl/file_service/file_service.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/connector_impl/mgg_server/mgg_server.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/connector_impl/peer_model_impl_java/peer_model_impl.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/connector_impl/peer_synchronizer/peer_synchronizer.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/webservices/authenticationws_client/authenticationws_client.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/webservices/gds_client/mw-gds-client.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/webservices/mcr_dws_client/mcr_dws_client.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/webservices/mwlic_client/mw-license-server-client.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/webservices/ssi_dws_client/ssi_dws_client.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/webservices/udc_client/udc_client.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/webservices/udc_client_ssi/udc_client_ssi.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/webservices/urlmanager/urlmanager.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/webservices/ws_client_core/mw-service-client-core.jar!/" />
+      <root url="jar:///Applications/MATLAB_R2016b.app/java/jarext/webservices/ws_usagedata_client/usagedata-client.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <NATIVE>
+      <root url="file:///Applications/MATLAB_R2016b.app/java/jarext/sqlite4java" />
+    </NATIVE>
+    <SOURCES />
+    <jarDirectory url="file:///Applications/MATLAB_R2016b.app/java/jarext/axis2" recursive="false" />
+    <jarDirectory url="file:///Applications/MATLAB_R2016b.app/java/jarext/guice" recursive="false" />
+    <jarDirectory url="file:///Applications/MATLAB_R2016b.app/java/jarext/ice" recursive="false" />
+    <jarDirectory url="file:///Applications/MATLAB_R2016b.app/java/jarext/jgit" recursive="false" />
+    <jarDirectory url="file:///Applications/MATLAB_R2016b.app/java/jarext/jide" recursive="false" />
+    <jarDirectory url="file:///Applications/MATLAB_R2016b.app/java/jarext/jung" recursive="false" />
+    <jarDirectory url="file:///Applications/MATLAB_R2016b.app/java/jarext/jxbrowser" recursive="false" />
+    <jarDirectory url="file:///Applications/MATLAB_R2016b.app/java/jarext/jxbrowser-chromium" recursive="false" />
+    <jarDirectory url="file:///Applications/MATLAB_R2016b.app/java/jarext/lais_server_impl" recursive="false" />
+    <jarDirectory url="file:///Applications/MATLAB_R2016b.app/java/jarext/lais_server_java_api" recursive="false" />
+    <jarDirectory url="file:///Applications/MATLAB_R2016b.app/java/jarext/slf4j" recursive="false" />
+    <jarDirectory url="file:///Applications/MATLAB_R2016b.app/java/jarext/sqlite4java" recursive="false" />
+    <jarDirectory url="file:///Applications/MATLAB_R2016b.app/java/jarext/svnkit" recursive="false" />
+    <jarDirectory url="file:///Applications/MATLAB_R2016b.app/java/jarext/webservices" recursive="false" />
+  </library>
+</component>

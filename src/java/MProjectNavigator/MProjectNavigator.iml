@@ -8,5 +8,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="MATLAB_R2016b - macOS" level="project" />
+    <orderEntry type="library" name="MATLAB_R2016b-jarext - macOS" level="project" />
   </component>
 </module>

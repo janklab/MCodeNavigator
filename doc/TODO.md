@@ -1,20 +1,20 @@
 TODO
 =============
 
+* Scroll-to-displayed-node is not working in the Classes view
 * Multiple pinned roots in file navigator
  * Or new "code roots" navigator
+* Smart refreshing upon file changes
 * "New..." action in file navigator
 * Delete files from file navigator
 * Open files in external programs from file navigator
 * Transparent icons/greyed text for Hidden items
  * Requires a custom variant of the Silk icon set
 * An inheritance hierarchy browser for classes
-* Scroll-to-displayed-node is not working in the Classes view
 
 # To Maybe Do
 
 * "About" box
-* Smart refreshing upon file changes
 * Better error reporting for the `FevalAction`. Right now errors are silently swallowed.
 * Multi-column tree view using JIDE's widgets
  * Licensing situation is unclear here
