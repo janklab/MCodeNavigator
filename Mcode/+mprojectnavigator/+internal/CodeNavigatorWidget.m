@@ -352,6 +352,15 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             tree.setLoaded(node, true);
         end
         
+        function out = rejectPackagesWithNoImmediateMembers(this, pkgNames)
+            tf = true(size(pkgNames));
+            for i = 1:numel(pkgNames)
+                pkg = meta.package.fromName(pkgNames{i});
+                tf(i) = ~isempty(pkg.ClassList) || ~isempty(pkg.FunctionList);
+            end
+            out = pkgNames(tf);
+        end
+        
         function out = buildChildNodes(this, node)
             out = {};
             nodeData = get(node, 'userdata');
@@ -364,7 +373,10 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
                     if ~isempty(found.mfiles) || ~isempty(found.classdirs)
                         out{end+1} = this.codePathsGlobalsNode(nodeData.paths, found);
                     end
-                    pkgs = sortCaseInsensitive(found.packages);                    
+                    pkgs = sortCaseInsensitive(found.packages);
+                    if this.flatPackageView
+                        pkgs = this.rejectPackagesWithNoImmediateMembers(pkgs);
+                    end
                     for i = 1:numel(pkgs)
                         out{end+1} = this.packageNode(pkgs{i}); %#ok<AGROW>
                     end
