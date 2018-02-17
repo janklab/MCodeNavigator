@@ -616,17 +616,13 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             logdebugf('removing %d nodes: %s', numel(nodesToRemoveNames), ...
                 strjoin(nodesToRemoveNames, ', '));
             [~,ixNodesToRemove] = ismember(nodesToRemoveNames, childNodeValues);
-            for i = numel(ixNodesToRemove):-1:1
-                this.treePeer.remove(node, node.getChildAt(i-1));
-            end
-            % BUG: if only one node is added, the tree doesn't recognize it.
-            % Prob due to a difference between add(node) and add(node[]) in
-            % UITreePeer.
+            ixNodesToRemove = sort(ixNodesToRemove);
+            this.treePeer.remove(node, ixNodesToRemove-1);
             logdebugf('adding %d nodes: %s', numel(nodesToAdd), ...
                 strjoin(nodesToAddNames, ', '));
             nodesToAdd = [nodesToAdd{:}];
             if ~isempty(nodesToAdd)
-                this.treePeer.addMulti(node, nodesToAdd);
+                this.treePeer.add(node, nodesToAdd);
             end
             nodeData.isPopulated = true;
             set(node, 'userdata', nodeData);
@@ -660,8 +656,6 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             else
                 if isempty(child)
                     this.treePeer.add(node, this.buildPropertyGroupNode(klass));
-                    logdebugf('refreshClassNode(): %s: added Properties node', ...
-                        nodeData.name);
                 end
             end
             % Methods
@@ -673,8 +667,6 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             else
                 if isempty(child)
                     this.treePeer.add(node, this.buildMethodGroupNode(klass));
-                    logdebugf('refreshClassNode(): %s: added Methods node', ...
-                        nodeData.name);
                 end
             end
             % Events
@@ -686,8 +678,6 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             else
                 if isempty(child)
                     this.treePeer.add(node, this.buildEventGroupNode(klass));
-                    logdebugf('refreshClassNode(): %s: added Events node', ...
-                        nodeData.name);
                 end
             end
             % Enumerations
@@ -699,8 +689,6 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             else
                 if isempty(child)
                     this.treePeer.add(node, this.buildEnumerationGroupNode(klass));
-                    logdebugf('refreshClassNode(): %s: added Enumerations node', ...
-                        nodeData.name);
                 end
             end
             % Superclasses
@@ -712,8 +700,6 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             else
                 if isempty(child)
                     this.treePeer.add(node, this.buildSuperclassGroupNode(klass));
-                    logdebugf('refreshClassNode(): %s: added Superclasses node', ...
-                        nodeData.name);
                 end
             end
             
