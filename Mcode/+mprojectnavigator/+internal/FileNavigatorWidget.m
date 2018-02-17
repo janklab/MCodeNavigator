@@ -80,7 +80,7 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
             tracker.setMatlabCallback('mprojectnavigator.internal.editorFileTrackerCallback');
             EDT('attachToMatlab', tracker);
             this.editorTracker = tracker;
-            fprintf('Editor tracking set up\n');
+            %fprintf('Editor tracking set up\n');
         end
         
         function tearDownEditorTracking(this)
