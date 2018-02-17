@@ -13,7 +13,8 @@ function loadMProjectNavigator(varargin)
     % This load step is necessary, unfortunately, because MProjectNavigator uses
     % custom Java components.
     
-    doDevKit = ismember(varargin, '-dev');
+    doDevKit = ismember('-dev', varargin);
+    doDebug = ismember('-debug', varargin);
     
     thisFile = mfilename('fullpath');
     distDir = fileparts(fileparts(thisFile));
@@ -25,6 +26,11 @@ function loadMProjectNavigator(varargin)
     javaaddpath(jarFile);
     
     mprojectnavigator.Log4jConfigurator.configureBasicConsoleLogging;
+    if doDebug
+        % Need to set this now so it's active during the initial
+        % MProjectNavigator call.
+        mprojectnavigator.Log4jConfigurator.setLevels({'root','DEBUG'});
+    end
     
     MProjectNavigator -registerhotkey
     

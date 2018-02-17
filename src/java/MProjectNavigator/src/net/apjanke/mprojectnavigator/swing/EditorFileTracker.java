@@ -2,6 +2,7 @@ package net.apjanke.mprojectnavigator.swing;
 
 import com.mathworks.matlab.api.editor.*;
 import com.mathworks.mde.desk.MLDesktop;
+import com.mathworks.mde.editor.EditorViewClient;
 import com.mathworks.mde.editor.MatlabEditorApplication;
 import com.mathworks.jmi.Matlab;
 import org.slf4j.Logger;
@@ -34,6 +35,14 @@ public class EditorFileTracker implements EditorApplicationListener {
         for (Editor editor : allEditors) {
             listenToEditor(editor);
         }
+        // Detect current front file
+        EditorViewClient viewClient = MatlabEditorApplication.getLastActiveEditorViewClient();
+        if (viewClient != null) {
+            Editor editor = viewClient.getEditor();
+            lastFrontFile = editor.getLongName();
+            log.debug("Initial front editor file: {}", lastFrontFile);
+            // TODO: Should this raise a newFrontFile event?
+        }
     }
 
     public void detachFromMatlab() {
@@ -41,7 +50,6 @@ public class EditorFileTracker implements EditorApplicationListener {
         for (Editor editor : editors.keySet()) {
             EditorListener listener = editors.get(editor);
             listener.dispose();
-            //editors.remove(editor);
         }
         editors = new HashMap<>();
         editorApplication = null;
@@ -107,10 +115,19 @@ public class EditorFileTracker implements EditorApplicationListener {
 
         @Override
         public void eventOccurred(EditorEvent editorEvent) {
-            log.debug("Editor {}: {}", editorEvent.name(), editor);
+            if (! "DEBUG_MODE_CHANGED".equals(editorEvent.name())) {
+                // debug changes are too noisy; suppress them.
+                log.debug("Editor {}: {} ({})", editorEvent.name(),
+                        editor, editor.getShortName());
+            }
+            String path;
             switch (editorEvent.name()) {
                 case "ACTIVATED":
-                    String path = editor.getLongName();
+                    path = editor.getLongName();
+                    newFrontFile(path);
+                    break;
+                case "RENAMED":
+                    path = editor.getLongName();
                     newFrontFile(path);
                     break;
                 case "CLOSED":

@@ -89,6 +89,7 @@ classdef Navigator < handle
             if ~this.syncToEditor
                 return;
             end
+            logdebugf('editorFrontFileChanged: %s', file);
             this.fileNavigator.revealFile(file);
             % Find out what that file defines, and update the code navigator
             defn = this.codebase.defnForMfile(file);
@@ -100,7 +101,7 @@ classdef Navigator < handle
             tracker.setMatlabCallback('mprojectnavigator.internal.editorFileTrackerCallback');
             EDT('attachToMatlab', tracker);
             this.editorTracker = tracker;
-            fprintf('setUpEditorTracking(): done\n');
+            logdebug('setUpEditorTracking(): done');
         end
         
         function tearDownEditorTracking(this)
@@ -109,7 +110,7 @@ classdef Navigator < handle
             end
             EDT('detachFromMatlab', this.editorTracker);
             this.editorTracker = [];
-            fprintf('tearDownEditorTracking(): done\n');
+            logdebug('tearDownEditorTracking(): done');
         end
         
     end

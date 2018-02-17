@@ -1,6 +1,8 @@
 function loggerCallImpl(logLevel, msg, args)
 %LOGGERCALLIMPL Implementation for the top-level logger functions
 
+if nargin < 3;  args = {};  end
+
 strStack = evalc('dbstack(2)');
 stackLine = regexprep(strStack, '\n.+', '');
 caller = regexp(stackLine, '>([^<>]+)<', 'once', 'tokens');

@@ -24,8 +24,8 @@ classdef TreeWidget < handle
             import javax.swing.*
             import java.awt.*
             
-            peer = com.mathworks.hg.peer.UITreePeer;
-            try peer = javaObjectEDT(peer); catch; end
+            peer = javaObjectEDT('net.apjanke.mprojectnavigator.swing.UITreePeer2');
+            %try peer = javaObjectEDT(peer); catch; end
             this.treePeer = peer;
             peer_h = handle(peer, 'CallbackProperties');
             this.treePeerHandle = peer_h;
@@ -69,6 +69,25 @@ classdef TreeWidget < handle
                     this.expandNode(node.getChildAt(i-1), recurse);
                 end
             end
+        end
+        
+        function removeNodesByIndex(this, node, ix)
+        % Remove nodes, properly updating the tree
+        %
+        % BUG: This is not currently working! The attempted removal has no
+        % effect.
+        %
+        % This is a hack needed because the Matlab UITreePeer class does not
+        % seem to fire nodesWereRemoved() events when calling its remove()
+        % method instead of removeAll.
+        %
+        % nodesWereRemoved(node, indexes) takes the parent node the nodes were
+        % removed from, and an array of child indexes under it
+        ix = ix - 1; % Switch to zero-indexing for Java
+        for i = 1:numel(ix)
+            EDT('remove', node, ix(i));
+        end
+        EDT('nodesWereRemoved', this.treePeer, node, ix);
         end
         
         function out = treePathForNode(this, node)
