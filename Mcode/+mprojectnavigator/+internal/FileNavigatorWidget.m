@@ -176,7 +176,7 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
             for iPathPart = 1:numel(relPathParts)
                 nodeData = get(node, 'userdata');
                 if ~nodeData.isPopulated
-                    this.rePopulateNode(node);
+                    this.repopulateNode(node);
                     nodeData = get(node, 'userdata'); %#ok<NASGU>
                 end
                 part = relPathParts{iPathPart};
@@ -184,7 +184,7 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
                     iPathPart, numel(relPathParts));
                 if ~found
                     % Second chance: repopulate in case a file was newly added
-                    this.rePopulateNode(node);
+                    this.repopulateNode(node);
                     [found,foundChild] = findPathComponentInChildren(node, part, ...
                         iPathPart, numel(relPathParts));
                 end
@@ -195,7 +195,7 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
                 node = foundChild;
             end
             this.setSelectedNode(node);
-            EDT('scrollPathToVisible', this.jTree, this.treePathForNode(node));
+            this.scrollToNode(node);
             % Scroll to make that node visible
         end
         
@@ -234,7 +234,7 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
             set(out, 'userdata', nodeData);
         end
         
-        function out = buildChildNodes(this, node, tree) %#ok<INUSD>
+        function out = buildChildNodes(this, node)
             nodeData = get(node, 'userdata');
             file = nodeData.path;
             childNodes = {};
@@ -252,13 +252,13 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
             out = childNodes;
         end
         
-        function rePopulateNode(this, node)
+        function repopulateNode(this, node)
             nodeData = get(node, 'userdata');
             tree = this.treePeer;
             % We could check ~tree.isLoaded(node) to avoid re-loading nodes.
             % But that could end up with stale definitions. For now, just always
             % reload nodes, so user can refresh them by re-expanding.
-            newChildNodes = this.buildChildNodes(node, tree);
+            newChildNodes = this.buildChildNodes(node);
             % Only this array-based adding method seems to work properly
             jChildNodes = javaArray('com.mathworks.hg.peer.UITreeNode', numel(newChildNodes));
             for i = 1:numel(newChildNodes)
@@ -271,9 +271,17 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
             set(node, 'userdata', nodeData);
         end
         
+        function populateNode(this, node)
+            nodeData = get(node, 'userdata');
+            if nodeData.isPopulated
+                return
+            end
+            this.repopulateNode(node);
+        end
+        
         function nodeExpanded(this, src, evd) %#ok<INUSL>
             node = evd.getCurrentNode;
-            this.rePopulateNode(node);
+            this.repopulateNode(node);
         end
         
         function treeMousePressed(this, hTree, eventData) %#ok<INUSL>

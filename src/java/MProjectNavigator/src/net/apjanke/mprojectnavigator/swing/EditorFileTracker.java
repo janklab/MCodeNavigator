@@ -19,6 +19,7 @@ public class EditorFileTracker implements EditorApplicationListener {
 
     private EditorApplication editorApplication;
     private Map<Editor,EditorListener> editors = new HashMap<>();
+    private String lastFrontFile = "";
 
     private String fevalFunction;
 
@@ -65,7 +66,10 @@ public class EditorFileTracker implements EditorApplicationListener {
     }
 
     public void newFrontFile(String path) {
-        System.out.format("newFrontFile(): %s\n", path);
+        if (path.equals(lastFrontFile)) {
+            // No change; no need to raise event
+            return;
+        }
         if (path.startsWith("untitled")) {
             //System.out.println("Ignoring untitled file brought to front.");
             return;
@@ -101,12 +105,10 @@ public class EditorFileTracker implements EditorApplicationListener {
         public void eventOccurred(EditorEvent editorEvent) {
             switch (editorEvent.name()) {
                 case "ACTIVATED":
-                    System.out.format("ACTIVATED: %s\n", editor.getLongName());
                     String path = editor.getLongName();
                     newFrontFile(path);
                     break;
                 case "CLOSED":
-                    System.out.format("CLOSED: %s\n", editor.getLongName());
                     dispose();
                     break;
                 case "AUTOSAVE_OPTIONS_CHANGED":
@@ -122,7 +124,7 @@ public class EditorFileTracker implements EditorApplicationListener {
                     // ignore
                     break;
                 default:
-                    System.out.println("Unhandled event from editor "+editor
+                    System.err.println("Unhandled event from editor "+editor
                     +", event="+editorEvent+", name="+editorEvent.name());
             }
         }

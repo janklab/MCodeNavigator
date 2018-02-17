@@ -11,6 +11,7 @@ classdef Navigator < handle
         % Whether to keep node selections in sync with Matlab's editor
         syncToEditor = getpref(PREFGROUP, 'files_syncToEditor', false);
         editorTracker;
+        codebase;
     end
     properties (Dependent)
         Visible
@@ -20,6 +21,7 @@ classdef Navigator < handle
         function this = Navigator()
             this.fileNavigator = mprojectnavigator.internal.FileNavigatorWidget(this);
             this.codeNavigator = mprojectnavigator.internal.CodeNavigatorWidget(this);
+            this.codebase = mprojectnavigator.internal.CodeBase;
             this.initializeGui();
         end
         
@@ -88,6 +90,9 @@ classdef Navigator < handle
                 return;
             end
             this.fileNavigator.revealFile(file);
+            % Find out what that file defines, and update the code navigator
+            defn = this.codebase.defnForMfile(file);
+            this.codeNavigator.revealDefn(defn, file);
         end
 
         function setUpEditorTracking(this)

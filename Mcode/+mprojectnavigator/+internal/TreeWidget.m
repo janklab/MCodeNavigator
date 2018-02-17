@@ -63,9 +63,8 @@ classdef TreeWidget < handle
             end
             nodePath = this.treePathForNode(node);
             EDT('expandPath', this.jTree, nodePath);
-            drawnow(); % Let lazy-loaded children be filled in
+            pause(0.0005); % Pause to allow lazy-loaded children to be filled in
             if isequal(mode, 'recurse')
-                %pause(0.0005); % Pause to allow lazy-loaded children to be filled in
                 for i = 1:node.getChildCount
                     this.expandNode(node.getChildAt(i-1), recurse);
                 end
@@ -98,6 +97,10 @@ classdef TreeWidget < handle
         
         function setSelectedNode(this, node)
             this.treePeer.setSelectedNode(node);
+        end
+        
+        function scrollToNode(this, node)
+            EDT('scrollPathToVisible', this.jTree, this.treePathForNode(node));
         end
         
         function out = oldUitreenode(this, x, text, icon, hasChildren) %#ok<INUSL>

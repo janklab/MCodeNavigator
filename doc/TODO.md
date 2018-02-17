@@ -9,6 +9,7 @@ TODO
 * Transparent icons/greyed text for Hidden items
  * Requires a custom variant of the Silk icon set
 * An inheritance hierarchy browser for classes
+* Scroll-to-displayed-node is not working in the Classes view
 
 # To Maybe Do
 
