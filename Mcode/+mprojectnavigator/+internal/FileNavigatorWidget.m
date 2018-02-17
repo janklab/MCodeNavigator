@@ -2,58 +2,13 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
     
     properties
         rootPath = getpref(PREFGROUP, 'files_pinnedDir', pwd);
-        syncToEditor = getpref(PREFGROUP, 'files_syncToEditor', false);
-        editorTracker;
+        navigator
     end
     
     methods
-        function this = FileNavigatorWidget()
-        end
-        
-        function setRootPath(this, newRootPath)
-            if ~isdir(newRootPath) %#ok
-                warning('''%s'' is not a directory', newRootPath);
-                return;
-            end
-            % HACK: Resolve "." and Matlab-path-relative paths to real path name.
-            % Can't use Java to do this, because it has a different notion of
-            % the current directory
-            %newRootPath = char(getCanonicalPath(java.io.File(newRootPath)));
-            if isequal(newRootPath, '.')
-                newRootPath = pwd;
-            end
-            realPath = [];
-            if isFolder(newRootPath)
-                realPath = newRootPath;
-            else
-                mp = strsplit(path, ':');
-                for i = 1:numel(mp)
-                    candidatePath = fullfile(mp{i}, newRootPath);
-                    if isFolder(candidatePath)
-                        realPath = candidatePath;
-                    end
-                end
-                if isempty(realPath)
-                    warning('Could not resolve directory ''%s''', newRootPath);
-                    return;
-                end
-            end
-            this.rootPath = realPath;
-            setpref(PREFGROUP, 'files_pinnedDir', realPath);
-            this.refreshGuiForNewPath();
-        end
-
-        function setSyncToEditor(this, newState)
-            if newState == this.syncToEditor
-                return
-            end
-            this.syncToEditor = newState;
-            if this.syncToEditor
-                this.setUpEditorTracking();
-            else
-                this.tearDownEditorTracking();
-            end
-            setpref(PREFGROUP, 'files_syncToEditor', true);
+        function this = FileNavigatorWidget(parentNavigator)
+            this.navigator = parentNavigator;
+            this.initializeGui;
         end
         
         function initializeGui(this)
@@ -70,32 +25,22 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
             this.jTree.getSelectionModel.setSelectionMode(javax.swing.tree.TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
             
             this.completeRefreshGui;
-            if this.syncToEditor
-                this.setUpEditorTracking();
-            end
         end
-        
-        function setUpEditorTracking(this)
-            tracker = javaObjectEDT('net.apjanke.mprojectnavigator.swing.EditorFileTracker');
-            tracker.setMatlabCallback('mprojectnavigator.internal.editorFileTrackerCallback');
-            EDT('attachToMatlab', tracker);
-            this.editorTracker = tracker;
-            %fprintf('Editor tracking set up\n');
+                
+        function setRootPath(this, newPath)
+            this.rootPath = newPath;
+            setpref(PREFGROUP, 'files_pinnedDir', newPath);
+            this.refreshGuiForNewPath();
         end
-        
-        function tearDownEditorTracking(this)
-            if isempty(this.editorTracker)
-                return;
-            end
-            % Currently broken with a ConcurrentModificationException
-            %EDT('detachFromMatlab', this.editorTracker);
-            this.editorTracker = [];
-        end        
-        
+
         function out = setupTreeContextMenu(this, node, nodeData) %#ok<INUSL>
             import javax.swing.*
             
             fileShellName = mprojectnavigator.internal.Utils.osFileBrowserName;
+            
+            if ~isempty(node) && ~this.isInSelection(node)
+                this.setSelectedNode(node);
+            end
             
             jmenu = JPopupMenu;
             menuItemEdit = JMenuItem('Edit');
@@ -112,7 +57,7 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
             menuItemPinThis = JMenuItem('Pin This Directory');
             menuOptions = JMenu('Options');
             menuItemSyncToEditor = JCheckBoxMenuItem('Sync to Editor');
-            menuItemSyncToEditor.setSelected(this.syncToEditor);
+            menuItemSyncToEditor.setSelected(this.navigator.syncToEditor);
             
             % Only enable edit if there is a selection or click target
             isTargetFile = (~isempty(nodeData) && nodeData.isFile);
@@ -194,17 +139,14 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
             this.treePeer.setRoot(root);
             pause(0.005); % Allow widgets to catch up
             % Expand the root node one level
-            this.expandNode(root, false);
+            this.expandNode(root);
         end
         
         function refreshGuiForNewPath(this)
             this.completeRefreshGui;
         end
         
-        function syncToFile(this, file)
-            if ~this.syncToEditor
-                return;
-            end
+        function revealFile(this, file)
             if ~strncmpi(file, this.rootPath, numel(this.rootPath))
                 % fprintf('Ignoring file outside of file navigator root: %s\n', file);
                 return;
@@ -222,7 +164,7 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
                         % Found the next step in the path. Expand it so its
                         % children are loaded.
                         if iPathPart < nPathParts
-                            this.expandNode(child, false);
+                            this.expandNode(child);
                         end
                         foundChild = child;
                         found = true;
@@ -252,7 +194,7 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
                 end
                 node = foundChild;
             end
-            this.treePeer.setSelectedNode(node);
+            this.setSelectedNode(node);
             EDT('scrollPathToVisible', this.jTree, this.treePathForNode(node));
             % Scroll to make that node visible
         end
@@ -463,7 +405,7 @@ clipboard('copy', path);
 end
 
 function ctxExpandAllCallback(src, evd, this) %#ok<INUSL>
-this.expandNode(this.treePeer.getRoot, true);
+this.expandNode(this.treePeer.getRoot, 'recurse');
 end
 
 function ctxDirUpCallback(src, evd, this) %#ok<INUSL>
@@ -477,6 +419,6 @@ end
 this.setRootPath(nodeData.path);
 end
 
-function ctxSyncToEditorCallback(src, evd, this)
-this.setSyncToEditor(src.isSelected);
+function ctxSyncToEditorCallback(src, evd, this) %#ok<INUSL>
+this.navigator.setSyncToEditor(src.isSelected);
 end

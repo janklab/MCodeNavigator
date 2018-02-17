@@ -13,4 +13,4 @@ for i = 1:editorList.size()
         net.apjanke.mprojectnavigator.swing.LoggingEditorEventListener(editor));
 end
 
-%fprintf('Editors instrumented with logging listeners\n');
+fprintf('Editors instrumented with logging listeners\n');

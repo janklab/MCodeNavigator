@@ -2,14 +2,15 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
     % A navigator for Mcode definitions (packages/classes/functions)
     
     properties (SetAccess = private)
-        flatPackageView;
-        showHidden;
+        flatPackageView = getpref(PREFGROUP, 'code_flatPackageView', false);
+        showHidden = getpref(PREFGROUP, 'code_showHidden', false);
+        navigator;
     end
     
     methods
-        function this = CodeNavigatorWidget()
-            this.flatPackageView = getpref(PREFGROUP, 'code_flatPackageView', false);
-            this.showHidden = getpref(PREFGROUP, 'code_showHidden', false);
+        function this = CodeNavigatorWidget(parentNavigator)
+            this.navigator = parentNavigator;
+            this.initializeGui;
         end
         
         function initializeGui(this)
@@ -18,7 +19,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             
             initializeGui@mprojectnavigator.internal.TreeWidget(this);
             
-            % Don't show root node; we're using it for namespaces
+            % Don't show root node; we're using multiple roots for code sets
             this.jTree.setShowsRootHandles(true);
             this.jTree.setRootVisible(false);
                         
@@ -48,14 +49,18 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             this.treePeer.setRoot(root);
             pause(0.005); % Allow widgets to catch up
             % Expand the root node one level, and expand the USER node
-            this.expandNode(root, false);
-            this.expandNode(root.getChildAt(0), false);
+            this.expandNode(root);
+            this.expandNode(root.getChildAt(0));
         end
         
         function out = setupTreeContextMenu(this, node, nodeData)
             import javax.swing.*
             
             fileShellName = mprojectnavigator.internal.Utils.osFileBrowserName;
+            
+            if ~isempty(node) && ~this.isInSelection(node)
+                this.setSelectedNode(node);
+            end
             
             jmenu = JPopupMenu;
             menuItemEdit = JMenuItem('Edit');
@@ -196,7 +201,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
                 strjoin(defn.InputNames, ', '));
             baseLabel = sprintf('%s (%s)', defn.Name, inputArgStr);
             items = {baseLabel};
-            if ~isempty(defn.OutputNames) && ~isequal(defn.OutputNames, {'lhs1'});
+            if ~isempty(defn.OutputNames) && ~isequal(defn.OutputNames, {'lhs1'})
                 items{end+1} = sprintf(':[%s]', strjoin(defn.OutputNames, ', '));
             end
             items(cellfun(@isempty, items)) = [];
@@ -695,7 +700,7 @@ end
 
 function ctxFullyExpandNodeCallback(src, evd, this, node, nodeData) %#ok<INUSD,INUSL>
 fprintf('ctxFullyExpandNodeCallback()\n');
-this.expandNode(node, true);
+this.expandNode(node, 'recurse');
 end
 
 function out = rejectInheritedDefinitions(defnList, parentDefn)

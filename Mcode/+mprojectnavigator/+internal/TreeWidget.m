@@ -43,17 +43,28 @@ classdef TreeWidget < handle
             this.panel.add(peer.getScrollPane);
         end
         
+        function dispose(this)
+            set(this.treePeerHandle, 'NodeExpandedCallback', []);
+            set(this.treePeerHandle, 'NodeSelectedCallback', []);
+            set(this.jTreeHandle, 'MousePressedCallback', []);
+            set(this.jTreeHandle, 'MouseMovedCallback', []);
+        end
+        
         function out = getJTreeFromUiPeer(this, peer) %#ok<INUSL>
             mustBeA(peer, 'com.mathworks.hg.peer.UITreePeer');
             treeScrollPane = peer.getScrollPane;
             out = treeScrollPane.getViewport.getComponent(0);
         end
         
-        function expandNode(this, node, recurse)
+        function expandNode(this, node, mode)
+            if nargin < 3 || isempty(mode);  mode = 'single';  end
+            if ~ismember(mode, {'single','recurse'})
+                error('Invalid mode: %s', mode);
+            end
             nodePath = this.treePathForNode(node);
             EDT('expandPath', this.jTree, nodePath);
             drawnow(); % Let lazy-loaded children be filled in
-            if recurse
+            if isequal(mode, 'recurse')
                 %pause(0.0005); % Pause to allow lazy-loaded children to be filled in
                 for i = 1:node.getChildCount
                     this.expandNode(node.getChildAt(i-1), recurse);
@@ -72,6 +83,21 @@ classdef TreeWidget < handle
                 nodePath = nodePath.pathByAddingChild(rawNodePath(i));
             end
             out = nodePath;
+        end
+        
+        function out = isInSelection(this, node)
+            selection = this.treePeer.getSelectedNodes;
+            for i = 1:numel(selection)
+                if isequal(node, selection(i))
+                    out = true;
+                    return;
+                end
+            end
+            out = false;
+        end
+        
+        function setSelectedNode(this, node)
+            this.treePeer.setSelectedNode(node);
         end
         
         function out = oldUitreenode(this, x, text, icon, hasChildren) %#ok<INUSL>

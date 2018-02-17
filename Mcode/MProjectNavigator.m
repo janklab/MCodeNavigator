@@ -17,129 +17,131 @@ function MProjectNavigator(varargin)
 
 error(javachk('awt'));
 
-persistent pFrame pFileNavigator
+persistent pNavigator
 
 if nargin == 0
     maybeInitializeGui();
-    pFrame.setVisible(true);
-else
-    if isequal(varargin{1}, '-pin')
+    pNavigator.Visible = true;
+    return;
+end
+
+switch varargin{1}
+    case '-pin'
         if nargin < 2
             warning('MProjectNavigator: Invalid arguments: -pin requires an argument');
             return;
         end
         newPinnedPath = varargin{2};
         maybeInitializeGui();
-        pFileNavigator.setRootPath(newPinnedPath);
-    elseif isequal(varargin{1}, '-hide')
-        if isempty(pFrame)
+        setPinnedPath(newPinnedPath);
+    case '-hide'
+        if isempty(pNavigator)
             return;
         end
-        pFrame.setVisible(false);
-    elseif isequal(varargin{1}, '-fresh')
+        pNavigator.Visible = false;
+    case '-fresh'
         disposeGui();
         maybeInitializeGui();
-        pFrame.setVisible(true);
-    elseif isequal(varargin{1}, '-registerhotkey')
-        registerHotkey();
-    elseif isequal(varargin{1}, '-hotkeyinvoked')
-        hotkeyInvoked();
-    elseif isequal(varargin{1}, '-deletesettings')
+        pNavigator.Visible = true;
+    case '-dispose'
+        disposeGui();        
+    case '-registerhotkey'
+        registerGlobalHotKey();
+    case '-hotkeyinvoked'
+        hotKeyInvoked();
+    case '-deletesettings'
         mprojectnavigator.internal.Persistence.deleteAllSettings();
         fprintf('MProjectNavigator: All settings deleted.\n');
-    elseif isequal(varargin{1}, '-editorfrontfile')
+    case '-editorfrontfile'
         editorFrontFile(varargin{2});
-    elseif isequal(varargin{1}(1), '-')
-        warning('MProjectNavigator: Unrecognized option: %s', varargin{1});
-    else
-        warning('MProjectNavigator: Invalid arguments');
-    end
+    otherwise
+        if isequal(varargin{1}(1), '-')
+            warning('MProjectNavigator: Unrecognized option: %s', varargin{1});
+        else
+            warning('MProjectNavigator: Invalid arguments');
+        end
 end
 
+
     function disposeGui()
-        if ~isempty(pFrame)
-            pFrame.dispose();
-            pFrame = [];
-            pFileNavigator = [];
+        if ~isempty(pNavigator)
+            pNavigator.dispose();
+            pNavigator = [];
         end
     end
 
     function maybeInitializeGui()
-        if isempty(pFrame)
-            initializeGui();
+        if isempty(pNavigator)
+            pNavigator = mprojectnavigator.internal.Navigator;
+            registerHotKeyOnComponent(pNavigator.frame.getContentPane);
         end
     end
 
-    function initializeGui()
-        import java.awt.*
-        import javax.swing.*
-        
-        framePosn = getpref('MProjectNavigator', 'nav_Position', []);
-        if isempty(framePosn)
-            framePosn = [NaN NaN 350 600];
-        end
-        frame = JFrame('Project Navigator');
-        frame.setSize(framePosn(3), framePosn(4));
-        if ~isnan(framePosn(1))
-            frame.setLocation(framePosn(1), framePosn(2));
-        end
-        
-        tabbedPane = JTabbedPane;
-        
-        fileNavigator = mprojectnavigator.internal.FileNavigatorWidget;
-        tabbedPane.add('Files', fileNavigator.panel);
-        codeNavigator = mprojectnavigator.internal.CodeNavigatorWidget;
-        tabbedPane.add('Definitions', codeNavigator.panel);
-        
-        frame.getContentPane.add(tabbedPane, BorderLayout.CENTER);
-        registerHotkeyOnComponent(frame.getContentPane);
-        frame.setVisible(true);
-        
-        hFrame = handle(frame, 'CallbackProperties');
-        hFrame.ComponentMovedCallback = @framePositionCallback;
-        hFrame.ComponentResizedCallback = @framePositionCallback;
-
-        pFrame = frame;
-        pFileNavigator = fileNavigator;
-    end
-
-    function framePositionCallback(frame, evd) %#ok<INUSD>
-        loc = frame.getLocation;
-        siz = frame.getSize;
-        framePosn = [loc.x loc.y siz.width siz.height];
-        setpref('MProjectNavigator', 'nav_Position', framePosn);
-    end
-
-    function registerHotkey()
-        mainFrame = com.mathworks.mde.desk.MLDesktop.getInstance.getMainFrame;
-        registerHotkeyOnComponent(mainFrame.getContentPane);
-    end
-
-    function hotkeyInvoked()
-        if isempty(pFrame)
-            initializeGui();
+    function hotKeyInvoked()
+        if isempty(pNavigator)
+            maybeInitializeGui();
+            pNavigator.Visible = true;
         else
             % Toggle visibility
-            pFrame.setVisible(~pFrame.isVisible);
+            pNavigator.Visible = ~pNavigator.Visible;
         end
     end
 
     function editorFrontFile(file)
-        if isempty(pFrame)
-            return;
+        if ~isempty(pNavigator)
+            pNavigator.editorFrontFileChanged(file);
         end
-        pFileNavigator.syncToFile(file);
     end
 
+    function setPinnedPath(newPath)
+        if ~isdir(newPath) %#ok
+            warning('''%s'' is not a directory', newPath);
+            return;
+        end
+        realPath = resolveRelativeDirPath(newPath);
+        if ~isempty(realPath)
+            pNavigator.fileNavigator.setRootPath(realPath);
+        end
+    end
+
+    function realPath = resolveRelativeDirPath(p)
+        % HACK: Resolve "." and Matlab-path-relative paths to real path name.
+        if isequal(p, '.')
+            p = pwd;
+        end
+        realPath = [];
+        if isFolder(p)
+            realPath = p;
+        else
+            mp = strsplit(path, pathsep);
+            for i = 1:numel(mp)
+                candidatePath = fullfile(mp{i}, p);
+                if isFolder(candidatePath)
+                    realPath = candidatePath;
+                    break;
+                end
+            end
+            if isempty(realPath)
+                warning('Could not resolve directory ''%s''', p);
+                return;
+            end
+        end
+    end
 end
 
-function registerHotkeyOnComponent(jComponent)
+
+function registerGlobalHotKey()
+mainFrame = com.mathworks.mde.desk.MLDesktop.getInstance.getMainFrame;
+registerHotKeyOnComponent(mainFrame.getContentPane);
+end
+
+function registerHotKeyOnComponent(jComponent)
 import net.apjanke.mprojectnavigator.swing.*
 import java.awt.*
 import javax.swing.*
 
-action = FevalAction.ofStringArguments('MProjectNavigator','-hotkeyinvoked');
-%action.setDisplayConsoleOutput(true); % DEBUG
+action = FevalAction.ofStringArguments('MProjectNavigator', '-hotkeyinvoked');
+action.setDisplayConsoleOutput(true);
 inputMap = jComponent.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
 actionMap = jComponent.getActionMap;
 controlShiftP = KeyStroke.getKeyStroke('control shift P');
@@ -147,3 +149,5 @@ actionName = java.lang.String('MProjectNavigator-hotkey');
 inputMap.put(controlShiftP, actionName);
 actionMap.put(actionName, action);
 end
+
+

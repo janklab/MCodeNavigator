@@ -2,6 +2,7 @@ TODO
 =============
 
 * Multiple pinned roots in file navigator
+ * Or new "code roots" navigator
 * "New..." action in file navigator
 * Delete files from file navigator
 * Open files in external programs from file navigator
