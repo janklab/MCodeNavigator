@@ -224,6 +224,12 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             out = this.createNode(message, message, nodeData, false, icon);
         end
         
+        function out = buildDummyNode(this)
+            nodeData = CodeNodeData('<dummy>');
+            icon = myIconPath('none');
+            out = this.createNode('<dummy>', 'Loading...', nodeData, false, icon);
+        end
+        
         function out = buildClassNode(this, className)
             mustBeA(className, 'char');
             classBaseName = regexprep(className, '.*\.', '');
@@ -300,13 +306,16 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             nodeData.defn = defn;
             nodeData.basename = defn.Name;
             nodeData.name = [klassDefn.Name '.' defn.Name];
-            label = this.propertyLabel(defn, klassDefn);
+            nodeData.definingClass = klassDefn.Name;
+            label = this.labelForProperty(defn, klassDefn);
             icon = myIconPath('dot');
             out = this.createNode(nodeData.basename, label, nodeData, false, icon);
             this.registerNode(nodeData, out);
         end
         
-        function out = propertyLabel(this, defn, klassDefn) %#ok<INUSL>
+        function out = labelForProperty(this, defn, klassDefn) %#ok<INUSL>
+            mustBeA(defn, 'meta.property');
+            mustBeA(klassDefn, 'meta.class');
             items = {};
             items{end+1} = defn.Name;
             if isequal(defn.GetAccess, defn.SetAccess)
@@ -391,15 +400,12 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             out.setAllowsChildren(allowsChildren);
             set(out, 'userdata', nodeData);
             if allowsChildren
-                dummyIcon = myIconPath('none');
-                dummyNode = this.oldUitreenode('<dummy>', 'Loading...', dummyIcon, true);
-                out.add(dummyNode);
+                out.add(this.buildDummyNode);
             end
         end
                 
-        function refreshNode(this, node)
+        function refreshNodeSingle(this, node)
             nodeData = get(node, 'userdata');
-            % nodeData.isRefreshing = true;
             switch nodeData.type
                 case 'root'                     % NOP; its contents are static
                 case 'codepaths';               this.refreshCodePathsNode(node);
@@ -417,18 +423,24 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
                 case 'package_private_thing'    % NOP
                 case 'error_message'            % NOP
                 case 'method';                  this.refreshMethodNode(node);
+                case 'function'                 % NOP
+                case 'property';                this.refreshPropertyNode(node);
+                case 'event'                    % NOP
                 otherwise
-                    refreshNode@mprojectnavigator.internalTreeWidget(this, node);
+                    refreshNodeSingle@mprojectnavigator.internal.TreeWidget(this, node);
             end
         end
         
-        function repopulateNode(this, node)
-            this.treePeer.removeAllChildren(node);
-            this.refreshNode(node);
-        end
-        
-        function populateNode(this, node)
-            this.refreshNode(node);
+        function markDirty(this, node)
+            markDirty@mprojectnavigator.internal.TreeWidget(this, node);
+            % Some node types need recursive dirtying
+            nodeData = get(node, 'userdata');
+            if ismember(nodeData.type, {'class','method_group','property_group',...
+                    'event_group','enumeration_group'})
+                for i = 1:node.getChildCount
+                    this.markDirty(node.getChildAt(i-1));
+                end
+            end
         end
         
         function out = rejectPackagesWithNoImmediateMembers(this, pkgNames) %#ok<INUSL>
@@ -853,28 +865,48 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         
         function refreshMethodNode(this, node)
             nodeData = get(node, 'userdata');
-            klassDefn = meta.class.fromName(nodeData.definingClass);
+            if isempty(nodeData.definingClass)
+                pkgDefn = meta.package.fromName(nodeData.package);
+                parentMethodList = pkgDefn.FunctionList;
+                parentDescr = sprintf('package %s', nodeData.package);
+            else
+                klassDefn = meta.class.fromName(nodeData.definingClass);
+                parentMethodList = klassDefn.MethodList;
+                parentDescr = sprintf('class %s', nodeData.definingClass);
+            end
             defn = [];
-            for i = 1:numel(klassDefn.MethodList)
-                if isequal(klassDefn.MethodList(i).Name, nodeData.basename)
-                    defn = klassDefn.MethodList(i);
+            for i = 1:numel(parentMethodList)
+                if isequal(parentMethodList(i).Name, nodeData.basename)
+                    defn = parentMethodList(i);
                     break;
                 end
             end
             if isempty(defn)
-                error('Could not find method definition for %s in class %s', ...
-                    nodeData.basename, nodeData.definingClass);
+                error('Could not find method definition for %s in %s', ...
+                    nodeData.basename, parentDescr);
             end
             label = this.labelForMethod(defn);
             node.setName(label);
-            logdebugf('New method label: %s', label);
-            %node.setUserObject(java.lang.String(label));
-            node.setName(label);
-            this.fireNodeChanged(node);
+            if ~isequal(label, node.getName)
+                this.setNodeName(node, label);
+            end
             nodeData.isPopulated = true;
         end
         
-        function out = labelForMethod(this, defn)
+        function refreshPropertyNode(this, node)
+            nodeData = get(node, 'nodedata');
+            klassDefn = meta.class.fromName(nodeData.definingClass);
+            defn = getMetaDefnByName(klassDefn.MethodList, nodeData.basename);
+            label = this.labelForProperty(defn, klassDefn);
+            if ~isequal(label, node.getName)
+                logdebugf('New property label: %s', label);
+                this.setNodeName(node, label);
+            else
+                logdebugf('Keeping existing property label: %s', label);
+            end
+        end
+        
+        function out = labelForMethod(this, defn) %#ok<INUSL>
             inputArgStr = ifthen(isequal(defn.InputNames, {'rhs1'}), '...', ...
                 strjoin(defn.InputNames, ', '));
             baseLabel = sprintf('%s (%s)', defn.Name, inputArgStr);
@@ -1326,4 +1358,14 @@ out = {};
 for i = 1:node.getChildCount
     out{i} = get(node.getChildAt(i-1), 'Value'); %#ok<AGROW>
 end
+end
+
+function out = getMetaDefnByName(defnList, name)
+for i = 1:numel(defnList)
+    if isequal(defnList(i).Name, name)
+        out = defnList(i);
+        return;
+    end
+end
+error('Could not find thing named ''%s'' in metadata definition list', name);
 end

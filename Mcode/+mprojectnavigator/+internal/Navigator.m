@@ -4,6 +4,11 @@ classdef Navigator < handle
     % This is intended to be a singleton, with only one active at a time in a
     % Matlab session.
     
+    properties (Constant)
+        NoAutoloadFiles = {
+            [matlabroot '/toolbox/matlab/codetools/mdbstatus.m']
+            };
+    end
     properties
         frame
         fileNavigator
@@ -72,7 +77,7 @@ classdef Navigator < handle
             this.frame = [];
         end
         
-        function setSyncToEditor(this, newState, blah)
+        function setSyncToEditor(this, newState)
             if newState == this.syncToEditor
                 return
             end
@@ -91,6 +96,15 @@ classdef Navigator < handle
             end
             [~,basename,ext] = fileparts(file);
             logdebugf('editorFrontFileChanged: %s', [basename ext]);
+            % Avoid doing expensive tree expansion for Matlab files that tend to
+            % pop up in the debugger due to Matlab's self-hosting nature and
+            % their internal use of try/catch
+            % TODO: Allow navigation to them if they're already visible
+            if ismember(file, this.NoAutoloadFiles)
+                logdebugf('editorFrontFileChanged: skipping autoload of known-funny file %s', ...
+                    file);
+                return;
+            end
             this.fileNavigator.revealFile(file);
             % Find out what that file defines, and update the code navigator
             defn = this.codebase.defnForMfile(file);

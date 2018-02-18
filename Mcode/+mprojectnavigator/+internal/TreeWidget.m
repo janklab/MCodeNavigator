@@ -71,7 +71,7 @@ classdef (Abstract) TreeWidget < handle
             end
         end
         
-        function refreshNodeWrapper(this, node)
+        function refreshNodeSingleWrapper(this, node)
             try
                 logdebugf('refreshNodeWrapper(): refreshing %s', char(node.toString));
                 nodeData = get(node, 'userdata');
@@ -81,8 +81,9 @@ classdef (Abstract) TreeWidget < handle
                    return;
                 end
                 nodeData.isRefreshing = true;
-                this.refreshNode(node);
+                this.refreshNodeSingle(node);
                 nodeData.isPopulated = true;
+                nodeData.isDirty = false;
                 nodeData.isRefreshing = false;
             catch err
                 nodeData.isRefreshing = false;
@@ -94,7 +95,39 @@ classdef (Abstract) TreeWidget < handle
             end
         end
         
-        function refreshNode(this, node) %#ok<INUSD>
+        function repopulateNode(this, node)
+            this.treePeer.removeAllChildren(node);
+            this.populateNode(node);
+        end
+        
+        function populateNode(this, node)
+            this.refreshNodeSingle(node);
+            nodeData = get(node, 'userdata');
+            nodeData.isPopulated = true;
+        end
+        
+        function refreshNode(this, node, doPopulate)
+            if nargin < 3 || isempty(doPopulate);  doPopulate = false; end
+            nodeData = get(node, 'userdata');
+            if ~nodeData.isPopulated && ~doPopulate
+                return;
+            end
+            if ~nodeData.isDirty
+                return;
+            end
+            this.refreshNodeSingleWrapper(node);
+            for i = 1:node.getChildCount
+                this.refreshNode(node.getChildAt(i-1));
+            end
+        end
+        
+        function markDirty(this, node) %#ok<INUSL>
+            nodeData = get(node, 'userdata');
+            nodeData.isDirty = true;
+        end
+        
+        function refreshNodeSingle(this, node) %#ok<INUSL>
+            nodeData = get(node, 'userdata');
             switch nodeData.type
                 case 'error_message'        % NOP
                 otherwise
@@ -103,7 +136,11 @@ classdef (Abstract) TreeWidget < handle
         end
         
         function nodeExpanded(this, src, evd) %#ok<INUSL>
-            this.refreshNodeWrapper(evd.getCurrentNode);
+            node = evd.getCurrentNode;
+            % Mark the node dirty so it always picks up fresh data in response
+            % to user input
+            this.markDirty(node);
+            this.refreshNode(node, true);
         end
         
         function gentleRecursiveRefresh(this, node)
@@ -138,6 +175,11 @@ classdef (Abstract) TreeWidget < handle
             EDT('remove', node, ix(i));
         end
         EDT('nodesWereRemoved', this.treePeer, node, ix);
+        end
+        
+        function setNodeName(this, node, name)
+            node.setName(name);
+            this.fireNodeChanged(node);
         end
         
         function out = treePathForNode(this, node)
