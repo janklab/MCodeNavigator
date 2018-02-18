@@ -4,7 +4,6 @@ TODO
 * BUG: Scroll-to--node is not working in classes view when there are a lot of nodes in the tree, such as when you have the MATLAB globals expanded
 * Multiple pinned roots in file navigator
  * Or new "code roots" navigator
-* Smart refreshing upon file changes
 * "New..." action in file navigator
 * Delete files from file navigator
 * Open files in external programs from file navigator
