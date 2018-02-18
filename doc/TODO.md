@@ -11,6 +11,7 @@ TODO
 * Transparent icons/greyed text for Hidden items
  * Requires a custom variant of the Silk icon set
 * An inheritance hierarchy browser for classes
+* Switch to using what() for class/function metadata discovery
 
 # To Maybe Do
 

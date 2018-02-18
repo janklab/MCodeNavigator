@@ -3,6 +3,8 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
     %
     % TODO: Get this to recognize newly-added/removed classes and update the
     % display.
+    % BUG: Newly-added items might show up out-of-order with respect to their
+    % siblings.
     properties (SetAccess = private)
         flatPackageView = getpref(PREFGROUP, 'code_flatPackageView', false);
         showHidden = getpref(PREFGROUP, 'code_showHidden', false);
@@ -167,6 +169,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         end
         
         function out = buildGlobalClassesNode(this, classNames)
+            mustBeA(classNames, 'cellstr');
             nodeData.type = 'global_classes';
             nodeData.classNames = classNames;
             icon = myIconPath('folder');
@@ -174,6 +177,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         end
         
         function out = buildGlobalFunctionsNode(this, functionNames)
+            mustBeA(functionNames, 'cellstr');
             nodeData.type = 'global_functions';
             nodeData.functionNames = functionNames;
             icon = myIconPath('folder');
@@ -181,6 +185,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         end
         
         function out = buildPackageNode(this, packageName)
+            mustBeA(packageName, 'char');
             label = ['+' packageName];
             nodeData.type = 'package';
             nodeData.name = packageName;
@@ -191,6 +196,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         end
         
         function out = buildClassNode(this, className)
+            mustBeA(className, 'char');
             classBaseName = regexprep(className, '.*\.', '');
             nodeData.type = 'class';
             nodeData.name = className;
@@ -201,7 +207,8 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         end
         
         function out = buildMethodGroupNode(this, parentDefinition)
-            nodeData.type = 'methodGroup';
+            mustBeA(parentDefinition, 'meta.class');
+            nodeData.type = 'method_group';
             nodeData.parentDefinition = parentDefinition;
             label = 'Methods';
             icon = myIconPath('none');
@@ -210,6 +217,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         
         function out = buildMethodNode(this, defn, packageName)
             mustBeA(defn, 'meta.method');
+            mustBeA(packageName, 'char');
             nodeData.type = 'method';
             nodeData.defn = defn;
             nodeData.name = ifthen(isempty(packageName), defn.Name, [packageName '.' defn.Name]);
@@ -246,6 +254,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         function out = buildFunctionNode(this, functionName)
             % Build function node
             % Only works for global functions, not functions inside a package
+            mustBeA(functionName, 'char');
             nodeData.type = 'function';
             nodeData.name = functionName;
             nodeData.basename = functionName;
@@ -256,7 +265,8 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         end
         
         function out = buildPropertyGroupNode(this, parentDefinition)
-            nodeData.type = 'propertyGroup';
+            mustBeA(parentDefinition, 'meta.class');
+            nodeData.type = 'property_group';
             nodeData.parentDefinition = parentDefinition;
             label = 'Properties';
             icon = myIconPath('none');
@@ -303,7 +313,8 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         end
         
         function out = buildEventGroupNode(this, parentDefinition)
-            nodeData.type = 'eventGroup';
+            mustBeA(parentDefinition, 'meta.class');
+            nodeData.type = 'event_group';
             nodeData.parentDefinition = parentDefinition;
             label = 'Events';
             icon = myIconPath('none');
@@ -323,21 +334,16 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         end
         
         function out = buildSuperclassGroupNode(this, parentDefinition)
-            nodeData.type = 'superclassGroup';
+            mustBeA(parentDefinition, 'meta.class');
+            nodeData.type = 'superclass_group';
             nodeData.parentDefinition = parentDefinition;
             label = 'Superclasses';
             icon = myIconPath('none');
             out = this.createNode(label, label, nodeData, [], icon);
         end
         
-        function out = buildSuperclassNode(this, defn)
-            nodeData.type = 'superclass';
-            nodeData.defn = defn;
-            label = [ '@' defn.Name];
-            out = this.createNode(label, label, nodeData, false);
-        end
-        
         function out = buildEnumerationGroupNode(this, parentDefinition)
+            mustBeA(parentDefinition, 'meta.class');
             nodeData.type = 'enumerationGroup';
             nodeData.parentDefinition = parentDefinition;
             label = 'Enumerations';
@@ -346,6 +352,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         end
         
         function out = buildEnumerationNode(this, defn)
+            mustBeA(defn, 'meta.EnumeratedValue');
             nodeData.type = 'enumeration';
             nodeData.defn = defn;
             nodeData.name = defn.Name;
@@ -370,59 +377,36 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         end
         
         function nodeExpanded(this, src, evd) %#ok<INUSL>
-            node = evd.getCurrentNode;
-            %logdebug('nodeExpanded: {} ({})', get(node, 'Name'), get(node, 'Value'));
-            nodeData = get(node, 'userdata');
-            if ismember(nodeData.type, {'package','class'})
-                this.refreshNode(node);
-            else
-                this.populateNode(node);
-            end
+            this.refreshNode(evd.getCurrentNode);
         end
         
         function refreshNode(this, node)
             nodeData = get(node, 'userdata');            
             switch nodeData.type
-                case 'root'         % NOP; its contents are static
-                case 'package';     this.refreshPackageNode(node);
-                case 'class';       this.refreshClassNode(node);
+                case 'root'                 % NOP; its contents are static
+                case 'codepaths';           this.refreshCodePathsNode(node);
+                case 'codepaths_globals';   this.refreshCodePathsGlobalsNode(node);
+                case 'global_classes';      this.refreshGlobalClassesNode(node);
+                case 'global_functions';    this.refreshGlobalFunctionsNode(node);
+                case 'package';             this.refreshPackageNode(node);
+                case 'class';               this.refreshClassNode(node);   
+                case 'method_group';        this.refreshMethodGroupNode(node);
+                case 'property_group';      this.refreshPropertyGroupNode(node);
+                case 'event_group';         this.refreshEventGroupNode(node);
+                case 'enumeration_group';   this.refreshEnumerationGroupNode(node);
+                case 'superclass_group';    this.refreshSuperclassGroupNode(node);
                 otherwise
-                    error('Node type %s is not supported for refreshNode() yet', ...
-                        nodeData.type);
+                    this.repopulateNode(node);
             end
         end
         
         function repopulateNode(this, node)
-            nodeData = get(node, 'userdata');
-            % HACK: Bypass root expansion, since it's populated with static info
-            if isequal(nodeData.type, 'root')
-                return;
-            end
-            tree = this.treePeer;
-            if isequal(nodeData.type, 'package')
-                % New development work. Eventually everything will be this style
-                this.refreshPackageNode(node);
-            else
-                newChildNodes = this.buildChildNodes(node);
-                % Only this array-based adding method seems to work properly
-                jChildNodes = javaArray('com.mathworks.hg.peer.UITreeNode', numel(newChildNodes));
-                for i = 1:numel(newChildNodes)
-                    jChildNodes(i) = java(newChildNodes{i});
-                end
-                tree.removeAllChildren(node);
-                tree.add(node, jChildNodes);
-            end
-                tree.setLoaded(node, true);
-            nodeData.isPopulated = true;
-            set(node, 'userdata', nodeData);
+            tree.removeAllChildren(node);
+            this.refreshNode(node);
         end
         
         function populateNode(this, node)
-            nodeData = get(node, 'userdata');
-            if nodeData.isPopulated
-                return
-            end
-            this.repopulateNode(node);
+            this.refreshNode(node);
         end
         
         function out = rejectPackagesWithNoImmediateMembers(this, pkgNames) %#ok<INUSL>
@@ -433,131 +417,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             end
             out = pkgNames(tf);
         end
-        
-        function out = buildChildNodes(this, node)
-            out = {};
-            nodeData = get(node, 'userdata');
-            logdebug('buildChildNodes: {}', nodeData.type);
-            switch nodeData.type
-                case 'root'
-                    % NOP: Shouldn't get here
-                    logwarn('buildChildNodes: attempt to build nodes for root node. Shouldn''t happen');
-                case 'codepaths'
-                    listMode = ifthen(this.flatPackageView, 'flat', 'nested');
-                    found = scanCodeRoots(nodeData.paths, listMode);
-                    if ~isempty(found.mfiles) || ~isempty(found.classdirs)
-                        out{end+1} = this.buildCodePathsGlobalsNode(nodeData.paths, found);
-                    end
-                    pkgs = sortCaseInsensitive(found.packages);
-                    if this.flatPackageView
-                        pkgs = this.rejectPackagesWithNoImmediateMembers(pkgs);
-                    end
-                    for i = 1:numel(pkgs)
-                        out{end+1} = this.buildPackageNode(pkgs{i}); %#ok<AGROW>
-                    end
-                case 'codepaths_globals'
-                    [paths, found] = deal(nodeData.paths, nodeData.found);
-                    % Ugh, now we have to scan the files to see if they're
-                    % classes or functions
-                    probed = scanCodeRootGlobals(paths, found);
-                    if ~isempty(probed.classes)
-                        out{end+1} = this.buildGlobalClassesNode(probed.classes);
-                    end
-                    if ~isempty(probed.functions)
-                        out{end+1} = this.buildGlobalFunctionsNode(probed.functions);
-                    end
-                case 'global_classes'
-                    classNames = nodeData.classNames;
-                    for i = 1:numel(classNames)
-                        out{end+1} = this.buildClassNode(classNames{i}); %#ok<AGROW>
-                    end
-                case 'global_functions'
-                    functionNames = nodeData.functionNames;
-                    for i = 1:numel(functionNames)
-                        out{end+1} = this.buildFunctionNode(functionNames{i}); %#ok<AGROW>
-                    end
-                case 'package'
-                    pkg = meta.package.fromName(nodeData.name);
-                    if ~this.flatPackageView
-                        pkgList = sortDefnsByName(pkg.PackageList);
-                        for i = 1:numel(pkgList)
-                            out{end+1} = this.buildPackageNode(pkgList(i).Name); %#ok<AGROW>
-                        end
-                    end
-                    classList = sortDefnsByName(pkg.ClassList);
-                    for i = 1:numel(classList)
-                        out{end+1} = this.buildClassNode(classList(i).Name); %#ok<AGROW>
-                    end
-                    functionList = sortDefnsByName(pkg.FunctionList);
-                    for i = 1:numel(functionList)
-                        % These are really methods, not functions (???)
-                        out{end+1} = this.buildMethodNode(functionList(i), nodeData.name); %#ok<AGROW>
-                    end
-                case 'class'
-                    klass = meta.class.fromName(nodeData.name);
-                    if ~isempty(this.maybeRejectHidden(...
-                            rejectInheritedDefinitions(klass.PropertyList, klass)))
-                        out{end+1} = this.buildPropertyGroupNode(klass);
-                    end
-                    if ~isempty(this.maybeRejectHidden(...
-                            rejectInheritedDefinitions(klass.MethodList, klass)))
-                        out{end+1} = this.buildMethodGroupNode(klass);
-                    end
-                    if ~isempty(this.maybeRejectHidden(...
-                            rejectInheritedDefinitions(klass.EventList, klass)))
-                        out{end+1} = this.buildEventGroupNode(klass);
-                    end
-                    if ~isempty(klass.EnumerationMemberList)
-                        out{end+1} = this.buildEnumerationGroupNode(klass);
-                    end
-                    if ~isempty(klass.SuperclassList)
-                        out{end+1} = this.buildSuperclassGroupNode(klass);
-                    end
-                case 'methodGroup'
-                    defn = nodeData.parentDefinition;
-                    methodList = rejectInheritedDefinitions(defn.MethodList, defn);
-                    methodList = sortDefnsByName(this.maybeRejectHidden(methodList));
-                    for i = 1:numel(methodList)
-                        % Hide well-known auto-defined methods
-                        if isequal(methodList(i).Name, 'empty') && methodList(i).Static ...
-                                && methodList(i).Hidden
-                            continue;
-                        end
-                        pkgName = ifthen(isempty(defn.ContainingPackage), '', defn.ContainingPackage.Name);
-                        out{end+1} = this.buildMethodNode(methodList(i), pkgName); %#ok<AGROW>
-                    end
-                case 'propertyGroup'
-                    defn = nodeData.parentDefinition;
-                    propList = rejectInheritedDefinitions(defn.PropertyList, defn);
-                    propList = sortDefnsByName(this.maybeRejectHidden(propList));
-                    for i = 1:numel(propList)
-                        out{end+1} = this.buildPropertyNode(propList(i), defn); %#ok<AGROW>
-                    end
-                case 'eventGroup'
-                    defn = nodeData.parentDefinition;
-                    eventList = rejectInheritedDefinitions(defn.EventList, defn);
-                    eventList = sortDefnsByName(this.maybeRejectHidden(eventList));
-                    for i = 1:numel(eventList)
-                        out{end+1} = this.buildEventNode(eventList(i)); %#ok<AGROW>
-                    end
-                case 'enumerationGroup'
-                    defn = nodeData.parentDefinition;
-                    enumList = sortDefnsByName(defn.EnumerationMemberList);
-                    for i = 1:numel(enumList)
-                        out{end+1} = this.buildEnumerationNode(enumList(i)); %#ok<AGROW>
-                    end
-                case 'superclassGroup'
-                    defn = nodeData.parentDefinition;
-                    for i = 1:numel(defn.SuperclassList)
-                        out{end+1} = this.buildClassNode(defn.SuperclassList(i).Name); %#ok<AGROW>
-                    end
-                case {'method','event','enumeration'}
-                    % NOP: No expansion
-                otherwise
-                    error('No expansion handler for node type %s\n', nodeData.type);
-            end
-        end
-        
+                
         function refreshPackageNode(this, node)
             nodeData = get(node, 'userdata');
             packageName = nodeData.name;
@@ -613,17 +473,9 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             % Do the adding and removal
             % TODO: Figure out how to insert new nodes in the right order WRT
             % existing nodes
-            logdebugf('removing %d nodes: %s', numel(nodesToRemoveNames), ...
-                strjoin(nodesToRemoveNames, ', '));
             [~,ixNodesToRemove] = ismember(nodesToRemoveNames, childNodeValues);
-            ixNodesToRemove = sort(ixNodesToRemove);
             this.treePeer.remove(node, ixNodesToRemove-1);
-            logdebugf('adding %d nodes: %s', numel(nodesToAdd), ...
-                strjoin(nodesToAddNames, ', '));
-            nodesToAdd = [nodesToAdd{:}];
-            if ~isempty(nodesToAdd)
-                this.treePeer.add(node, nodesToAdd);
-            end
+            this.treePeer.add(node, [nodesToAdd{:}]);
             nodeData.isPopulated = true;
             set(node, 'userdata', nodeData);
             logdebugf('refreshed %s; added %d things; removed %d things', ...
@@ -701,8 +553,257 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
                 if isempty(child)
                     this.treePeer.add(node, this.buildSuperclassGroupNode(klass));
                 end
+            end            
+        end
+        
+        function refreshCodePathsNode(this, node)
+            nodeData = get(node, 'userdata');
+            
+            listMode = ifthen(this.flatPackageView, 'flat', 'nested');
+            found = scanCodeRoots(nodeData.paths, listMode);
+            % "Globals" node
+            globalsNode = getChildNodeByValue(node, '<Global>');
+            if ~isempty(found.mfiles) || ~isempty(found.classdirs)
+                if isempty(globalsNode)
+                    globalsNode = this.buildCodePathsGlobalsNode(nodeData.paths, found);
+                    this.treePeer.insert(node, globalsNode, 0);
+                end
+            else
+                if ~isempty(globalsNode)
+                    this.treePeer.remove(node, globalsNode);
+                end
+            end
+            % Package nodes            
+            pkgs = sortCaseInsensitive(found.packages);
+            childNodeValues = getChildNodeValues(node);
+            nodesToAdd = {};
+            if this.flatPackageView
+                pkgs = this.rejectPackagesWithNoImmediateMembers(pkgs);
+            end
+            childNodePkgNames = strrep(setdiff(childNodeValues, {'<Global>','<dummy>'}), '+', '');
+            pkgsToAdd = setdiff(pkgs, childNodePkgNames);
+            pkgsToRemove = setdiff(childNodePkgNames, pkgs);
+            [~,ixToRemove] = ismember(strcat('+',pkgsToRemove), childNodeValues);
+            % Handle dummy node
+            [tf,ixDummy] = ismember('<dummy>', childNodeValues);
+            if tf
+                ixToRemove(end+1) = ixDummy;
+            end
+            ixToRemove = sort(ixToRemove);
+            % Do the add/removes
+            for i = 1:numel(pkgsToAdd)
+                nodesToAdd{end+1} = this.buildPackageNode(pkgsToAdd{i}); %#ok<AGROW>
+            end
+            this.treePeer.remove(node, ixToRemove-1);
+            this.treePeer.add(node, [nodesToAdd{:}]);
+        end
+        
+        function refreshCodePathsGlobalsNode(this, node)
+            nodeData = get(node, 'userdata');
+            [paths, found] = deal(nodeData.paths, nodeData.found);
+            % Ugh, now we have to scan the files to see if they're classes or
+            % functions
+            probed = scanCodeRootGlobals(paths, found);
+            
+            classesNode = getChildNodeByValue(node, 'Classes');
+            if isempty(probed.classes)
+                if ~isempty(classesNode)
+                    this.treePeer.remove(node, classesNode);
+                end
+            else
+                if isempty(classesNode)
+                    this.treePeer.add(node, this.buildGlobalClassesNode(probed.classes));
+                end
+            end
+            functionsNode = getChildNodeByValue(node, 'Functions');
+            if isempty(probed.functions)
+                if ~isempty(functionsNode)
+                    this.treePeer.remove(node, functionsNode);
+                end
+            else
+                if isempty(functionsNode)
+                    this.treePeer.add(node, this.buildGlobalFunctionsNode(probed.functions));
+                end
+            end
+            dummyNode = getChildNodeByValue(node, '<dummy>');
+            if ~isempty(dummyNode)
+                this.treePeer.remove(node, dummyNode);
+            end
+        end
+        
+        function refreshGlobalClassesNode(this, node)
+            nodeData = get(node, 'userdata');
+            classNames = nodeData.classNames;
+            % This node's data is static, so we can just do the simple initial-population case
+            dummyNode = getChildNodeByValue(node, '<dummy>');
+            if ~isempty(dummyNode)
+                nodesToAdd = {};
+                for i = 1:numel(classNames)
+                    nodesToAdd{end+1} = this.buildClassNode(classNames{i}); %#ok<AGROW>
+                end
+                this.treePeer.remove(node, dummyNode);
+                this.treePeer.add(node, [nodesToAdd{:}]);
+            end
+        end
+        
+        function refreshGlobalFunctionsNode(this, node)
+            nodeData = get(node, 'userdata');
+            functionNames = nodeData.functionNames;
+            % This node's data is static, so we can just do the simple initial-population case
+            dummyNode = getChildNodeByValue(node, '<dummy>');
+            if ~isempty(dummyNode)
+                nodesToAdd = {};
+                for i = 1:numel(functionNames)
+                    nodesToAdd{end+1} = this.buildFunctionNode(functionNames{i}); %#ok<AGROW>
+                end
+                this.treePeer.remove(node, dummyNode);
+                this.treePeer.add(node, [nodesToAdd{:}]);
+            end
+        end
+        
+        function refreshMethodGroupNode(this, node)
+            nodeData = get(node, 'userdata');
+            childNodeValues = getChildNodeValues(node);
+            nodesToAdd = {};
+            classDefn = nodeData.parentDefinition;
+            if isempty(classDefn.ContainingPackage)
+                pkgName = '';
+            else
+                pkgName = classDefn.ContainingPackage.Name;
+            end
+            defnList = rejectInheritedDefinitions(classDefn.MethodList, classDefn);
+            defnList = sortDefnsByName(this.maybeRejectHidden(defnList));
+            % Hide well-known auto-defined methods
+            for i = numel(defnList):-1:1
+                if isequal(defnList(i).Name, 'empty') && defnList(i).Static ...
+                        && defnList(i).Hidden
+                    defnList(i) = [];
+                end
             end
             
+            defnNames = metaObjNames(defnList);
+            childDefnNames = setdiff(childNodeValues, '<dummy>');
+            defnsToAdd = setdiff(defnNames, childDefnNames);
+            defnsToRemove = setdiff(childDefnNames, defnNames);
+            [~,ixToRemove] = ismember(defnsToRemove, childNodeValues);
+            [~,loc] = ismember(defnsToAdd, defnNames);
+            for i = 1:numel(defnsToAdd)
+                nodesToAdd{end+1} = this.buildMethodNode(defnList(loc(i)), pkgName); %#ok<AGROW>
+            end
+            % Handle dummy node
+            [tf,ixDummy] = ismember('<dummy>', childNodeValues);
+            if tf
+                ixToRemove(end+1) = ixDummy;
+            end
+            
+            this.treePeer.remove(node, ixToRemove-1);
+            this.treePeer.add(node, [nodesToAdd{:}]);            
+        end
+
+        function refreshPropertyGroupNode(this, node)
+            nodeData = get(node, 'userdata');
+            childNodeValues = getChildNodeValues(node);
+            nodesToAdd = {};
+            classDefn = nodeData.parentDefinition;
+            defnList = rejectInheritedDefinitions(classDefn.PropertyList, classDefn);
+            defnList = sortDefnsByName(this.maybeRejectHidden(defnList));
+            
+            defnNames = metaObjNames(defnList);
+            childDefnNames = setdiff(childNodeValues, '<dummy>');
+            defnsToAdd = setdiff(defnNames, childDefnNames);
+            defnsToRemove = setdiff(childDefnNames, defnNames);
+            [~,ixToRemove] = ismember(defnsToRemove, childNodeValues);
+            [~,loc] = ismember(defnsToAdd, defnNames);
+            for i = 1:numel(defnsToAdd)
+                nodesToAdd{end+1} = this.buildPropertyNode(defnList(loc(i)), classDefn); %#ok<AGROW>
+            end
+            % Handle dummy node
+            [tf,ixDummy] = ismember('<dummy>', childNodeValues);
+            if tf
+                ixToRemove(end+1) = ixDummy;
+            end
+            
+            this.treePeer.remove(node, ixToRemove-1);
+            this.treePeer.add(node, [nodesToAdd{:}]);            
+        end
+        
+        function refreshEventGroupNode(this, node)
+            nodeData = get(node, 'userdata');
+            childNodeValues = getChildNodeValues(node);
+            nodesToAdd = {};
+            classDefn = nodeData.parentDefinition;
+            defnList = rejectInheritedDefinitions(classDefn.EventList, classDefn);
+            defnList = sortDefnsByName(this.maybeRejectHidden(defnList));
+            
+            defnNames = metaObjNames(defnList);
+            childDefnNames = setdiff(childNodeValues, '<dummy>');
+            defnsToAdd = setdiff(defnNames, childDefnNames);
+            defnsToRemove = setdiff(childDefnNames, defnNames);
+            [~,ixToRemove] = ismember(defnsToRemove, childNodeValues);
+            [~,loc] = ismember(defnsToAdd, defnNames);
+            for i = 1:numel(defnsToAdd)
+                nodesToAdd{end+1} = this.buildEventNode(defnList(loc(i))); %#ok<AGROW>
+            end
+            % Handle dummy node
+            [tf,ixDummy] = ismember('<dummy>', childNodeValues);
+            if tf
+                ixToRemove(end+1) = ixDummy;
+            end
+            
+            this.treePeer.remove(node, ixToRemove-1);
+            this.treePeer.add(node, [nodesToAdd{:}]);            
+        end
+
+        function refreshEnumerationGroupNode(this, node)
+            nodeData = get(node, 'userdata');
+            classDefn = nodeData.parentDefinition;
+            childNodeValues = getChildNodeValues(node);
+            nodesToAdd = {};
+            defnList = sortDefnsByName(classDefn.EnumerationMemberList);
+            
+            defnNames = metaObjNames(defnList);
+            childDefnNames = setdiff(childNodeValues, '<dummy>');
+            defnsToAdd = setdiff(defnNames, childDefnNames);
+            defnsToRemove = setdiff(childDefnNames, defnNames);
+            [~,ixToRemove] = ismember(defnsToRemove, childNodeValues);
+            [~,loc] = ismember(defnsToAdd, defnNames);
+            for i = 1:numel(defnsToAdd)
+                nodesToAdd{end+1} = this.buildEnumerationNode(defnList(loc(i))); %#ok<AGROW>
+            end
+            % Handle dummy node
+            [tf,ixDummy] = ismember('<dummy>', childNodeValues);
+            if tf
+                ixToRemove(end+1) = ixDummy;
+            end
+            
+            this.treePeer.remove(node, ixToRemove-1);
+            this.treePeer.add(node, [nodesToAdd{:}]);            
+        end
+        
+        function refreshSuperclassGroupNode(this, node)
+            nodeData = get(node, 'userdata');
+            classDefn = nodeData.parentDefinition;
+            childNodeValues = getChildNodeValues(node);
+            nodesToAdd = {};
+            defnList = sortDefnsByName(classDefn.SuperclassList);
+            
+            defnNames = metaObjNames(defnList);
+            childDefnNames = setdiff(childNodeValues, '<dummy>');
+            defnsToAdd = setdiff(defnNames, childDefnNames);
+            defnsToRemove = setdiff(childDefnNames, defnNames);
+            [~,ixToRemove] = ismember(defnsToRemove, childNodeValues);
+            [~,loc] = ismember(defnsToAdd, defnNames);
+            for i = 1:numel(defnsToAdd)
+                nodesToAdd{end+1} = this.buildClassNode(defnList(loc(i)).Name); %#ok<AGROW>
+            end
+            % Handle dummy node
+            [tf,ixDummy] = ismember('<dummy>', childNodeValues);
+            if tf
+                ixToRemove(end+1) = ixDummy;
+            end
+            
+            this.treePeer.remove(node, ixToRemove-1);
+            this.treePeer.add(node, [nodesToAdd{:}]);            
         end
         
         function out = maybeRejectHidden(this, defns)
@@ -746,7 +847,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             end
         end
         
-        function revealDefn(this, defn, file) %#ok<INUSD>
+        function revealDefn(this, defn, file)
             if isempty(defn)
                 % Ignore empty definitions. That means it's a file outside of
                 % our code base

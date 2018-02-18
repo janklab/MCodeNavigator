@@ -20,6 +20,9 @@ import java.util.List;
  *
  * I observed this issue in Matlab R2016b and R2018a. It might be resolved in future releases,
  * in which case this class will not be necessary.
+ *
+ * The new methods are written with Matlab-style "return silently if input is null" logic to
+ * match their style.
  */
 public class UITreePeer2 extends UITreePeer {
 
@@ -59,7 +62,25 @@ public class UITreePeer2 extends UITreePeer {
      * @param child
      */
     public void add(UITreeNode parent, UITreeNode child) {
+        if (null == parent || null == child) {
+            return;
+        }
         add(parent, new UITreeNode[] { child });
+    }
+
+    /**
+     * This method is overridden to work around an apparent bug in UITreePeer where it
+     * does not raise a nodesWereAdded() event when inserting a node.
+     * @param parent
+     * @param child
+     * @param index
+     */
+    public void insert(UITreeNode parent, UITreeNode child, int index) {
+        if (null == parent || null == child) {
+            return;
+        }
+        parent.insert(child, index);
+        nodesWereAdded(parent, new int[] { index });
     }
 
     //-------------------------------------------------
@@ -99,7 +120,6 @@ public class UITreePeer2 extends UITreePeer {
         for (int i = 0; i < ix.length; i++) {
             ix[i] = indexes.get(i);
         }
-        Arrays.sort(ix);
         remove(parent, ix);
     }
 
@@ -108,7 +128,7 @@ public class UITreePeer2 extends UITreePeer {
      * Remove multiple nodes by their index. This method is an optimization that allows
      * multiple removals to be coalesced and raise only a single nodesWereRemoved() event.
      * @param parent node to remove children from
-     * @param index child indexes to be removed; must be in sorted order
+     * @param index child indexes to be removed
      */
     public void remove(UITreeNode parent, int[] index) {
         if (null == parent || null == index) {
@@ -117,6 +137,7 @@ public class UITreePeer2 extends UITreePeer {
         if (index.length == 0) {
             return;
         }
+        Arrays.sort(index);
         for (int i = index.length - 1; i >= 0; i--) {
             parent.remove(index[i]);
         }
