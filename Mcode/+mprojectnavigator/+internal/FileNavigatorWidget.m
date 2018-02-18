@@ -116,9 +116,8 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
         end
         
         function out = buildDummyNode(this)
-            nodeData.path = '<dummy>';
+            nodeData = mprojectnavigator.internal.FileNodeData('<dummy>', false);
             nodeData.isDummy = true;
-            nodeData.isDir = false;
             nodeData.isPopulated = true;
             nodeData.isFile = false;
             icon = myIconPath('none');

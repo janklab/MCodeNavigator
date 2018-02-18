@@ -5,6 +5,13 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
     % display.
     % BUG: Newly-added items might show up out-of-order with respect to their
     % siblings.
+    % BUG: The isRefreshing detection doesn't seem to work. Maybe handles can't
+    % be correctly stashed in UINode userdata? Or maybe the expansion events
+    % queue up in a thread that's blocked while refresh is happening, so the
+    % expansion request isn't even delivered until the initial refresh is done.
+    % Hmm. The latter seems more likely, considering that the refreshNode() log
+    % messages appear slowly when I do multiple refreshes on a slowly-loading
+    % node.
     properties (SetAccess = private)
         flatPackageView = getpref(PREFGROUP, 'code_flatPackageView', false);
         showHidden = getpref(PREFGROUP, 'code_showHidden', false);
@@ -140,7 +147,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         end
                 
         function out = buildRootTreenode(this)
-            nodeData.type = 'root';
+            nodeData = CodeNodeData('root');
             out = this.oldUitreenode('<dummy>', 'Definitions', [], true);
             out.setAllowsChildren(true);
             set(out, 'userdata', nodeData);
@@ -152,7 +159,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         
         function out = buildCodePathsNode(this, label, paths)
             % A node representing a codebase with a list of paths
-            nodeData.type = 'codepaths';
+            nodeData = CodeNodeData('codepaths');
             nodeData.label = label;
             nodeData.paths = paths;
             icon = myIconPath('topfolder');
@@ -161,7 +168,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         
         function out = buildCodePathsGlobalsNode(this, paths, found)
             % A node representing global definitions under a codepath set
-            nodeData.type = 'codepaths_globals';
+            nodeData = CodeNodeData('codepaths_globals');
             nodeData.paths = paths;
             nodeData.found = found;
             icon = myIconPath('folder');
@@ -170,7 +177,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         
         function out = buildGlobalClassesNode(this, classNames)
             mustBeA(classNames, 'cellstr');
-            nodeData.type = 'global_classes';
+            nodeData = CodeNodeData('global_classes');
             nodeData.classNames = classNames;
             icon = myIconPath('folder');
             out = this.createNode('Classes', 'Classes', nodeData, [], icon);
@@ -178,7 +185,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         
         function out = buildGlobalFunctionsNode(this, functionNames)
             mustBeA(functionNames, 'cellstr');
-            nodeData.type = 'global_functions';
+            nodeData = CodeNodeData('global_functions');
             nodeData.functionNames = functionNames;
             icon = myIconPath('folder');
             out = this.createNode('Functions', 'Functions', nodeData, [], icon);
@@ -187,7 +194,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         function out = buildPackageNode(this, packageName)
             mustBeA(packageName, 'char');
             label = ['+' packageName];
-            nodeData.type = 'package';
+            nodeData = CodeNodeData('package');
             nodeData.name = packageName;
             nodeData.basename = regexprep(packageName, '.*\.', '');
             icon = myIconPath('folder');
@@ -198,7 +205,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         function out = buildClassNode(this, className)
             mustBeA(className, 'char');
             classBaseName = regexprep(className, '.*\.', '');
-            nodeData.type = 'class';
+            nodeData = CodeNodeData('class');
             nodeData.name = className;
             nodeData.basename = classBaseName;
             label = ['@' classBaseName];
@@ -208,7 +215,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         
         function out = buildMethodGroupNode(this, parentDefinition)
             mustBeA(parentDefinition, 'meta.class');
-            nodeData.type = 'method_group';
+            nodeData = CodeNodeData('method_group');
             nodeData.parentDefinition = parentDefinition;
             label = 'Methods';
             icon = myIconPath('none');
@@ -218,7 +225,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         function out = buildMethodNode(this, defn, packageName)
             mustBeA(defn, 'meta.method');
             mustBeA(packageName, 'char');
-            nodeData.type = 'method';
+            nodeData = CodeNodeData('method');
             nodeData.defn = defn;
             nodeData.name = ifthen(isempty(packageName), defn.Name, [packageName '.' defn.Name]);
             nodeData.basename = regexprep(defn.Name, '.*\.', '');
@@ -255,7 +262,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             % Build function node
             % Only works for global functions, not functions inside a package
             mustBeA(functionName, 'char');
-            nodeData.type = 'function';
+            nodeData = CodeNodeData('function');
             nodeData.name = functionName;
             nodeData.basename = functionName;
             nodeData.package = [];
@@ -266,7 +273,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         
         function out = buildPropertyGroupNode(this, parentDefinition)
             mustBeA(parentDefinition, 'meta.class');
-            nodeData.type = 'property_group';
+            nodeData = CodeNodeData('property_group');
             nodeData.parentDefinition = parentDefinition;
             label = 'Properties';
             icon = myIconPath('none');
@@ -275,7 +282,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         
         function out = buildPropertyNode(this, defn, klassDefn)
             mustBeA(defn, 'meta.property');
-            nodeData.type = 'property';
+            nodeData = CodeNodeData('property');
             nodeData.defn = defn;
             nodeData.basename = defn.Name;
             nodeData.name = [klassDefn.Name '.' defn.Name];
@@ -314,7 +321,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         
         function out = buildEventGroupNode(this, parentDefinition)
             mustBeA(parentDefinition, 'meta.class');
-            nodeData.type = 'event_group';
+            nodeData = CodeNodeData('event_group');
             nodeData.parentDefinition = parentDefinition;
             label = 'Events';
             icon = myIconPath('none');
@@ -323,7 +330,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         
         function out = buildEventNode(this, defn)
             mustBeA(defn, 'meta.event');
-            nodeData.type = 'event';
+            nodeData = CodeNodeData('event');
             nodeData.defn = defn;
             nodeData.basename = defn.Name;
             nodeData.name = defn.Name; % hack
@@ -335,6 +342,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         
         function out = buildSuperclassGroupNode(this, parentDefinition)
             mustBeA(parentDefinition, 'meta.class');
+            nodeData = CodeNodeData('superclass_group');
             nodeData.type = 'superclass_group';
             nodeData.parentDefinition = parentDefinition;
             label = 'Superclasses';
@@ -344,7 +352,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         
         function out = buildEnumerationGroupNode(this, parentDefinition)
             mustBeA(parentDefinition, 'meta.class');
-            nodeData.type = 'enumerationGroup';
+            nodeData = CodeNodeData('enumeration_group');
             nodeData.parentDefinition = parentDefinition;
             label = 'Enumerations';
             icon = myIconPath('none');
@@ -353,7 +361,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         
         function out = buildEnumerationNode(this, defn)
             mustBeA(defn, 'meta.EnumeratedValue');
-            nodeData.type = 'enumeration';
+            nodeData = CodeNodeData('enumeration');
             nodeData.defn = defn;
             nodeData.name = defn.Name;
             label = defn.Name;
@@ -367,7 +375,6 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             
             out = this.oldUitreenode(tag, label, icon, true);
             out.setAllowsChildren(allowsChildren);
-            nodeData.isPopulated = false;
             set(out, 'userdata', nodeData);
             if allowsChildren
                 dummyIcon = myIconPath('none');
@@ -381,7 +388,13 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         end
         
         function refreshNode(this, node)
-            nodeData = get(node, 'userdata');            
+            nodeData = get(node, 'userdata');
+            % Avoid redundant refreshes
+            if nodeData.isRefreshing
+               logdebugf('refreshNode(): node is already refreshing; skipping redundant refresh');
+               return;
+            end
+            % nodeData.isRefreshing = true;
             switch nodeData.type
                 case 'root'                 % NOP; its contents are static
                 case 'codepaths';           this.refreshCodePathsNode(node);
@@ -398,6 +411,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
                 otherwise
                     this.repopulateNode(node);
             end
+            nodeData.isRefreshing = false;
         end
         
         function repopulateNode(this, node)
@@ -477,7 +491,6 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             this.treePeer.remove(node, ixNodesToRemove-1);
             this.treePeer.add(node, [nodesToAdd{:}]);
             nodeData.isPopulated = true;
-            set(node, 'userdata', nodeData);
             logdebugf('refreshed %s; added %d things; removed %d things', ...
                 get(node, 'name'), numel(nodesToAdd), numel(ixNodesToRemove));
         end
