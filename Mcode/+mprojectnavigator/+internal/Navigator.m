@@ -89,7 +89,8 @@ classdef Navigator < handle
             if ~this.syncToEditor
                 return;
             end
-            logdebugf('editorFrontFileChanged: %s', file);
+            [~,basename,ext] = fileparts(file);
+            logdebugf('editorFrontFileChanged: %s', [basename ext]);
             this.fileNavigator.revealFile(file);
             % Find out what that file defines, and update the code navigator
             defn = this.codebase.defnForMfile(file);

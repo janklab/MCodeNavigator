@@ -850,7 +850,8 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         function revealDefn(this, defn, file)
             if isempty(defn)
                 % Ignore empty definitions. That means it's a file outside of
-                % our code base
+                % our code base. Or it's a function in a private/ folder, which
+                % we can't currently see.
                 logdebugf('revealDefn: ignoring empty definition: %s', file);
                 return;
             end
@@ -873,22 +874,26 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
                     this.populateNode(parentNode);
                 else
                     parentNode = scopeNode;
+                    this.refreshNode(parentNode);
                     if this.flatPackageView
                         if ~isempty(defn.package)
                             parentNode = getChildNodeByName(scopeNode, ['+' defn.package]);
+                            this.refreshNode(parentNode);
                         end
                     else
-                        pkgEls = strsplit(defn.package, '.');
-                        for i = 1:numel(pkgEls)
-                            parentNode = getChildNodeByName(parentNode, ['+' pkgEls{i}]);
-                            if isempty(parentNode)
+                        pkgParts = strsplit(defn.package, '.');
+                        for i = 1:numel(pkgParts)
+                            nextPackageDown = ['+' strjoin(pkgParts(1:i), '.')];
+                            nextParentNode = getChildNodeByName(parentNode, nextPackageDown);
+                            if isempty(nextParentNode)
                                 logwarnf('Definition not found in code base: missing parent package for %s', ...
                                     defn.name);
                                 return;
                             end
+                            parentNode = nextParentNode;
+                            this.refreshNode(parentNode);
                         end
                     end
-                    this.populateNode(parentNode);
                 end
                 if isequal(defn.type, 'function')
                     groupNode = getChildNodeByName(parentNode, 'Functions');
