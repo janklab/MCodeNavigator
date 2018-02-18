@@ -26,14 +26,195 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
             
             this.completeRefreshGui;
         end
-                
+        
         function setRootPath(this, newPath)
+            if isequal(newPath, this.rootPath)
+                return;
+            end
             this.rootPath = newPath;
             setpref(PREFGROUP, 'files_pinnedDir', newPath);
             this.refreshGuiForNewPath();
         end
-
-        function out = setupTreeContextMenu(this, node, nodeData) %#ok<INUSL>
+        
+        function completeRefreshGui(this)
+            root = this.buildFileNode(this.rootPath);
+            this.treePeer.setRoot(root);
+            pause(0.005); % Allow widgets to catch up
+            % Expand the root node one level
+            this.expandNode(root);
+        end
+        
+        function refreshGuiForNewPath(this)
+            this.completeRefreshGui;
+        end
+        
+        function revealFile(this, file)
+            if ~strncmpi(file, this.rootPath, numel(this.rootPath))
+                logdebugf('revealFile(): Ignoring file outside of file navigator root: %s', file);
+                return;
+            end
+            relPath = file(numel(this.rootPath)+2:end);
+            relPathParts = strsplit(relPath, filesep);
+            % Expand to that file
+            function [found,foundChild] = findPathComponentInChildren(parentNode, part, iPathPart, nPathParts)
+                found = false;
+                foundChild = [];
+                for iChild = 1:parentNode.getChildCount
+                    child = parentNode.getChildAt(iChild-1);
+                    childData = get(child, 'userdata');
+                    if isequal(part, childData.basename)
+                        % Found the next step in the path. Expand it so its
+                        % children are loaded.
+                        if iPathPart < nPathParts
+                            this.expandNode(child);
+                        end
+                        foundChild = child;
+                        found = true;
+                        break;
+                    end
+                end
+            end
+            node = this.treePeer.getRoot();
+            this.refreshNode(node);
+            for iPathPart = 1:numel(relPathParts)
+                part = relPathParts{iPathPart};
+                [found,foundChild] = findPathComponentInChildren(node, part, ...
+                    iPathPart, numel(relPathParts));
+                if ~found
+                    logwarnf('Could not find file path in tree: %s', path);
+                    return;
+                end
+                node = foundChild;
+                this.refreshNode(node);
+            end
+            this.setSelectedNode(node);
+            this.scrollToNode(node);
+        end
+        
+        function out = buildFileNode(this, path)
+            [~,basename,ext] = fileparts(path);
+            basename = [basename ext];
+            isDir = isFolder(path);
+            if isDir
+                icon = myIconPath('folder');
+            else
+                icon = myIconPath('file');
+            end
+            out = this.oldUitreenode(path, basename, icon, true);
+            nodeData.isDummy = false;
+            nodeData.path = path;
+            nodeData.basename = basename;
+            nodeData.isDir = isDir;
+            nodeData.isFile = ~isDir;
+            nodeData.isPopulated = ~isDir;
+            set(out, 'userdata', nodeData);
+            out.setLeafNode(false);
+            out.setAllowsChildren(isDir);
+            if isDir
+                out.add(this.buildDummyNode());
+            end
+        end
+        
+        function out = buildDummyNode(this)
+            nodeData.path = '<dummy>';
+            nodeData.isDummy = true;
+            nodeData.isDir = false;
+            nodeData.isPopulated = true;
+            nodeData.isFile = false;
+            icon = myIconPath('none');
+            out = this.oldUitreenode('<dummy>', 'Loading...', icon, true);
+            set(out, 'userdata', nodeData);
+        end
+        
+        function repopulateNode(this, node)
+            tree.removeAllChildren(node);
+            this.refreshNode(node);
+        end
+        
+        function populateNode(this, node)
+            this.refreshNode(node);
+        end
+        
+        function refreshNode(this, node)
+            this.refreshFileNode(node);
+        end
+        
+        function refreshFileNode(this, node)
+            nodeData = get(node, 'userdata');
+            file = nodeData.path;
+            nodesToAdd = {};
+            if nodeData.isDir
+                childNodeValues = getChildNodeValues(node);
+                d = dir2(file);
+                [~,ix] = sort(lower({d.name}));
+                d = d(ix);
+                fileNames = {d.name};
+                filePaths = fullfile(file, fileNames);
+                %TODO: Technically, this is a bug, because it won't display
+                %files that are named '<dummy>'. But who would make one of
+                %those?
+                filesToAdd = setdiff(filePaths, childNodeValues);
+                filesToRemove = setdiff(childNodeValues, filePaths);
+                [~,ixToRemove] = ismember(filesToRemove, childNodeValues);
+                for i = 1:numel(filesToAdd)
+                    nodesToAdd{end+1} = this.buildFileNode(filesToAdd{i}); %#ok<AGROW>
+                end
+                this.treePeer.remove(node, ixToRemove-1);
+                this.treePeer.add(node, [nodesToAdd{:}]);
+            else
+                % Plain file: nothing to do
+            end
+        end
+        
+        function nodeExpanded(this, src, evd) %#ok<INUSL>
+            this.refreshNode(evd.getCurrentNode);
+        end
+        
+        function treeMousePressed(this, hTree, eventData) %#ok<INUSL>
+            % Mouse click callback
+            import javax.swing.*
+            
+            %fprintf('mousePressed()\n');
+            % Get the clicked node
+            clickX = eventData.getX;
+            clickY = eventData.getY;
+            jtree = eventData.getSource;
+            treePath = jtree.getPathForLocation(clickX, clickY);
+            % This method of detecting right-clicks avoids confusion with Cmd-clicks on Mac
+            isRightClick = eventData.getButton == java.awt.event.MouseEvent.BUTTON3;
+            if isRightClick
+                % Right-click
+                if ~isempty(treePath)
+                    node = treePath.getLastPathComponent;
+                    nodeData = get(node, 'userdata');
+                else
+                    node = [];
+                    nodeData = [];
+                end
+                jmenu = this.setupTreeContextMenu(node, nodeData);
+                jmenu.show(jtree, clickX, clickY);
+                jmenu.repaint;
+            elseif eventData.getClickCount == 2
+                % Double-click
+                if isempty(treePath)
+                    % Click was not on a node
+                    return;
+                end
+                node = treePath.getLastPathComponent;
+                nodeData = get(node, 'userdata');
+                if nodeData.isDummy
+                    return;
+                end
+                if nodeData.isDir
+                    this.setRootPath(nodeData.path);
+                else
+                    % File node was double-clicked
+                    edit(nodeData.path);
+                end
+            end
+        end
+        
+        function out = setupTreeContextMenu(this, node, nodeData)
             import javax.swing.*
             
             fileShellName = mprojectnavigator.internal.Utils.osFileBrowserName;
@@ -133,200 +314,6 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
             
             out = jmenu;
         end
-        
-        function completeRefreshGui(this)
-            root = this.fileTreenode(this.rootPath);
-            this.treePeer.setRoot(root);
-            pause(0.005); % Allow widgets to catch up
-            % Expand the root node one level
-            this.expandNode(root);
-        end
-        
-        function refreshGuiForNewPath(this)
-            this.completeRefreshGui;
-        end
-        
-        function revealFile(this, file)
-            if ~strncmpi(file, this.rootPath, numel(this.rootPath))
-                % fprintf('Ignoring file outside of file navigator root: %s\n', file);
-                return;
-            end
-            relPath = file(numel(this.rootPath)+2:end);
-            relPathParts = strsplit(relPath, filesep);
-            % Expand to that file
-            function [found,foundChild] = findPathComponentInChildren(parentNode, part, iPathPart, nPathParts)
-                found = false;
-                foundChild = [];
-                for iChild = 1:parentNode.getChildCount
-                    child = parentNode.getChildAt(iChild-1);
-                    childData = get(child, 'userdata');
-                    if isequal(part, childData.basename)
-                        % Found the next step in the path. Expand it so its
-                        % children are loaded.
-                        if iPathPart < nPathParts
-                            this.expandNode(child);
-                        end
-                        foundChild = child;
-                        found = true;
-                        break;
-                    end
-                end
-            end
-            node = this.treePeer.getRoot();
-            for iPathPart = 1:numel(relPathParts)
-                nodeData = get(node, 'userdata');
-                if ~nodeData.isPopulated
-                    this.repopulateNode(node);
-                    nodeData = get(node, 'userdata'); %#ok<NASGU>
-                end
-                part = relPathParts{iPathPart};
-                [found,foundChild] = findPathComponentInChildren(node, part, ...
-                    iPathPart, numel(relPathParts));
-                if ~found
-                    % Second chance: repopulate in case a file was newly added
-                    this.repopulateNode(node);
-                    [found,foundChild] = findPathComponentInChildren(node, part, ...
-                        iPathPart, numel(relPathParts));
-                end
-                if ~found
-                    fprintf('Could not find file path in tree: %s\n', path);
-                    return;
-                end
-                node = foundChild;
-            end
-            this.setSelectedNode(node);
-            this.scrollToNode(node);
-            % Scroll to make that node visible
-        end
-        
-        function out = fileTreenode(this, path)
-            [~,basename,ext] = fileparts(path);
-            basename = [basename ext];
-            isDir = isFolder(path);
-            if isDir
-                icon = myIconPath('folder');
-            else
-                icon = myIconPath('file');
-            end
-            out = this.oldUitreenode('Some Dummy Text', basename, icon, true);
-            nodeData.isDummy = false;
-            nodeData.path = path;
-            nodeData.basename = basename;
-            nodeData.isDir = isDir;
-            nodeData.isFile = ~isDir;
-            nodeData.isPopulated = ~isDir;
-            set(out, 'userdata', nodeData);
-            out.setLeafNode(false);
-            out.setAllowsChildren(isDir);
-            if isDir
-                out.add(this.dummyTreenode());
-            end
-        end
-        
-        function out = dummyTreenode(this)
-            nodeData.path = '<dummy>';
-            nodeData.isDummy = true;
-            nodeData.isDir = false;
-            nodeData.isPopulated = true;
-            nodeData.isFile = false;
-            icon = myIconPath('none');
-            out = this.oldUitreenode('Some Dummy Text', 'Loading...', icon, true);
-            set(out, 'userdata', nodeData);
-        end
-        
-        function out = buildChildNodes(this, node)
-            nodeData = get(node, 'userdata');
-            file = nodeData.path;
-            childNodes = {};
-            if nodeData.isDir
-                d = dir2(file);
-                [~,ix] = sort(lower({d.name})); % Case-insensitive sort
-                d = d(ix);
-                childNodes = cell(1, numel(d));
-                for i = 1:numel(d)
-                    childPath = fullfile(file, d(i).name);
-                    childNode = this.fileTreenode(childPath);
-                    childNodes{i} = childNode;
-                end
-            end
-            out = childNodes;
-        end
-        
-        function repopulateNode(this, node)
-            nodeData = get(node, 'userdata');
-            tree = this.treePeer;
-            % We could check ~tree.isLoaded(node) to avoid re-loading nodes.
-            % But that could end up with stale definitions. For now, just always
-            % reload nodes, so user can refresh them by re-expanding.
-            newChildNodes = this.buildChildNodes(node);
-            % Only this array-based adding method seems to work properly
-            jChildNodes = javaArray('com.mathworks.hg.peer.UITreeNode', numel(newChildNodes));
-            for i = 1:numel(newChildNodes)
-                jChildNodes(i) = java(newChildNodes{i});
-            end
-            tree.removeAllChildren(node);
-            tree.add(node, jChildNodes);
-            tree.setLoaded(node, true);
-            nodeData.isPopulated = true;
-            set(node, 'userdata', nodeData);
-        end
-        
-        function populateNode(this, node)
-            nodeData = get(node, 'userdata');
-            if nodeData.isPopulated
-                return
-            end
-            this.repopulateNode(node);
-        end
-        
-        function nodeExpanded(this, src, evd) %#ok<INUSL>
-            node = evd.getCurrentNode;
-            this.repopulateNode(node);
-        end
-        
-        function treeMousePressed(this, hTree, eventData) %#ok<INUSL>
-            % Mouse click callback
-            import javax.swing.*
-            
-            %fprintf('mousePressed()\n');
-            % Get the clicked node
-            clickX = eventData.getX;
-            clickY = eventData.getY;
-            jtree = eventData.getSource;
-            treePath = jtree.getPathForLocation(clickX, clickY);
-            % This method of detecting right-clicks avoids confusion with Cmd-clicks on Mac
-            isRightClick = eventData.getButton == java.awt.event.MouseEvent.BUTTON3;
-            if isRightClick
-                % Right-click
-                if ~isempty(treePath)
-                    node = treePath.getLastPathComponent;
-                    nodeData = get(node, 'userdata');
-                else
-                    node = [];
-                    nodeData = [];
-                end
-                jmenu = this.setupTreeContextMenu(node, nodeData);
-                jmenu.show(jtree, clickX, clickY);
-                jmenu.repaint;
-            elseif eventData.getClickCount == 2
-                % Double-click
-                if isempty(treePath)
-                    % Click was not on a node
-                    return;
-                end
-                node = treePath.getLastPathComponent;
-                nodeData = get(node, 'userdata');
-                if nodeData.isDummy
-                    return;
-                end
-                if nodeData.isDir
-                    this.setRootPath(nodeData.path);
-                else
-                    % File node was double-clicked
-                    edit(nodeData.path);
-                end
-            end
-        end
     end
 end
 
@@ -375,7 +362,7 @@ if ~isdir(path)
     path = fileparts(path);
 end
 cd(path);
-fprintf('cded to %s\n', path);
+fprintf('Changed directory to %s\n', path);
 end
 
 function ctxRevealInDesktopCallback(src, evd, this, nodeData) %#ok<INUSL>
@@ -430,3 +417,11 @@ end
 function ctxSyncToEditorCallback(src, evd, this) %#ok<INUSL>
 this.navigator.setSyncToEditor(src.isSelected);
 end
+
+function out = getChildNodeValues(node)
+out = {};
+for i = 1:node.getChildCount
+    out{i} = get(node.getChildAt(i-1), 'Value'); %#ok<AGROW>
+end
+end
+

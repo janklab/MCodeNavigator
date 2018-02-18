@@ -100,7 +100,7 @@ classdef Navigator < handle
         function setUpEditorTracking(this)
             tracker = javaObjectEDT('net.apjanke.mprojectnavigator.swing.EditorFileTracker');
             tracker.setMatlabCallback('mprojectnavigator.internal.editorFileTrackerCallback');
-            EDT('attachToMatlab', tracker);
+            tracker.attachToMatlab;
             this.editorTracker = tracker;
             logdebug('setUpEditorTracking(): done');
         end
@@ -109,7 +109,7 @@ classdef Navigator < handle
             if isempty(this.editorTracker)
                 return;
             end
-            EDT('detachFromMatlab', this.editorTracker);
+            this.editorTracker.detachFromMatlab;
             this.editorTracker = [];
             logdebug('tearDownEditorTracking(): done');
         end

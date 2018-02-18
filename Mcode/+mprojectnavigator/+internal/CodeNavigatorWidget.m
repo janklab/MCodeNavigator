@@ -751,7 +751,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             end
             
             this.treePeer.remove(node, ixToRemove-1);
-            this.treePeer.add(node, [nodesToAdd{:}]);            
+            this.treePeer.add(node, [nodesToAdd{:}]);
         end
 
         function refreshEnumerationGroupNode(this, node)
@@ -1152,11 +1152,6 @@ else
     [~,ix] = sort(lower({defns.Name}));
     out = defns(ix);
 end
-end
-
-function out = sortCaseInsensitive(x)
-[~,ix] = sort(lower(x));
-out = x(ix);
 end
 
 function out = idForDefn(defn)
