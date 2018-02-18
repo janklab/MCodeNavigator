@@ -34,6 +34,7 @@ classdef CodeNodeData < mprojectnavigator.internal.NodeData
             end
             this.type = type;
             if nargin >= 2;     this.name = name;  end
+            
         end
     end
 end

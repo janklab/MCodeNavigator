@@ -26,7 +26,8 @@ public class EditorFileTracker implements EditorApplicationListener {
     private Map<Editor,EditorListener> editors = new HashMap<>();
     private String lastFrontFile = "";
 
-    private String fevalFunction;
+    private String frontFileChangeFevalFunction;
+    private String fileSavedFevalFunction;
 
     public void attachToMatlab() {
         editorApplication = MatlabEditorApplication.getInstance();
@@ -55,9 +56,12 @@ public class EditorFileTracker implements EditorApplicationListener {
         editorApplication = null;
     }
 
-    public void setMatlabCallback(String functionName) {
-        requireNonNull(functionName);
-        this.fevalFunction = functionName;
+    public void setFrontFileChangedMatlabCallback(String functionName) {
+        this.frontFileChangeFevalFunction = functionName;
+    }
+
+    public void setFileSavedMatlabCallback(String functionName) {
+        this.fileSavedFevalFunction = functionName;
     }
 
     @Override
@@ -80,22 +84,33 @@ public class EditorFileTracker implements EditorApplicationListener {
     public void newFrontFile(String path) {
         if (path.equals(lastFrontFile)) {
             // No change; no need to raise event
+            log.debug("Same as lastFrontFile; ignoring");
             return;
         }
+        lastFrontFile = path;
         if (path.startsWith("untitled")) {
-            //System.out.println("Ignoring untitled file brought to front.");
+            log.debug("Ignoring untitled file brought to front: '{}'", path);
             return;
         }
         fireFrontFileChanged(path);
     }
 
     public void fireFrontFileChanged(String path) {
-        if (fevalFunction != null) {
-            Matlab ml = new Matlab();
-            Object[] fevalArgs = new Object[1];
-            fevalArgs[0] = path;
-            ml.fevalConsoleOutput(fevalFunction, fevalArgs);
+        fireFileEvent(path, frontFileChangeFevalFunction);
+    }
+
+    public void fireFileSaved(String path) {
+        fireFileEvent(path, fileSavedFevalFunction);
+    }
+
+    private void fireFileEvent(String path, String fevalCallbackFunction) {
+        if (fevalCallbackFunction == null) {
+            return;
         }
+        Matlab ml = new Matlab();
+        Object[] fevalArgs = new Object[1];
+        fevalArgs[0] = path;
+        ml.fevalConsoleOutput(fevalCallbackFunction, fevalArgs);
     }
 
     public class EditorListener implements EditorEventListener {
@@ -121,24 +136,28 @@ public class EditorFileTracker implements EditorApplicationListener {
                         editor, editor.getShortName());
             }
             String path;
+            path = editor.getLongName();
             switch (editorEvent.name()) {
                 case "ACTIVATED":
-                    path = editor.getLongName();
                     newFrontFile(path);
                     break;
                 case "RENAMED":
-                    path = editor.getLongName();
                     newFrontFile(path);
                     break;
                 case "CLOSED":
-                    log.debug("Editor CLOSED: {}", editor);
                     dispose();
                     break;
                 case "AUTOSAVE_OPTIONS_CHANGED":
                     // ignore
                     break;
                 case "DIRTY_STATE_CHANGED":
-                    // ignore
+                    boolean dirty = editor.isDirty();
+                    log.debug("DIRTY_STATE_CHANGED dirty={} file={}", dirty, path);
+                    if (!dirty) {
+                        // This means the file was just saved
+                        log.debug("Firing fireFileSaved({})", path);
+                        fireFileSaved(path);
+                    }
                     break;
                 case "DEBUG_MODE_CHANGED":
                     // ignore

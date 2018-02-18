@@ -17,11 +17,24 @@ function MProjectNavigator(varargin)
 
 error(javachk('awt'));
 
-persistent pNavigator
+    function out = myNavigator(newVal)
+        s = getappdata(0, 'MProjectNavigator');
+        if isempty(s)
+            s = struct;
+            s.NavigatorInstance = [];
+        end
+        out = s.NavigatorInstance;
+        if nargin > 0
+            s.NavigatorInstance = newVal;
+            setappdata(0, 'MProjectNavigator', s);
+        end
+    end
+
+navigator = myNavigator;
 
 if nargin == 0
     maybeInitializeGui();
-    pNavigator.Visible = true;
+    navigator.Visible = true;
     return;
 end
 
@@ -35,14 +48,14 @@ switch varargin{1}
         maybeInitializeGui();
         setPinnedPath(newPinnedPath);
     case '-hide'
-        if isempty(pNavigator)
+        if isempty(navigator)
             return;
         end
-        pNavigator.Visible = false;
+        navigator.Visible = false;
     case '-fresh'
         disposeGui();
         maybeInitializeGui();
-        pNavigator.Visible = true;
+        navigator.Visible = true;
     case '-dispose'
         disposeGui();        
     case '-registerhotkey'
@@ -54,6 +67,8 @@ switch varargin{1}
         fprintf('MProjectNavigator: All settings deleted.\n');
     case '-editorfrontfile'
         editorFrontFile(varargin{2});
+    case '-editorfilesaved'
+        editorFileSaved(varargin{2});
     otherwise
         if isequal(varargin{1}(1), '-')
             warning('MProjectNavigator: Unrecognized option: %s', varargin{1});
@@ -64,32 +79,40 @@ end
 
 
     function disposeGui()
-        if ~isempty(pNavigator)
-            pNavigator.dispose();
-            pNavigator = [];
+        if ~isempty(navigator)
+            navigator.dispose();
+            navigator = [];
+            myNavigator(navigator);
         end
     end
 
     function maybeInitializeGui()
-        if isempty(pNavigator)
-            pNavigator = mprojectnavigator.internal.Navigator;
-            registerHotKeyOnComponent(pNavigator.frame.getContentPane);
+        if isempty(navigator)
+            navigator = mprojectnavigator.internal.Navigator;
+            myNavigator(navigator);
+            registerHotKeyOnComponent(navigator.frame.getContentPane);
         end
     end
 
     function hotKeyInvoked()
-        if isempty(pNavigator)
+        if isempty(navigator)
             maybeInitializeGui();
-            pNavigator.Visible = true;
+            navigator.Visible = true;
         else
             % Toggle visibility
-            pNavigator.Visible = ~pNavigator.Visible;
+            navigator.Visible = ~navigator.Visible;
         end
     end
 
     function editorFrontFile(file)
-        if ~isempty(pNavigator)
-            pNavigator.editorFrontFileChanged(file);
+        if ~isempty(navigator)
+            navigator.editorFrontFileChanged(file);
+        end
+    end
+
+    function editorFileSaved(file)
+        if ~isempty(navigator)
+            navigator.editorFileSaved(file);
         end
     end
 
@@ -100,35 +123,35 @@ end
         end
         realPath = resolveRelativeDirPath(newPath);
         if ~isempty(realPath)
-            pNavigator.fileNavigator.setRootPath(realPath);
+            navigator.fileNavigator.setRootPath(realPath);
         end
     end
 
-    function realPath = resolveRelativeDirPath(p)
-        % HACK: Resolve "." and Matlab-path-relative paths to real path name.
-        if isequal(p, '.')
-            p = pwd;
-        end
-        realPath = [];
-        if isFolder(p)
-            realPath = p;
-        else
-            mp = strsplit(path, pathsep);
-            for i = 1:numel(mp)
-                candidatePath = fullfile(mp{i}, p);
-                if isFolder(candidatePath)
-                    realPath = candidatePath;
-                    break;
-                end
-            end
-            if isempty(realPath)
-                warning('Could not resolve directory ''%s''', p);
-                return;
-            end
-        end
-    end
 end
 
+function realPath = resolveRelativeDirPath(p)
+% HACK: Resolve "." and Matlab-path-relative paths to real path name.
+if isequal(p, '.')
+    p = pwd;
+end
+realPath = [];
+if isFolder(p)
+    realPath = p;
+else
+    mp = strsplit(path, pathsep);
+    for i = 1:numel(mp)
+        candidatePath = fullfile(mp{i}, p);
+        if isFolder(candidatePath)
+            realPath = candidatePath;
+            break;
+        end
+    end
+    if isempty(realPath)
+        warning('Could not resolve directory ''%s''', p);
+        return;
+    end
+end
+end
 
 function registerGlobalHotKey()
 mainFrame = com.mathworks.mde.desk.MLDesktop.getInstance.getMainFrame;

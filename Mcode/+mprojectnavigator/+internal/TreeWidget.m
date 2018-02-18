@@ -106,14 +106,17 @@ classdef (Abstract) TreeWidget < handle
             nodeData.isPopulated = true;
         end
         
-        function refreshNode(this, node, doPopulate)
-            if nargin < 3 || isempty(doPopulate);  doPopulate = false; end
+        function refreshNode(this, node, mode)
+            if nargin < 3;  mode = '';  end
+            mustBeA(mode, 'char');
             nodeData = get(node, 'userdata');
-            if ~nodeData.isPopulated && ~doPopulate
-                return;
-            end
-            if ~nodeData.isDirty
-                return;
+            if ~isequal(mode, 'force')
+                if ~nodeData.isPopulated && ~isequal(mode, 'populate')
+                    return;
+                end
+                if ~nodeData.isDirty
+                    return;
+                end
             end
             this.refreshNodeSingleWrapper(node);
             for i = 1:node.getChildCount
@@ -140,7 +143,7 @@ classdef (Abstract) TreeWidget < handle
             % Mark the node dirty so it always picks up fresh data in response
             % to user input
             this.markDirty(node);
-            this.refreshNode(node, true);
+            this.refreshNode(node, 'populate');
         end
         
         function gentleRecursiveRefresh(this, node)

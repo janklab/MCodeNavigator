@@ -44,6 +44,7 @@ classdef CodeBase
             pkgEls = {};
             iPkgEnd = 0;
             for i = 1:numel(p)
+
                 if p{i}(1) == '+'
                     pkgEls{end+1} = p{i}(2:end); %#ok<AGROW>
                 else

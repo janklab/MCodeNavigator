@@ -13,5 +13,8 @@ classdef FileNodeData < mprojectnavigator.internal.NodeData
             if nargin >= 1;   this.path = path;  end
             if nargin >= 2;   this.isDir = isDir;  end
         end
+        
+        function WHATEVER(foo)
+        end
     end
 end

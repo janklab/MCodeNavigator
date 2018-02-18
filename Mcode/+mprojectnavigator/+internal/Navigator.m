@@ -110,10 +110,17 @@ classdef Navigator < handle
             defn = this.codebase.defnForMfile(file);
             this.codeNavigator.revealDefn(defn, file);
         end
+        
+        function editorFileSaved(this, file)
+            [~,basename,ext] = fileparts(file);
+            logdebugf('editorFileSaved: %s', [basename ext]);
+            this.codeNavigator.fileChanged(file);
+        end
 
         function setUpEditorTracking(this)
             tracker = javaObjectEDT('net.apjanke.mprojectnavigator.swing.EditorFileTracker');
-            tracker.setMatlabCallback('mprojectnavigator.internal.editorFileTrackerCallback');
+            tracker.setFrontFileChangedMatlabCallback('mprojectnavigator.internal.editorFileChangedCallback');
+            tracker.setFileSavedMatlabCallback('mprojectnavigator.internal.editorFileSavedCallback');
             tracker.attachToMatlab;
             this.editorTracker = tracker;
             logdebug('setUpEditorTracking(): done');

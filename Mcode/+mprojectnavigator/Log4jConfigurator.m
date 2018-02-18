@@ -65,7 +65,7 @@ classdef Log4jConfigurator
             out = eval(['org.apache.log4j.Level.' levelName]);
         end
         
-        function setLevels(levels)
+        function setLevels(levels, summat)
             % Set the logging levels for multiple loggers
             %
             % setLevels(levels)

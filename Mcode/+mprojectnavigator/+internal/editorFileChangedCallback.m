@@ -1,8 +1,7 @@
-function editorFileTrackerCallback(varargin)
+function editorFileChangedCallback(path)
 
 persistent lastSeenPath
 
-path = varargin{1};
 if isequal(path, lastSeenPath)
     return
 end

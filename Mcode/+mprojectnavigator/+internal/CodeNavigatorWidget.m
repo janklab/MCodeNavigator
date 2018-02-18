@@ -18,6 +18,8 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         navigator;
         % A Map<String,Node> of definition IDs to nodes in tree
         defnMap = java.util.HashMap;
+        % A Map<File,Node> that tracks what nodes are backed by given files
+        fileToNodeMap = java.util.HashMap;
     end
     
     methods
@@ -238,6 +240,12 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             nodeData.basename = classBaseName;
             label = ['@' classBaseName];
             out = this.createNode(label, label, nodeData);
+            % Get ready for file change notifications: List the files that go in
+            % to this class definition, and register them
+            % Hack: for now, just register the constructor, and be sloppy about
+            % 'which' output for builtins; they'll never change
+            w = which(className);
+            this.fileToNodeMap.put(java.lang.String(w), out);
             this.registerNode(nodeData, out);
         end
         
@@ -262,7 +270,11 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         function out = buildMethodNode(this, defn, packageName)
             mustBeA(defn, 'meta.method');
             mustBeA(packageName, 'char');
-            fqName = ifthen(isempty(packageName), defn.Name, [packageName '.' defn.Name]);
+            if isempty(defn.DefiningClass)
+                fqName = ifthen(isempty(packageName), defn.Name, [packageName '.' defn.Name]);
+            else
+                fqName = [defn.DefiningClass.Name '.' defn.Name];
+            end
             nodeData = CodeNodeData('method', fqName);
             nodeData.basename = regexprep(defn.Name, '.*\.', '');
             nodeData.package = packageName;
@@ -1019,14 +1031,14 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
                 this.populateNode(scopeNode);
                 if ~isequal(defn.type, 'package') && isempty(defn.package)
                     parentNode = getChildNodeByName(scopeNode, '<Global>');
-                    this.populateNode(parentNode);
+                    this.refreshNode(parentNode, 'force');
                 else
                     parentNode = scopeNode;
-                    this.refreshNode(parentNode);
+                    this.refreshNode(parentNode, 'force');
                     if this.flatPackageView
                         if ~isempty(defn.package)
                             parentNode = getChildNodeByName(scopeNode, ['+' defn.package]);
-                            this.refreshNode(parentNode);
+                            this.refreshNode(parentNode, 'force');
                         end
                     else
                         pkgParts = strsplit(defn.package, '.');
@@ -1039,13 +1051,13 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
                                 return;
                             end
                             parentNode = nextParentNode;
-                            this.refreshNode(parentNode);
+                            this.refreshNode(parentNode, 'force');
                         end
                     end
                 end
                 if isequal(defn.type, 'function')
                     groupNode = getChildNodeByName(parentNode, 'Functions');
-                    this.populateNode(groupNode);
+                    this.refreshNode(groupNode, 'force');
                     defnNode = getChildNodeByName(groupNode, defn.basename);
                 elseif isequal(defn.type, 'class')
                     % Parent node was populated, so this node should exist now
@@ -1064,7 +1076,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
                             error('Unrecognized defn.type: %s', defn.type);
                     end
                     groupNode = getChildNodeByName(parentNode, groupName);
-                    this.populateNode(groupNode);
+                    this.refreshNode(groupNode, 'force');
                     defnNode = this.defnMap.get(id);
                 end
             end
@@ -1078,7 +1090,20 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             this.scrollToNode(defnNode);
         end
         
-        function out = locatePrivateDirsForPackage(this, packageName)
+        function fileChanged(this, file)
+            % File-changed callback
+            logdebugf('fileChanged(): file=%s', file);
+            if this.fileToNodeMap.containsKey(file)
+                logdebugf('fileChanged(): file is in map');
+                node = this.fileToNodeMap.get(file);
+                this.markDirty(node);
+                this.refreshNode(node);
+            else
+                logdebugf('fileChanged(): file is not in map');                
+            end 
+        end
+        
+        function out = locatePrivateDirsForPackage(this, packageName) %#ok<INUSL>
             % Locate private/ source directories for class
             % Matlab's metaclasses don't provide this, so we need to scan the
             % path
@@ -1089,7 +1114,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             for i = 1:numel(roots)
                 pkgPrivatePath = fullfile(roots{i}, pkgRelPath, 'private');
                 if isFolder(pkgPrivatePath)
-                    out{end+1} = pkgPrivatePath;
+                    out{end+1} = pkgPrivatePath; %#ok<AGROW>
                 end
             end
         end
@@ -1234,16 +1259,15 @@ switch nodeData.type
     case 'function'
         edit(nodeData.name);
     case 'method'
-        defn = nodeData.defn;
-        klassDefn = defn.DefiningClass;
-        if isempty(klassDefn)
+        className = nodeData.definingClass;
+        if isempty(className)
             if isempty(nodeData.package)
-                qualifiedName = defn.Name;
+                qualifiedName = nodeData.basename;
             else
-                qualifiedName = [nodeData.package '.' defn.Name];
+                qualifiedName = [nodeData.package '.' nodeData.basename];
             end
         else
-            qualifiedName = [klassDefn.Name '.' defn.Name];
+            qualifiedName = [className '.' nodeData.basename];
         end
         edit(qualifiedName);
     otherwise
