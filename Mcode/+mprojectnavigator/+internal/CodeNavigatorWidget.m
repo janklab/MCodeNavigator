@@ -12,6 +12,8 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
     % Hmm. The latter seems more likely, considering that the refreshNode() log
     % messages appear slowly when I do multiple refreshes on a slowly-loading
     % node.
+    % TODO: Track package-privates in file map and support syncing/refreshing of
+    % them.
     properties (SetAccess = private)
         flatPackageView = getpref(PREFGROUP, 'code_flatPackageView', false);
         showHidden = getpref(PREFGROUP, 'code_showHidden', false);
@@ -37,7 +39,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             % Don't show root node; we're using multiple roots for code sets
             this.jTree.setShowsRootHandles(true);
             this.jTree.setRootVisible(false);
-                        
+            
             this.completeRefreshGui;
         end
         
@@ -152,7 +154,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             defn = get(node, 'userdata');
             this.defnMap.remove(idForDefn(defn));
         end
-                
+        
         function out = buildRootNode(this)
             nodeData = CodeNodeData('root', 'root');
             out = this.oldUitreenode('<dummy>', 'Definitions', [], true);
@@ -245,7 +247,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             % Hack: for now, just register the constructor, and be sloppy about
             % 'which' output for builtins; they'll never change
             w = which(className);
-            this.fileToNodeMap.put(java.lang.String(w), out);
+            this.fileToNodeMap.put(w, out);
             this.registerNode(nodeData, out);
         end
         
@@ -253,9 +255,11 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             nodeData = CodeNodeData('package_private_thing', key);
             nodeData.basename = name;
             nodeData.path = path;
+            nodeData.isFile = true;
             icon = myIconPath('none');
             out = this.createNode(key, name, nodeData, false, icon);
             this.registerNode(nodeData, out);
+            this.fileToNodeMap.put(path, out);
         end
         
         function out = buildMethodGroupNode(this, parentDefinition)
@@ -415,7 +419,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
                 out.add(this.buildDummyNode);
             end
         end
-                
+        
         function refreshNodeSingle(this, node)
             nodeData = get(node, 'userdata');
             switch nodeData.type
@@ -463,7 +467,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             end
             out = pkgNames(tf);
         end
-                
+        
         function refreshPackageNode(this, node)
             nodeData = get(node, 'userdata');
             packageName = nodeData.name;
@@ -533,7 +537,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             this.treePeer.remove(node, ixNodesToRemove-1);
             this.treePeer.add(node, [nodesToAdd{:}]);
         end
-                
+        
         function refreshClassNode(this, node)
             nodeData = get(node, 'userdata');
             klass = meta.class.fromName(nodeData.name);
@@ -608,7 +612,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
                 if isempty(child)
                     this.treePeer.add(node, this.buildSuperclassGroupNode(klass));
                 end
-            end            
+            end
         end
         
         function refreshCodePathsNode(this, node)
@@ -628,7 +632,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
                     this.treePeer.remove(node, globalsNode);
                 end
             end
-            % Package nodes            
+            % Package nodes
             pkgs = sortCaseInsensitive(found.packages);
             childNodeValues = getChildNodeValues(node);
             nodesToAdd = {};
@@ -789,12 +793,12 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             if tf
                 ixToRemove(end+1) = ixDummy;
             end
-                        
+            
             this.treePeer.remove(node, ixToRemove-1);
             this.treePeer.add(node, [nodesToAdd{:}]);
             nodeData.isPopulated = true;
         end
-
+        
         function refreshPropertyGroupNode(this, node)
             nodeData = get(node, 'userdata');
             childNodeValues = getChildNodeValues(node);
@@ -819,7 +823,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             end
             
             this.treePeer.remove(node, ixToRemove-1);
-            this.treePeer.add(node, [nodesToAdd{:}]);            
+            this.treePeer.add(node, [nodesToAdd{:}]);
         end
         
         function refreshEventGroupNode(this, node)
@@ -848,7 +852,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             this.treePeer.remove(node, ixToRemove-1);
             this.treePeer.add(node, [nodesToAdd{:}]);
         end
-
+        
         function refreshEnumerationGroupNode(this, node)
             nodeData = get(node, 'userdata');
             classDefn = meta.class.fromName(nodeData.definingClass);
@@ -872,7 +876,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             end
             
             this.treePeer.remove(node, ixToRemove-1);
-            this.treePeer.add(node, [nodesToAdd{:}]);            
+            this.treePeer.add(node, [nodesToAdd{:}]);
         end
         
         function refreshMethodNode(this, node)
@@ -963,7 +967,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             end
             
             this.treePeer.remove(node, ixToRemove-1);
-            this.treePeer.add(node, [nodesToAdd{:}]);            
+            this.treePeer.add(node, [nodesToAdd{:}]);
         end
         
         function out = maybeRejectHidden(this, defns)
@@ -1008,76 +1012,83 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         end
         
         function revealDefn(this, defn, file)
-            if isempty(defn)
+            % Reveal the node for a given definition
+            
+            % Fast path: look up by file
+            if ~isempty(file) && this.fileToNodeMap.containsKey(file)
+                logdebugf('revealDefn: fast path by file: %s', file);
+                defnNode = this.fileToNodeMap.get(file);
+            elseif isempty(defn)
                 % Ignore empty definitions. That means it's a file outside of
                 % our code base. Or it's a function in a private/ folder, which
                 % we can't currently see.
                 logdebugf('revealDefn: ignoring empty definition: %s', file);
                 return;
-            end
-            id = idForDefn(defn);
-            node = this.defnMap.get(id);
-            if ~isempty(node)
-                % Easy case: the node already exists
-                logdebugf('revealDefn: fast path: %s', file);
-                defnNode = node;
             else
-                % Hard case: we may need to start at the top and expand nodes in
-                % order to vivify the node for this definition
-                logdebugf('revealDefn: hard path: %s', file);
-                root = this.treePeer.getRoot;
-                scopeNodeName = ifthen(isequal(defn.scope, 'system'), 'MATLAB', 'USER');
-                scopeNode = getChildNodeByName(root, scopeNodeName);
-                this.populateNode(scopeNode);
-                if ~isequal(defn.type, 'package') && isempty(defn.package)
-                    parentNode = getChildNodeByName(scopeNode, '<Global>');
-                    this.refreshNode(parentNode, 'force');
+                id = idForDefn(defn);
+                node = this.defnMap.get(id);
+                if ~isempty(node)
+                    % Easy case: the node already exists
+                    logdebugf('revealDefn: fast path by id: %s', file);
+                    defnNode = node;
                 else
-                    parentNode = scopeNode;
-                    this.refreshNode(parentNode, 'force');
-                    if this.flatPackageView
-                        if ~isempty(defn.package)
-                            parentNode = getChildNodeByName(scopeNode, ['+' defn.package]);
-                            this.refreshNode(parentNode, 'force');
-                        end
+                    % Hard case: we may need to start at the top and expand nodes in
+                    % order to vivify the node for this definition
+                    logdebugf('revealDefn: hard path: %s', file);
+                    root = this.treePeer.getRoot;
+                    scopeNodeName = ifthen(isequal(defn.scope, 'system'), 'MATLAB', 'USER');
+                    scopeNode = getChildNodeByName(root, scopeNodeName);
+                    this.populateNode(scopeNode);
+                    if ~isequal(defn.type, 'package') && isempty(defn.package)
+                        parentNode = getChildNodeByName(scopeNode, '<Global>');
+                        this.refreshNode(parentNode, 'force');
                     else
-                        pkgParts = strsplit(defn.package, '.');
-                        for i = 1:numel(pkgParts)
-                            nextPackageDown = ['+' strjoin(pkgParts(1:i), '.')];
-                            nextParentNode = getChildNodeByName(parentNode, nextPackageDown);
-                            if isempty(nextParentNode)
-                                logwarnf('Definition not found in code base: missing parent package for %s', ...
-                                    defn.name);
-                                return;
+                        parentNode = scopeNode;
+                        this.refreshNode(parentNode, 'force');
+                        if this.flatPackageView
+                            if ~isempty(defn.package)
+                                parentNode = getChildNodeByName(scopeNode, ['+' defn.package]);
+                                this.refreshNode(parentNode, 'force');
                             end
-                            parentNode = nextParentNode;
-                            this.refreshNode(parentNode, 'force');
+                        else
+                            pkgParts = strsplit(defn.package, '.');
+                            for i = 1:numel(pkgParts)
+                                nextPackageDown = ['+' strjoin(pkgParts(1:i), '.')];
+                                nextParentNode = getChildNodeByName(parentNode, nextPackageDown);
+                                if isempty(nextParentNode)
+                                    logwarnf('Definition not found in code base: missing parent package for %s', ...
+                                        defn.name);
+                                    return;
+                                end
+                                parentNode = nextParentNode;
+                                this.refreshNode(parentNode, 'force');
+                            end
                         end
                     end
-                end
-                if isequal(defn.type, 'function')
-                    groupNode = getChildNodeByName(parentNode, 'Functions');
-                    this.refreshNode(groupNode, 'force');
-                    defnNode = getChildNodeByName(groupNode, defn.basename);
-                elseif isequal(defn.type, 'class')
-                    % Parent node was populated, so this node should exist now
-                    defnNode = this.defnMap.get(id);
-                elseif isequal(defn.type, 'method') && ...
-                        (~isfield(defn, 'definingClass') || isempty(defn.definingClass))
-                    % Package functions. Same as with class; parent was
-                    % populated
-                    defnNode = this.defnMap.get(id);
-                else
-                    switch defn.type
-                        case 'method';    groupName = 'Methods';
-                        case 'property';  groupName = 'Properties';
-                        otherwise
-                            % Other types won't be passed in to this method.
-                            error('Unrecognized defn.type: %s', defn.type);
+                    if isequal(defn.type, 'function')
+                        groupNode = getChildNodeByName(parentNode, 'Functions');
+                        this.refreshNode(groupNode, 'force');
+                        defnNode = getChildNodeByName(groupNode, defn.basename);
+                    elseif isequal(defn.type, 'class')
+                        % Parent node was populated, so this node should exist now
+                        defnNode = this.defnMap.get(id);
+                    elseif isequal(defn.type, 'method') && ...
+                            (~isfield(defn, 'definingClass') || isempty(defn.definingClass))
+                        % Package functions. Same as with class; parent was
+                        % populated
+                        defnNode = this.defnMap.get(id);
+                    else
+                        switch defn.type
+                            case 'method';    groupName = 'Methods';
+                            case 'property';  groupName = 'Properties';
+                            otherwise
+                                % Other types won't be passed in to this method.
+                                error('Unrecognized defn.type: %s', defn.type);
+                        end
+                        groupNode = getChildNodeByName(parentNode, groupName);
+                        this.refreshNode(groupNode, 'force');
+                        defnNode = this.defnMap.get(id);
                     end
-                    groupNode = getChildNodeByName(parentNode, groupName);
-                    this.refreshNode(groupNode, 'force');
-                    defnNode = this.defnMap.get(id);
                 end
             end
             if isempty(defnNode)
@@ -1092,15 +1103,11 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         
         function fileChanged(this, file)
             % File-changed callback
-            logdebugf('fileChanged(): file=%s', file);
             if this.fileToNodeMap.containsKey(file)
-                logdebugf('fileChanged(): file is in map');
                 node = this.fileToNodeMap.get(file);
                 this.markDirty(node);
                 this.refreshNode(node);
-            else
-                logdebugf('fileChanged(): file is not in map');                
-            end 
+            end
         end
         
         function out = locatePrivateDirsForPackage(this, packageName) %#ok<INUSL>
@@ -1306,19 +1313,19 @@ end
 end
 
 function ctxRevealInDesktopCallback(src, evd, this, nodeData) %#ok<INUSL>
-    if isequal(nodeData.type, 'class')
-        w = which(nodeData.className);
-        if strfind(w, 'is a built-in')
-            uiwait(errordlg({sprintf('Cannot reveal %s because it is a built-in', ...
-                nodeData.className)}, 'Error'));
-        else
-            mprojectnavigator.internal.Utils.guiRevealFileInDesktopFileBrowser(w);
-        end
-    elseif (nodeData.isFile)
-        mprojectnavigator.internal.Utils.guiRevealFileInDesktopFileBrowser(nodeData.path);            
+if isequal(nodeData.type, 'class')
+    w = which(nodeData.className);
+    if strfind(w, 'is a built-in')
+        uiwait(errordlg({sprintf('Cannot reveal %s because it is a built-in', ...
+            nodeData.className)}, 'Error'));
     else
-        % NOP
+        mprojectnavigator.internal.Utils.guiRevealFileInDesktopFileBrowser(w);
     end
+elseif (nodeData.isFile)
+    mprojectnavigator.internal.Utils.guiRevealFileInDesktopFileBrowser(nodeData.path);
+else
+    % NOP
+end
 end
 
 function ctxFullyExpandNodeCallback(src, evd, this, node, nodeData) %#ok<INUSD,INUSL>

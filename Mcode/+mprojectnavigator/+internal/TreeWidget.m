@@ -73,11 +73,9 @@ classdef (Abstract) TreeWidget < handle
         
         function refreshNodeSingleWrapper(this, node)
             try
-                logdebugf('refreshNodeWrapper(): refreshing %s', char(node.toString));
                 nodeData = get(node, 'userdata');
                 % Avoid redundant refreshes
                 if nodeData.isRefreshing
-                   logdebugf('refreshNodeWrapper(): node is already refreshing; skipping redundant refresh');
                    return;
                 end
                 nodeData.isRefreshing = true;
@@ -147,14 +145,16 @@ classdef (Abstract) TreeWidget < handle
         end
         
         function gentleRecursiveRefresh(this, node)
-            % Refresh all nodes that are already populated
-            %logdebug('gentleRecursiveRefresh(): {}', node);
+            % Refresh all nodes that are already populated.
+            % This will pick up updates to dirty nodes anywhere on the tree
+            % TODO: Since this is for a user-driven refresh, might want to
+            % either ignore the dirty flag, or just mark the entire tree dirty
+            % before doing this, so we're sure to get fresh data
             nodeData = get(node, 'userdata');
             if ~nodeData.isPopulated
-                logdebug('gentleRecursiveRefresh(): not populated. skipping: {}', node);
                 return;
             else
-                this.refreshNodeWrapper(node);
+                this.refreshNode(node);
                 for i = 1:node.getChildCount
                     this.gentleRecursiveRefresh(node.getChildAt(i-1));
                 end

@@ -38,7 +38,7 @@ classdef Navigator < handle
             if isempty(framePosn)
                 framePosn = [NaN NaN 350 600];
             end
-            myFrame = JFrame('Project Navigator');
+            myFrame = javaObjectEDT('javax.swing.JFrame', 'Project Navigator');
             myFrame.setSize(framePosn(3), framePosn(4));
             if ~isnan(framePosn(1))
                 myFrame.setLocation(framePosn(1), framePosn(2));
@@ -62,7 +62,7 @@ classdef Navigator < handle
         end
         
         function set.Visible(this, newValue)
-            EDT('setVisible', this.frame, newValue);
+            this.frame.setVisible(newValue);
         end
         
         function out = get.Visible(this)
@@ -73,7 +73,7 @@ classdef Navigator < handle
             this.fileNavigator.dispose;
             this.codeNavigator.dispose;
             this.tearDownEditorTracking;
-            EDT('dispose', this.frame);
+            this.frame.dispose;
             this.frame = [];
         end
         

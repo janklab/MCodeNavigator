@@ -42,7 +42,7 @@ public class EditorFileTracker implements EditorApplicationListener {
             Editor editor = viewClient.getEditor();
             lastFrontFile = editor.getLongName();
             log.debug("Initial front editor file: {}", lastFrontFile);
-            // TODO: Should this raise a newFrontFile event?
+            // TODO: Should this raise an initial newFrontFile event?
         }
     }
 
@@ -84,12 +84,10 @@ public class EditorFileTracker implements EditorApplicationListener {
     public void newFrontFile(String path) {
         if (path.equals(lastFrontFile)) {
             // No change; no need to raise event
-            log.debug("Same as lastFrontFile; ignoring");
             return;
         }
         lastFrontFile = path;
         if (path.startsWith("untitled")) {
-            log.debug("Ignoring untitled file brought to front: '{}'", path);
             return;
         }
         fireFrontFileChanged(path);
@@ -152,10 +150,8 @@ public class EditorFileTracker implements EditorApplicationListener {
                     break;
                 case "DIRTY_STATE_CHANGED":
                     boolean dirty = editor.isDirty();
-                    log.debug("DIRTY_STATE_CHANGED dirty={} file={}", dirty, path);
                     if (!dirty) {
                         // This means the file was just saved
-                        log.debug("Firing fireFileSaved({})", path);
                         fireFileSaved(path);
                     }
                     break;
