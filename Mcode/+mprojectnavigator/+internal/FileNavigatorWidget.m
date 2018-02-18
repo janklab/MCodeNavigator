@@ -145,14 +145,12 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
             if nodeData.isDir
                 childNodeValues = getChildNodeValues(node);
                 d = dir2(file);
-                [~,ix] = sort(lower({d.name}));
-                d = d(ix);
                 fileNames = {d.name};
                 filePaths = fullfile(file, fileNames);
                 %TODO: Technically, this is a bug, because it won't display
                 %files that are named '<dummy>'. But who would make one of
                 %those?
-                filesToAdd = setdiff(filePaths, childNodeValues);
+                filesToAdd = sortCaseInsensitive(setdiff(filePaths, childNodeValues));
                 filesToRemove = setdiff(childNodeValues, filePaths);
                 [~,ixToRemove] = ismember(filesToRemove, childNodeValues);
                 for i = 1:numel(filesToAdd)
@@ -205,7 +203,10 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
                     return;
                 end
                 if nodeData.isDir
-                    this.setRootPath(nodeData.path);
+                    % Toggle expansion
+                    % Actually, that's the default behavior for JTree, so do
+                    % nothing.
+                    % this.setRootPath(nodeData.path);
                 else
                     % File node was double-clicked
                     edit(nodeData.path);
@@ -238,6 +239,7 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
             menuOptions = JMenu('Options');
             menuItemSyncToEditor = JCheckBoxMenuItem('Sync to Editor');
             menuItemSyncToEditor.setSelected(this.navigator.syncToEditor);
+            menuPath = JMenu('Path');
             
             % Only enable edit if there is a selection or click target
             isTargetFile = (~isempty(nodeData) && nodeData.isFile);
@@ -253,6 +255,18 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
             menuItemRevealInDesktop.setEnabled(isTargetFileOrDir);
             menuItemCopyPath.setEnabled(isTargetFileOrDir);
             menuItemCopyRelativePath.setEnabled(isTargetFileOrDir);
+            
+            pathParts = strsplit(this.rootPath, filesep);
+            if isempty(pathParts{1})
+                pathParts{1} = '/';
+            end
+            for i = 1:numel(pathParts)
+                label = pathParts{i};
+                menuItem = JMenuItem(label);
+                partialPath = fullfile(pathParts{1:i});
+                setCallback(menuItem, {@ctxPathElementCallback, this, partialPath});
+                menuPath.add(menuItem);
+            end
             
             hasUsableTerminal = mprojectnavigator.internal.Utils.isSupportedTerminalInstalled;
             
@@ -302,6 +316,7 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
                 jmenu.addSeparator;
             end
             jmenu.add(menuItemDirUp);
+            jmenu.add(menuPath);
             if isTargetDir
                 jmenu.add(menuItemPinThis);
             end
@@ -415,6 +430,10 @@ end
 
 function ctxSyncToEditorCallback(src, evd, this) %#ok<INUSL>
 this.navigator.setSyncToEditor(src.isSelected);
+end
+
+function ctxPathElementCallback(src, evd, this, path)
+this.setRootPath(path);
 end
 
 function out = getChildNodeValues(node)
