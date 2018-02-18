@@ -12,7 +12,7 @@ TODO
  * Requires a custom variant of the Silk icon set
 * An inheritance hierarchy browser for classes
 * Switch to using what() for class/function metadata discovery
-* "Edit" action for Properties
+* Persist files/classes tab selection across restarts
 
 # To Maybe Do
 

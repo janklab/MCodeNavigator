@@ -104,7 +104,8 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
                 isTargetEnum = isequal(nd.type, 'enumeration');
                 isFile = nd.isFile;
             end
-            isTargetEditable = isTargetClass || isTargetMethod || isTargetFunction || isFile;
+            isTargetEditable = isTargetClass || isTargetMethod || isTargetFunction ...
+                || isTargetProperty || isTargetEnum || isFile;
             isTargetDocable = isTargetClass || isTargetMethod || isTargetProperty ...
                 || isTargetEvent || isTargetEnum || isTargetFunction;
             isTargetRevealable = isTargetClass || isFile;
@@ -1277,12 +1278,16 @@ switch nodeData.type
             qualifiedName = [className '.' nodeData.basename];
         end
         edit(qualifiedName);
+    case 'property'
+        className = nodeData.definingClass;
+        qualifiedName = [className '.' nodeData.basename];
+        edit(qualifiedName);
     otherwise
         if nodeData.isFile
             edit(nodeData.path);
         else
             % Shouldn't get here
-            fprintf('Editing not supported for node type %s\n', nodeData.type);
+            logerrorf('Editing is not supported for node type %s', nodeData.type);
         end
 end
 end
@@ -1294,21 +1299,22 @@ switch nodeData.type
     case 'function'
         doc(nodeData.functionName);
     case {'method', 'property', 'event', 'enumeration'}
-        defn = nodeData.defn;
-        klassDefn = defn.DefiningClass;
-        if isempty(klassDefn)
-            if isempty(nodeData.package)
-                qualifiedName = defn.Name;
-            else
-                qualifiedName = [nodeData.package '.' defn.Name];
-            end
+        pkg = nodeData.package;
+        className = nodeData.definingClass;
+        if isempty(className)
+            pName = nodeData.basename;
         else
-            qualifiedName = [klassDefn.Name '.' defn.Name];
+            pName = [className '.' nodeData.basename];
+        end
+        if isempty(pkg)
+            qualifiedName = pName;
+        else
+            qualifiedName = [pkg '.' pName];
         end
         doc(qualifiedName);
     otherwise
         % Shouldn't get here
-        fprintf('Editing not supported for node type %s\n', nodeData.type);
+        logerrorf('Doc viewing is not supported for node type %s', nodeData.type);
 end
 end
 
