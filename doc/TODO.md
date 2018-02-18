@@ -13,6 +13,7 @@ TODO
 * An inheritance hierarchy browser for classes
 * Switch to using what() for class/function metadata discovery
 * Persist files/classes tab selection across restarts
+* On-node "loading" indicator, so you can see when things are auto-loading without being expanded yet
 
 # To Maybe Do
 
@@ -23,6 +24,7 @@ TODO
 * Auto-detect new versions and notify user
 * Text search/filtering on the class/file navigators?
 * Persist the tree expansion state across Matlab restarts
+* External file change detection (once I'm on Java 8)
 
 # TO NOT DO
 

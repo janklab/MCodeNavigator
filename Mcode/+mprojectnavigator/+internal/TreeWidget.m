@@ -72,6 +72,9 @@ classdef (Abstract) TreeWidget < handle
         end
         
         function refreshNodeSingleWrapper(this, node)
+            function stopRefreshing(nodeData)
+                nodeData.isRefreshing = false;
+            end
             try
                 nodeData = get(node, 'userdata');
                 % Avoid redundant refreshes
@@ -79,10 +82,10 @@ classdef (Abstract) TreeWidget < handle
                    return;
                 end
                 nodeData.isRefreshing = true;
+                RAII.refreshing = onCleanup(@() stopRefreshing(nodeData));
                 this.refreshNodeSingle(node);
                 nodeData.isPopulated = true;
                 nodeData.isDirty = false;
-                nodeData.isRefreshing = false;
             catch err
                 nodeData.isRefreshing = false;
                 % Display errors in the GUI
@@ -106,18 +109,19 @@ classdef (Abstract) TreeWidget < handle
         
         function refreshNode(this, node, mode)
             if nargin < 3;  mode = '';  end
-            mustBeA(mode, 'char');
+            mode = cellstr(mode);
+            doForce = ismember('force', mode);
+            doPopulate = ismember('populate', mode);
             nodeData = get(node, 'userdata');
-            if ~isequal(mode, 'force')
-                if ~nodeData.isPopulated && ~isequal(mode, 'populate')
-                    return;
-                end
-                if ~nodeData.isDirty
-                    return;
-                end
+            if ~nodeData.isPopulated && ~doPopulate
+                return;
+            end
+            if ~nodeData.isDirty && ~doForce
+                return;
             end
             this.refreshNodeSingleWrapper(node);
             for i = 1:node.getChildCount
+                % force and populate do *not* propagate
                 this.refreshNode(node.getChildAt(i-1));
             end
         end
@@ -141,7 +145,7 @@ classdef (Abstract) TreeWidget < handle
             % Mark the node dirty so it always picks up fresh data in response
             % to user input
             this.markDirty(node);
-            this.refreshNode(node, 'populate');
+            this.refreshNode(node, {'populate','force'});
         end
         
         function gentleRecursiveRefresh(this, node)

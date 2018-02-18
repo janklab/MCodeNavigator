@@ -218,7 +218,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             nodeData = CodeNodeData('package_private', packageName);
             nodeData.package = packageName;
             icon = myIconPath('none');
-            out = this.createNode(label, label, nodeData, [], icon);
+            out = this.createNode('<pkgprivate>', label, nodeData, [], icon);
             this.registerNode(nodeData, out);
         end
         
@@ -513,8 +513,9 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             functionChildNodeNames = selectRegexp(childNodeValues, '^[^@+]');
             ixToAdd = find(~ismember(functionNames, functionChildNodeNames));
             for i = 1:numel(ixToAdd)
-                nodesToAdd{end+1} = this.buildMethodNode(functionList(i), packageName); %#ok<AGROW>
-                nodesToAddNames{end+1} = functionNames{i}; %#ok<AGROW>
+                ix = ixToAdd(i);
+                nodesToAdd{end+1} = this.buildMethodNode(functionList(ix), packageName); %#ok<AGROW>
+                nodesToAddNames{end+1} = functionNames{ix}; %#ok<AGROW>
             end
             functionChildNodeNamesToRemove = setdiff(functionChildNodeNames, functionNames);
             nodesToRemoveNames = [nodesToRemoveNames functionChildNodeNamesToRemove];
@@ -1042,14 +1043,14 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
                     this.populateNode(scopeNode);
                     if ~isequal(defn.type, 'package') && isempty(defn.package)
                         parentNode = getChildNodeByName(scopeNode, '<Global>');
-                        this.refreshNode(parentNode, 'force');
+                        this.refreshNode(parentNode, {'force','populate'});
                     else
                         parentNode = scopeNode;
-                        this.refreshNode(parentNode, 'force');
+                        this.refreshNode(parentNode, {'force','populate'});
                         if this.flatPackageView
                             if ~isempty(defn.package)
                                 parentNode = getChildNodeByName(scopeNode, ['+' defn.package]);
-                                this.refreshNode(parentNode, 'force');
+                                this.refreshNode(parentNode, {'force','populate'});
                             end
                         else
                             pkgParts = strsplit(defn.package, '.');
@@ -1062,13 +1063,13 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
                                     return;
                                 end
                                 parentNode = nextParentNode;
-                                this.refreshNode(parentNode, 'force');
+                                this.refreshNode(parentNode, {'force','populate'});
                             end
                         end
                     end
                     if isequal(defn.type, 'function')
                         groupNode = getChildNodeByName(parentNode, 'Functions');
-                        this.refreshNode(groupNode, 'force');
+                        this.refreshNode(groupNode, {'force','populate'});
                         defnNode = getChildNodeByName(groupNode, defn.basename);
                     elseif isequal(defn.type, 'class')
                         % Parent node was populated, so this node should exist now
@@ -1087,7 +1088,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
                                 error('Unrecognized defn.type: %s', defn.type);
                         end
                         groupNode = getChildNodeByName(parentNode, groupName);
-                        this.refreshNode(groupNode, 'force');
+                        this.refreshNode(groupNode, {'force','populate'});
                         defnNode = this.defnMap.get(id);
                     end
                 end
