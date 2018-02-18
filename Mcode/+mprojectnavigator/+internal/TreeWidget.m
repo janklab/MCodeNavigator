@@ -1,4 +1,4 @@
-classdef TreeWidget < handle
+classdef (Abstract) TreeWidget < handle
     % A widget based on UITreePeer
     
     properties
@@ -71,6 +71,56 @@ classdef TreeWidget < handle
             end
         end
         
+        function refreshNodeWrapper(this, node)
+            try
+                logdebugf('refreshNodeWrapper(): refreshing %s', char(node.toString));
+                nodeData = get(node, 'userdata');
+                % Avoid redundant refreshes
+                if nodeData.isRefreshing
+                   logdebugf('refreshNodeWrapper(): node is already refreshing; skipping redundant refresh');
+                   return;
+                end
+                nodeData.isRefreshing = true;
+                this.refreshNode(node);
+                nodeData.isPopulated = true;
+                nodeData.isRefreshing = false;
+            catch err
+                nodeData.isRefreshing = false;
+                % Display errors in the GUI
+                warning('Error while refreshing node ''%s'': %s', nodeData.name, ...
+                    err.message);
+                this.treePeer.removeAllChildren(node);
+                this.treePeer.add(node, this.buildErrorMessageNode(['ERROR: ' err.message]));
+            end
+        end
+        
+        function refreshNode(this, node) %#ok<INUSD>
+            switch nodeData.type
+                case 'error_message'        % NOP
+                otherwise
+                    error('Unrecognized nodeData.type: ''%s''', nodeData.type);
+            end
+        end
+        
+        function nodeExpanded(this, src, evd) %#ok<INUSL>
+            this.refreshNodeWrapper(evd.getCurrentNode);
+        end
+        
+        function gentleRecursiveRefresh(this, node)
+            % Refresh all nodes that are already populated
+            %logdebug('gentleRecursiveRefresh(): {}', node);
+            nodeData = get(node, 'userdata');
+            if ~nodeData.isPopulated
+                %logdebug('gentleRecursiveRefresh(): not populated. skipping: {}', node);
+                return;
+            else
+                this.refreshNodeWrapper(node);
+                for i = 1:node.getChildCount
+                    this.gentleRecursiveRefresh(node.getChildAt(i-1));
+                end
+            end
+        end
+        
         function removeNodesByIndex(this, node, ix)
         % Remove nodes, properly updating the tree
         %
@@ -118,7 +168,7 @@ classdef TreeWidget < handle
             this.treePeer.setSelectedNode(node);
         end
         
-        function scrollToNode(this, node)
+        function scrollToNode(this, node, bogus)
             EDT('scrollPathToVisible', this.jTree, this.treePathForNode(node));
         end
         
@@ -137,10 +187,12 @@ classdef TreeWidget < handle
         function treeMouseMoved(this, src, evd) %#ok<INUSD>
         end
         
-        function nodeExpanded(this, src, evd) %#ok<INUSD>
+        function nodeSelected(this, src, evd, bogus) %#ok<INUSD>
         end
         
-        function nodeSelected(this, src, evd) %#ok<INUSD>
+        function fireNodeChanged(this, node)
+            treeModel = getJavaPrivateFieldViaReflection(this.treePeer, 'fuitreemodel');
+            EDT('nodeChanged', treeModel, node);
         end
     end
 end

@@ -72,7 +72,7 @@ classdef Navigator < handle
             this.frame = [];
         end
         
-        function setSyncToEditor(this, newState)
+        function setSyncToEditor(this, newState, blah)
             if newState == this.syncToEditor
                 return
             end

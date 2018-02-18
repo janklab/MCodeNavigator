@@ -17,7 +17,6 @@ classdef CodeNodeData < mprojectnavigator.internal.NodeData
         paths
         found
         defn
-        parentDefinition
         classNames
         functionNames
         definingClass

@@ -8,6 +8,8 @@ classdef NodeData < handle
         isRefreshing logical = false
         % Indicates the node has been populated with data, at least initially
         isPopulated logical = false
+        % Indicates this node contains a diagnostic message, not real data
+        isDiagnostic logical = false
     end
     
 end
