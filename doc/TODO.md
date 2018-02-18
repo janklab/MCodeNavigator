@@ -21,6 +21,7 @@ TODO
  * Licensing situation is unclear here
 * Auto-detect new versions and notify user
 * Text search/filtering on the class/file navigators?
+* Persist the tree expansion state across Matlab restarts
 
 # TO NOT DO
 

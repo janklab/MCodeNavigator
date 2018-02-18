@@ -89,7 +89,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             nd = nodeData;
             if isempty(nd)
                 [isTargetClass,isTargetMethod,isTargetFunction,isTargetProperty,...
-                    isTargetEvent,isTargetEnum] = deal(false);
+                    isTargetEvent,isTargetEnum,isFile] = deal(false);
             else
                 isTargetClass = isequal(nd.type, 'class');
                 isTargetMethod = isequal(nd.type, 'method');
@@ -97,11 +97,12 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
                 isTargetProperty = isequal(nd.type, 'property');
                 isTargetEvent = isequal(nd.type, 'event');
                 isTargetEnum = isequal(nd.type, 'enumeration');
+                isFile = nd.isFile;
             end
-            isTargetEditable = isTargetClass || isTargetMethod || isTargetFunction;
+            isTargetEditable = isTargetClass || isTargetMethod || isTargetFunction || isFile;
             isTargetDocable = isTargetClass || isTargetMethod || isTargetProperty ...
                 || isTargetEvent || isTargetEnum || isTargetFunction;
-            isTargetRevealable = isTargetClass;
+            isTargetRevealable = isTargetClass || isFile;
             menuItemEdit.setEnabled(isTargetEditable);
             
             function setCallback(item, callback)
@@ -147,7 +148,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         end
                 
         function out = buildRootTreenode(this)
-            nodeData = CodeNodeData('root');
+            nodeData = CodeNodeData('root', 'root');
             out = this.oldUitreenode('<dummy>', 'Definitions', [], true);
             out.setAllowsChildren(true);
             set(out, 'userdata', nodeData);
@@ -159,8 +160,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         
         function out = buildCodePathsNode(this, label, paths)
             % A node representing a codebase with a list of paths
-            nodeData = CodeNodeData('codepaths');
-            nodeData.label = label;
+            nodeData = CodeNodeData('codepaths', label);
             nodeData.paths = paths;
             icon = myIconPath('topfolder');
             out = this.createNode('codepaths', label, nodeData, [], icon);
@@ -178,7 +178,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         function out = buildGlobalClassesNode(this, classNames)
             mustBeA(classNames, 'cellstr');
             nodeData = CodeNodeData('global_classes');
-            nodeData.classNames = classNames;
+            nodeData.classNames = sortCaseInsensitive(classNames);
             icon = myIconPath('folder');
             out = this.createNode('Classes', 'Classes', nodeData, [], icon);
         end
@@ -186,7 +186,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         function out = buildGlobalFunctionsNode(this, functionNames)
             mustBeA(functionNames, 'cellstr');
             nodeData = CodeNodeData('global_functions');
-            nodeData.functionNames = functionNames;
+            nodeData.functionNames = sortCaseInsensitive(functionNames);
             icon = myIconPath('folder');
             out = this.createNode('Functions', 'Functions', nodeData, [], icon);
         end
@@ -194,12 +194,29 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         function out = buildPackageNode(this, packageName)
             mustBeA(packageName, 'char');
             label = ['+' packageName];
-            nodeData = CodeNodeData('package');
+            nodeData = CodeNodeData('package', packageName);
             nodeData.name = packageName;
             nodeData.basename = regexprep(packageName, '.*\.', '');
             icon = myIconPath('folder');
             out = this.createNode(label, label, nodeData, [], icon);
             this.registerNode(nodeData, out);
+        end
+        
+        function out = buildPackagePrivateNode(this, packageName)
+            mustBeA(packageName, 'char');
+            label = 'private';
+            nodeData = CodeNodeData('package_private', packageName);
+            nodeData.package = packageName;
+            icon = myIconPath('none');
+            out = this.createNode(label, label, nodeData, [], icon);
+            this.registerNode(nodeData, out);
+        end
+        
+        function out = buildErrorMessageNode(this, message)
+            nodeData = CodeNodeData('error_message');
+            nodeData.label = message;
+            icon = myIconPath('error');
+            out = this.createNode(message, message, nodeData, false, icon);
         end
         
         function out = buildClassNode(this, className)
@@ -210,6 +227,15 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             nodeData.basename = classBaseName;
             label = ['@' classBaseName];
             out = this.createNode(label, label, nodeData);
+            this.registerNode(nodeData, out);
+        end
+        
+        function out = buildPackagePrivateThingNode(this, name, path, key)
+            nodeData = CodeNodeData('package_private_thing', key);
+            nodeData.basename = name;
+            nodeData.path = path;
+            icon = myIconPath('none');
+            out = this.createNode(key, name, nodeData, false, icon);
             this.registerNode(nodeData, out);
         end
         
@@ -225,9 +251,9 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         function out = buildMethodNode(this, defn, packageName)
             mustBeA(defn, 'meta.method');
             mustBeA(packageName, 'char');
-            nodeData = CodeNodeData('method');
+            fqName = ifthen(isempty(packageName), defn.Name, [packageName '.' defn.Name]);
+            nodeData = CodeNodeData('method', fqName);
             nodeData.defn = defn;
-            nodeData.name = ifthen(isempty(packageName), defn.Name, [packageName '.' defn.Name]);
             nodeData.basename = regexprep(defn.Name, '.*\.', '');
             nodeData.package = packageName;
             if isempty(defn.DefiningClass)
@@ -388,34 +414,45 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         end
         
         function refreshNode(this, node)
-            nodeData = get(node, 'userdata');
-            % Avoid redundant refreshes
-            if nodeData.isRefreshing
-               logdebugf('refreshNode(): node is already refreshing; skipping redundant refresh');
-               return;
+            try
+                nodeData = get(node, 'userdata');
+                % Avoid redundant refreshes
+                if nodeData.isRefreshing
+                   logdebugf('refreshNode(): node is already refreshing; skipping redundant refresh');
+                   return;
+                end
+                % nodeData.isRefreshing = true;
+                switch nodeData.type
+                    case 'root'                     % NOP; its contents are static
+                    case 'codepaths';               this.refreshCodePathsNode(node);
+                    case 'codepaths_globals';       this.refreshCodePathsGlobalsNode(node);
+                    case 'global_classes';          this.refreshGlobalClassesNode(node);
+                    case 'global_functions';        this.refreshGlobalFunctionsNode(node);
+                    case 'package';                 this.refreshPackageNode(node);
+                    case 'class';                   this.refreshClassNode(node);   
+                    case 'method_group';            this.refreshMethodGroupNode(node);
+                    case 'property_group';          this.refreshPropertyGroupNode(node);
+                    case 'event_group';             this.refreshEventGroupNode(node);
+                    case 'enumeration_group';       this.refreshEnumerationGroupNode(node);
+                    case 'superclass_group';        this.refreshSuperclassGroupNode(node);
+                    case 'package_private';         this.refreshPackagePrivateNode(node);  
+                    case 'package_private_thing'    % NOP
+                    case 'error_message'            % NOP
+                    otherwise
+                        error('Unrecognized nodeData.type: ''%s''', nodeData.type);
+                end
+                nodeData.isRefreshing = false;
+            catch err
+                % Display errors in the GUI
+                warning('Error while refreshing node ''%s'': %s', nodeData.name, ...
+                    err.message);
+                this.treePeer.removeAllChildren(node);
+                this.treePeer.add(node, this.buildErrorMessageNode(err.message));
             end
-            % nodeData.isRefreshing = true;
-            switch nodeData.type
-                case 'root'                 % NOP; its contents are static
-                case 'codepaths';           this.refreshCodePathsNode(node);
-                case 'codepaths_globals';   this.refreshCodePathsGlobalsNode(node);
-                case 'global_classes';      this.refreshGlobalClassesNode(node);
-                case 'global_functions';    this.refreshGlobalFunctionsNode(node);
-                case 'package';             this.refreshPackageNode(node);
-                case 'class';               this.refreshClassNode(node);   
-                case 'method_group';        this.refreshMethodGroupNode(node);
-                case 'property_group';      this.refreshPropertyGroupNode(node);
-                case 'event_group';         this.refreshEventGroupNode(node);
-                case 'enumeration_group';   this.refreshEnumerationGroupNode(node);
-                case 'superclass_group';    this.refreshSuperclassGroupNode(node);
-                otherwise
-                    this.repopulateNode(node);
-            end
-            nodeData.isRefreshing = false;
         end
         
         function repopulateNode(this, node)
-            tree.removeAllChildren(node);
+            this.treePeer.removeAllChildren(node);
             this.refreshNode(node);
         end
         
@@ -441,6 +478,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             nodesToAddNames = {};
             nodesToRemoveNames = cell(1, 0);
             pkg = meta.package.fromName(nodeData.name);
+            pkgPrivateDirs = this.locatePrivateDirsForPackage(packageName);
             % Detect subpackages to add/remove
             if ~this.flatPackageView
                 pkgList = sortDefnsByName(pkg.PackageList);
@@ -480,6 +518,16 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             end
             functionChildNodeNamesToRemove = setdiff(functionChildNodeNames, functionNames);
             nodesToRemoveNames = [nodesToRemoveNames functionChildNodeNamesToRemove];
+            logdebugf('pkgPrivateDirs = [%s]', strjoin(pkgPrivateDirs, ', '));
+            if isempty(pkgPrivateDirs)
+                if ismember('<pkgprivate>', childNodeValues)
+                    nodesToRemoveNames{end+1} = '<pkgprivate>';
+                end
+            else
+                if ~ismember('<pkgprivate>', childNodeValues)
+                    nodesToAdd{end+1} = this.buildPackagePrivateNode(packageName);
+                end
+            end
             % Remove dummy node
             if ismember('dummy', childNodeValues)
                 nodesToRemoveNames{end+1} = 'dummy';
@@ -491,13 +539,14 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             this.treePeer.remove(node, ixNodesToRemove-1);
             this.treePeer.add(node, [nodesToAdd{:}]);
             nodeData.isPopulated = true;
-            logdebugf('refreshed %s; added %d things; removed %d things', ...
-                get(node, 'name'), numel(nodesToAdd), numel(ixNodesToRemove));
         end
                 
         function refreshClassNode(this, node)
             nodeData = get(node, 'userdata');
             klass = meta.class.fromName(nodeData.name);
+            if isempty(klass)
+                error('Failed getting class definition for class ''%s''', nodeData.name);
+            end
             properties = this.maybeRejectHidden(...
                 rejectInheritedDefinitions(klass.PropertyList, klass));
             methods = this.maybeRejectHidden(...
@@ -646,7 +695,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         
         function refreshGlobalClassesNode(this, node)
             nodeData = get(node, 'userdata');
-            classNames = nodeData.classNames;
+            classNames = sortCaseInsensitive(nodeData.classNames);
             % This node's data is static, so we can just do the simple initial-population case
             dummyNode = getChildNodeByValue(node, '<dummy>');
             if ~isempty(dummyNode)
@@ -661,7 +710,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         
         function refreshGlobalFunctionsNode(this, node)
             nodeData = get(node, 'userdata');
-            functionNames = nodeData.functionNames;
+            functionNames = sortCaseInsensitive(nodeData.functionNames);
             % This node's data is static, so we can just do the simple initial-population case
             dummyNode = getChildNodeByValue(node, '<dummy>');
             if ~isempty(dummyNode)
@@ -672,6 +721,45 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
                 this.treePeer.remove(node, dummyNode);
                 this.treePeer.add(node, [nodesToAdd{:}]);
             end
+        end
+        
+        function refreshPackagePrivateNode(this, node)
+            % Refresh package-private node
+            %
+            % This implementation is incomplete: private dirs can have many
+            % types of things, and I'm only supporting a couple types for now.
+            nodeData = get(node, 'userdata');
+            packageName = nodeData.package;
+            % Re-scan directories every time, because they might change, and I
+            % don't want to do differential logic in the package node refresh
+            dirs = this.locatePrivateDirsForPackage(packageName);
+            % Merge all the dir contents into a single display
+            % c is { key, type, name, path; ... }
+            c = {};
+            types = {'m' 'mlapp' 'mat' 'mex' 'mdl' 'slx' 'p' 'classes' 'packages'};
+            for iDir = 1:numel(dirs)
+                w = what(dirs{iDir});
+                for iType = 1:numel(types)
+                    type = types{iType};
+                    filePaths = fullfile(dirs{iDir}, w.(type));
+                    c = [c; [strcat(type,{':'},filePaths) repmat({type},size(w.(type))) ...
+                        w.(type) filePaths]]; %#ok<AGROW>
+                end
+            end
+            [~,ix] = sortCaseInsensitive(c(:,3));
+            c = c(ix,:);
+            childNodeValues = getChildNodeValues(node);
+            [~,ixToAdd] = setdiff(c(:,1), childNodeValues);
+            [~,ixToRemove] = setdiff(childNodeValues, c(:,1));
+            nodesToAdd = {};
+            for i = 1:numel(ixToAdd)
+                ix = ixToAdd(i);
+                nodesToAdd{i} = this.buildPackagePrivateThingNode(c{ix,3}, c{ix,4}, c{ix,1}); %#ok<AGROW>
+                nodesToAdd{i}.UserData.isFile = true; %#ok<AGROW>
+            end
+            
+            this.treePeer.remove(node, ixToRemove-1);
+            this.treePeer.add(node, [nodesToAdd{:}]);
         end
         
         function refreshMethodGroupNode(this, node)
@@ -710,7 +798,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             end
             
             this.treePeer.remove(node, ixToRemove-1);
-            this.treePeer.add(node, [nodesToAdd{:}]);            
+            this.treePeer.add(node, [nodesToAdd{:}]);
         end
 
         function refreshPropertyGroupNode(this, node)
@@ -943,6 +1031,21 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             this.scrollToNode(defnNode);
         end
         
+        function out = locatePrivateDirsForPackage(this, packageName)
+            % Locate private/ source directories for class
+            % Matlab's metaclasses don't provide this, so we need to scan the
+            % path
+            pkgPathEls = strcat('+', strsplit(packageName, '.'));
+            pkgRelPath = fullfile(pkgPathEls{:});
+            roots = strsplit(path, pathsep);
+            out = {};
+            for i = 1:numel(roots)
+                pkgPrivatePath = fullfile(roots{i}, pkgRelPath, 'private');
+                if isFolder(pkgPrivatePath)
+                    out{end+1} = pkgPrivatePath;
+                end
+            end
+        end
     end
 end
 
@@ -1097,8 +1200,12 @@ switch nodeData.type
         end
         edit(qualifiedName);
     otherwise
-        % Shouldn't get here
-        fprintf('Editing not supported for node type %s\n', nodeData.type);
+        if nodeData.isFile
+            edit(nodeData.path);
+        else
+            % Shouldn't get here
+            fprintf('Editing not supported for node type %s\n', nodeData.type);
+        end
 end
 end
 
@@ -1128,8 +1235,7 @@ end
 end
 
 function ctxRevealInDesktopCallback(src, evd, this, nodeData) %#ok<INUSL>
-switch nodeData.type
-    case 'class'
+    if isequal(nodeData.type, 'class')
         w = which(nodeData.className);
         if strfind(w, 'is a built-in')
             uiwait(errordlg({sprintf('Cannot reveal %s because it is a built-in', ...
@@ -1137,9 +1243,11 @@ switch nodeData.type
         else
             mprojectnavigator.internal.Utils.guiRevealFileInDesktopFileBrowser(w);
         end
-    otherwise
+    elseif (nodeData.isFile)
+        mprojectnavigator.internal.Utils.guiRevealFileInDesktopFileBrowser(nodeData.path);            
+    else
         % NOP
-end
+    end
 end
 
 function ctxFullyExpandNodeCallback(src, evd, this, node, nodeData) %#ok<INUSD,INUSL>
