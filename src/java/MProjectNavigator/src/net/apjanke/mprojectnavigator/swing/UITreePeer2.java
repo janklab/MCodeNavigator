@@ -3,6 +3,7 @@ package net.apjanke.mprojectnavigator.swing;
 import com.mathworks.hg.peer.UITreeNode;
 import com.mathworks.hg.peer.UITreePeer;
 
+import javax.swing.tree.DefaultTreeModel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -28,6 +29,21 @@ public class UITreePeer2 extends UITreePeer {
 
     //-------------------------------------------------
     // Bug Fixes
+
+    private DefaultTreeModel fuitreemodel;
+
+    private DefaultTreeModel getFuitreemodel() throws NoSuchFieldException, IllegalAccessException {
+        // Can't initialize the field at construction time, because UITreePeer
+        // initializes it at init() time, not construction. This is a hack that hopes it's not called
+        // before the parent has been initialized. Can't just override init() because
+        // init() is final.
+        // TODO: Figure out a better way to do this, ensuring that we wait until super is initialized.
+        if (fuitreemodel == null) {
+            fuitreemodel = (DefaultTreeModel) getPrivateFieldViaReflection(
+                    this, UITreePeer.class, "fuitreemodel");
+        }
+        return fuitreemodel;
+    }
 
     /**
      * This method is overridden to work around an apparent bug in UITreePeer where
@@ -81,6 +97,17 @@ public class UITreePeer2 extends UITreePeer {
         }
         parent.insert(child, index);
         nodesWereAdded(parent, new int[] { index });
+    }
+
+    /**
+     * Indicate that a node value was changed.
+     * This method works around a limitation in UITreePeer, where it has no mechanism to
+     * raise a notification of node value changes, so the displayed string for the node
+     * cannot be updated.
+     * @param node
+     */
+    public void nodeChanged(UITreeNode node) throws NoSuchFieldException, IllegalAccessException {
+        getFuitreemodel().nodeChanged(node);
     }
 
     //-------------------------------------------------
@@ -145,5 +172,28 @@ public class UITreePeer2 extends UITreePeer {
     }
 
 
+    /**
+     * Gets a private field via Java Reflection. This is a dangerous hack.
+     * @param obj
+     * @param klass
+     * @param fieldName
+     * @return
+     * @throws IllegalAccessException
+     * @throws NoSuchFieldException
+     */
+    private static Object getPrivateFieldViaReflection(Object obj, Class klass, String fieldName) throws IllegalAccessException, NoSuchFieldException {
+        java.lang.reflect.Field field = klass.getDeclaredField(fieldName);
+        boolean wasAccessible = field.isAccessible();
+        if (!wasAccessible) {
+            field.setAccessible(true);
+        }
+        try {
+            return field.get(obj);
+        } finally {
+            if (!wasAccessible) {
+                field.setAccessible(false);
+            }
+        }
+    }
 
 }

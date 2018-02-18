@@ -258,7 +258,6 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             mustBeA(packageName, 'char');
             fqName = ifthen(isempty(packageName), defn.Name, [packageName '.' defn.Name]);
             nodeData = CodeNodeData('method', fqName);
-            nodeData.defn = defn;
             nodeData.basename = regexprep(defn.Name, '.*\.', '');
             nodeData.package = packageName;
             if isempty(defn.DefiningClass)
@@ -267,7 +266,9 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
                 nodeData.definingClass = defn.DefiningClass.Name;
             end
             icon = myIconPath('dot');
-            out = this.createNode(nodeData.basename, nodeData.basename, nodeData, false, icon);
+            label = this.labelForMethod(defn);
+            out = this.createNode(nodeData.basename, label, nodeData, false, icon);
+            nodeData.isPopulated = true;
             this.registerNode(nodeData, out);
         end
         
@@ -764,15 +765,10 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             if tf
                 ixToRemove(end+1) = ixDummy;
             end
-            
-            % Method nodes are non-expanding, so they must be refreshed to pick
-            % up their correct label
-            for i = 1:numel(nodesToAdd)
-                this.refreshNode(nodesToAdd{i});
-            end
-            
+                        
             this.treePeer.remove(node, ixToRemove-1);
             this.treePeer.add(node, [nodesToAdd{:}]);
+            nodeData.isPopulated = true;
         end
 
         function refreshPropertyGroupNode(this, node)
@@ -869,6 +865,16 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
                 error('Could not find method definition for %s in class %s', ...
                     nodeData.basename, nodeData.definingClass);
             end
+            label = this.labelForMethod(defn);
+            node.setName(label);
+            logdebugf('New method label: %s', label);
+            %node.setUserObject(java.lang.String(label));
+            node.setName(label);
+            this.fireNodeChanged(node);
+            nodeData.isPopulated = true;
+        end
+        
+        function out = labelForMethod(this, defn)
             inputArgStr = ifthen(isequal(defn.InputNames, {'rhs1'}), '...', ...
                 strjoin(defn.InputNames, ', '));
             baseLabel = sprintf('%s (%s)', defn.Name, inputArgStr);
@@ -887,12 +893,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
                 end
             end
             label = regexprep(strjoin(items, ' '), '  +', ' ');
-            node.setName(label);
-            logdebugf('New method label: %s', label);
-            %node.setUserObject(java.lang.String(label));
-            node.setName(label);
-            this.fireNodeChanged(node);
-            nodeData.isPopulated = true;
+            out = label;
         end
         
         function refreshSuperclassGroupNode(this, node)

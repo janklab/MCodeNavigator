@@ -1,5 +1,7 @@
 function out = getJavaPrivateFieldViaReflection(javaObj, fieldName)
-
+% Access a private field on a Java object via Reflection
+%
+% WARNING: This is a dangerous hack, and is also very slow!
 exactClass = javaObj.getClass();
 
 klass = exactClass;

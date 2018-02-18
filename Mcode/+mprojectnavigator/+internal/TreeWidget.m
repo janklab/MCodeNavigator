@@ -111,7 +111,7 @@ classdef (Abstract) TreeWidget < handle
             %logdebug('gentleRecursiveRefresh(): {}', node);
             nodeData = get(node, 'userdata');
             if ~nodeData.isPopulated
-                %logdebug('gentleRecursiveRefresh(): not populated. skipping: {}', node);
+                logdebug('gentleRecursiveRefresh(): not populated. skipping: {}', node);
                 return;
             else
                 this.refreshNodeWrapper(node);
@@ -168,7 +168,7 @@ classdef (Abstract) TreeWidget < handle
             this.treePeer.setSelectedNode(node);
         end
         
-        function scrollToNode(this, node, bogus)
+        function scrollToNode(this, node)
             EDT('scrollPathToVisible', this.jTree, this.treePathForNode(node));
         end
         
@@ -191,8 +191,9 @@ classdef (Abstract) TreeWidget < handle
         end
         
         function fireNodeChanged(this, node)
-            treeModel = getJavaPrivateFieldViaReflection(this.treePeer, 'fuitreemodel');
-            EDT('nodeChanged', treeModel, node);
+            this.treePeer.nodeChanged(node);
+            %treeModel = getJavaPrivateFieldViaReflection(this.treePeer, 'fuitreemodel');
+            %EDT('nodeChanged', treeModel, node);
         end
     end
 end
