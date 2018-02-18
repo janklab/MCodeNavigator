@@ -150,7 +150,7 @@ classdef CodeBase
             out = which(functionName);
         end
         
-        function out = locationInfoForDefn(this, defn, file)
+        function out = locationInfoForDefn(this, defn, file) %#ok<INUSL>
             if strncmpi(file, matlabroot, numel(matlabroot))
                 out.scope = 'system';
             else
