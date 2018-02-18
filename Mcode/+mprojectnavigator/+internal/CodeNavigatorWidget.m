@@ -581,7 +581,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
                 pkgs = this.rejectPackagesWithNoImmediateMembers(pkgs);
             end
             childNodePkgNames = strrep(setdiff(childNodeValues, {'<Global>','<dummy>'}), '+', '');
-            pkgsToAdd = setdiff(pkgs, childNodePkgNames);
+            pkgsToAdd = sortCaseInsensitive(setdiff(pkgs, childNodePkgNames));
             pkgsToRemove = setdiff(childNodePkgNames, pkgs);
             [~,ixToRemove] = ismember(strcat('+',pkgsToRemove), childNodeValues);
             % Handle dummy node
