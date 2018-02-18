@@ -7,7 +7,7 @@
 PROGRAM=MProjectNavigator
 VERSION=$(shell cat VERSION)
 DIST=dist/${PROGRAM}-${VERSION}
-FILES=README.md lib Mcode bootstrap doc
+FILES=README.md LICENSE lib Mcode bootstrap doc 
 
 dist:
 	rm -rf dist/*
