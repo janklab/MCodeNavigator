@@ -1009,7 +1009,9 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
                     % Click was not on a node
                     return;
                 end
-                % Haven't decided on an action for double-click yet. Do nothing.
+                node = treePath.getLastPathComponent;
+                nodeData = get(node, 'userdata');
+                editNode(this, nodeData);
             end
         end
         
@@ -1261,7 +1263,7 @@ function ctxShowHiddenCallback(src, evd, this, nodeData) %#ok<INUSD,INUSL>
 this.setShowHidden(src.isSelected);
 end
 
-function ctxEditCallback(src, evd, this, nodeData) %#ok<INUSL>
+function editNode(this, nodeData)
 switch nodeData.type
     case 'class'
         edit(nodeData.name);
@@ -1279,7 +1281,7 @@ switch nodeData.type
             qualifiedName = [className '.' nodeData.basename];
         end
         edit(qualifiedName);
-    case 'property'
+    case {'property','event','enumeration'}
         className = nodeData.definingClass;
         qualifiedName = [className '.' nodeData.basename];
         edit(qualifiedName);
@@ -1291,6 +1293,10 @@ switch nodeData.type
             logerrorf('Editing is not supported for node type %s', nodeData.type);
         end
 end
+end
+
+function ctxEditCallback(src, evd, this, nodeData) %#ok<INUSL>
+editNode(this, nodeData);
 end
 
 function ctxViewDocCallback(src, evd, this, nodeData) %#ok<INUSL>
