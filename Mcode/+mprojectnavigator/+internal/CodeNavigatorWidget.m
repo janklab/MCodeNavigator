@@ -783,7 +783,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             
             defnNames = metaObjNames(defnList);
             childDefnNames = setdiff(childNodeValues, '<dummy>');
-            defnsToAdd = setdiff(defnNames, childDefnNames);
+            defnsToAdd = sortCaseInsensitive(setdiff(defnNames, childDefnNames));
             defnsToRemove = setdiff(childDefnNames, defnNames);
             [~,ixToRemove] = ismember(defnsToRemove, childNodeValues);
             [~,loc] = ismember(defnsToAdd, defnNames);
@@ -811,7 +811,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             
             defnNames = metaObjNames(defnList);
             childDefnNames = setdiff(childNodeValues, '<dummy>');
-            defnsToAdd = setdiff(defnNames, childDefnNames);
+            defnsToAdd = sortCaseInsensitive(setdiff(defnNames, childDefnNames));
             defnsToRemove = setdiff(childDefnNames, defnNames);
             [~,ixToRemove] = ismember(defnsToRemove, childNodeValues);
             [~,loc] = ismember(defnsToAdd, defnNames);
@@ -838,7 +838,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             
             defnNames = metaObjNames(defnList);
             childDefnNames = setdiff(childNodeValues, '<dummy>');
-            defnsToAdd = setdiff(defnNames, childDefnNames);
+            defnsToAdd = sortCaseInsensitive(setdiff(defnNames, childDefnNames));
             defnsToRemove = setdiff(childDefnNames, defnNames);
             [~,ixToRemove] = ismember(defnsToRemove, childNodeValues);
             [~,loc] = ismember(defnsToAdd, defnNames);
@@ -864,7 +864,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             
             defnNames = metaObjNames(defnList);
             childDefnNames = setdiff(childNodeValues, '<dummy>');
-            defnsToAdd = setdiff(defnNames, childDefnNames);
+            defnsToAdd = sortCaseInsensitive(setdiff(defnNames, childDefnNames));
             defnsToRemove = setdiff(childDefnNames, defnNames);
             [~,ixToRemove] = ismember(defnsToRemove, childNodeValues);
             [~,loc] = ismember(defnsToAdd, defnNames);
@@ -955,7 +955,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             
             defnNames = metaObjNames(defnList);
             childDefnNames = setdiff(childNodeValues, '<dummy>');
-            defnsToAdd = setdiff(defnNames, childDefnNames);
+            defnsToAdd = sortCaseInsensitive(setdiff(defnNames, childDefnNames));
             defnsToRemove = setdiff(childDefnNames, defnNames);
             [~,ixToRemove] = ismember(defnsToRemove, childNodeValues);
             [~,loc] = ismember(defnsToAdd, defnNames);
