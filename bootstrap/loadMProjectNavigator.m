@@ -23,7 +23,9 @@ function loadMProjectNavigator(varargin)
     jarFile = fullfile(javaLibDir, 'MProjectNavigator.jar');
     
     addpath(mcodeDir);
-    javaaddpath(jarFile);
+    %javaaddpath(jarFile);
+    classpathHacker = mprojectnavigator.internal.StaticClasspathHacker;
+    classpathHacker.addToStaticClasspath(jarFile);
     
     mprojectnavigator.Log4jConfigurator.configureBasicConsoleLogging;
     if doDebug

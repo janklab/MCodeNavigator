@@ -105,10 +105,18 @@ classdef Navigator < handle
                     file);
                 return;
             end
-            this.fileNavigator.revealFile(file);
-            % Find out what that file defines, and update the code navigator
-            defn = this.codebase.defnForMfile(file);
-            this.codeNavigator.revealDefn(defn, file);
+            try
+                this.fileNavigator.revealFile(file);
+                % Find out what that file defines, and update the code navigator
+                defn = this.codebase.defnForMfile(file);
+                this.codeNavigator.revealDefn(defn, file);
+            catch err
+                % Ignore all errors. These can happen if the user is working on
+                % a file that's in flux and has an invalid definition, which is
+                % a common case when developing code
+                logdebugf('editorFrontFileChanged(): caught error while revealing file; ignoring. Error: %s', ...
+                    err.message);
+            end
         end
         
         function editorFileSaved(this, file)

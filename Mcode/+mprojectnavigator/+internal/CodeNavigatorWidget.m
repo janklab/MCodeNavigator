@@ -1096,7 +1096,9 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
                 end
             end
             if isempty(defnNode)
-                logwarnf('Definition node did not populate as expected: %s', id);
+                % This is not a warning; it can happen when there's an invalid
+                % definition in user code. Ignore.
+                logdebugf('Definition node did not populate as expected: %s', id);
                 return;
             end
             parent = defnNode.getParent;
