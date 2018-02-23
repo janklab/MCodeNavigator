@@ -22,7 +22,7 @@ classdef Log4jConfigurator
     %
     % % Display fully-qualified class/category names in the log output:
     % mprojectnavigator.Log4jConfigurator.setRootAppenderPattern(...
-    %    ['%d{HH:mm:ss.SSS} %-5p %c - %m' sprintf('\n')]);
+    %    ['%d{HH:mm:ss.SSS} %p %c - %m' sprintf('\n')]);
     
     methods (Static)
         function configureBasicConsoleLogging
@@ -39,7 +39,7 @@ classdef Log4jConfigurator
             rootAppender = rootLogger.getAllAppenders().nextElement();
             % Use \n instead of %n because the Matlab console wants Unix-style line
             % endings, even on Windows.
-            pattern = ['%d{HH:mm:ss.SSS} %-5p %c{1} - %m' sprintf('\n')]; %#ok<SPRINTFN>
+            pattern = ['%d{HH:mm:ss.SSS} %p %c{1} - %m' sprintf('\n')]; %#ok<SPRINTFN>
             myLayout = org.apache.log4j.PatternLayout(pattern);
             rootAppender.setLayout(myLayout);
         end
