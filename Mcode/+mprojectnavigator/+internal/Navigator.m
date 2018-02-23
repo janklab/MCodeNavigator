@@ -43,7 +43,10 @@ classdef Navigator < handle
             if ~isnan(framePosn(1))
                 myFrame.setLocation(framePosn(1), framePosn(2));
             end
-            
+            % Use the Matlab or custom icon to blend in with the rest of the
+            % application.
+            mainFrame = com.mathworks.mde.desk.MLDesktop.getInstance.getMainFrame;
+            myFrame.setIconImages(mainFrame.getIconImages);
             tabbedPane = JTabbedPane;
             
             tabbedPane.add('Files', this.fileNavigator.panel);

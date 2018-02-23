@@ -97,7 +97,7 @@ classdef CodeBase
                 % assume that we were passed a legit extension
                 name = ifthen(isempty(packageName), identifier, [packageName '.' identifier]);
                 out.name = name;
-                tryKlass = meta.class.fromName(name);
+                tryKlass = gentleClassFromName(name);
                 if ~isempty(tryKlass)
                     % found a class definition
                     out.type = 'class';
@@ -187,4 +187,30 @@ end
 out.allRoots = roots;
 out.userRoots = userRoots;
 out.sysRoots = sysRoots;
+end
+
+function out = gentleClassFromName(className)
+% Get class definition, without triggering "dbstop if all error"
+%
+% This is an attempt to get a class meta definition (like meta.class.fromName
+% returns) in a way that won't trigger the "dbstop if all error" breakpoint, so
+% it can be used in code that might be running against a user codebase with
+% invalid definitions (which is a totally valid use case during software
+% development!)
+
+% There doesn't seem to be any way to quell the exception raised by
+% `meta.class.fromName` on bad definitions, so just temporarily turn off the
+% debugger breakpoint.
+origDebuggerState = dbstatus('-completenames');
+RAII.dbstop = onCleanup(@() dbstop(origDebuggerState));
+dbclear if all error
+
+try
+    out = meta.class.fromName(className);
+catch err
+    % quash
+    logdebugf('%s: loading class definition for ''%s'' failed. (Error: %s). Ignoring', ...
+        'gentleClassFromName()', className, err.message);
+    out = [];
+end
 end
