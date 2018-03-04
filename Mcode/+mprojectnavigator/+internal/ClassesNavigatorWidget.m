@@ -999,11 +999,14 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
             classDefn = meta.class.fromName(nodeData.definingClass);
             childNodeValues = getChildNodeValues(node);
             nodesToAdd = {};
-            defnList = sortDefnsByName(classDefn.SuperclassList);
+            % Do not sort the list in this case! Order of inheritance is
+            % significant, so preserve it. (I assume that SuperclassList is in
+            % inheritance order; and a couple tests I did support that.)
+            defnList = classDefn.SuperclassList;
             
             defnNames = metaObjNames(defnList);
             childDefnNames = setdiff(childNodeValues, '<dummy>');
-            defnsToAdd = sortCaseInsensitive(setdiff(defnNames, childDefnNames));
+            defnsToAdd = setdiff(defnNames, childDefnNames, 'stable');
             defnsToRemove = setdiff(childDefnNames, defnNames);
             [~,ixToRemove] = ismember(defnsToRemove, childNodeValues);
             [~,loc] = ismember(defnsToAdd, defnNames);
