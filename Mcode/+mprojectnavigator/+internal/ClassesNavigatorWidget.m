@@ -483,7 +483,7 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
             childNodeValues = getChildNodeValues(node);
             nodesToAdd = {};
             nodesToAddValues = {};
-            nodesToRemoveValues = cell(1, 0);
+            nodesToRemoveValues = {};
             pkg = meta.package.fromName(nodeData.name);
             pkgPrivateDirs = this.locatePrivateDirsForPackage(packageName);
             % Detect subpackages to add/remove
@@ -525,10 +525,11 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
                 nodesToAddValues{end+1} = functionNames{ix}; %#ok<AGROW>
             end
             functionChildNodeValuesToRemove = setdiff(functionChildNodeValues, functionNames);
-            if ~isempty(functionChildNodeValuesToRemove)
+            nodesToRemoveValues = [nodesToRemoveValues functionChildNodeValuesToRemove];
+            if isempty(nodesToRemoveValues)
                 % This isempty() check is needed to work around a weird edge
-                % case with cell array expansion
-                nodesToRemoveValues = [nodesToRemoveValues functionChildNodeValuesToRemove];
+                % case with cell array expansion using "end+1"
+                nodesToRemoveValues = {};
             end
             if isempty(pkgPrivateDirs)
                 if ismember('<pkgprivate>', childNodeValues)
