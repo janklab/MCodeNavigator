@@ -100,13 +100,14 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
             else
                 icon = myIconPath('file');
             end
-            out = this.oldUitreenode(path, basename, icon, true);
+            nodeData = mprojectnavigator.internal.FileNodeData(path, isDir);
             nodeData.isDummy = false;
             nodeData.path = path;
             nodeData.basename = basename;
             nodeData.isDir = isDir;
             nodeData.isFile = ~isDir;
             nodeData.isPopulated = ~isDir;
+            out = this.oldUitreenode(path, basename, icon, true);
             set(out, 'userdata', nodeData);
             out.setLeafNode(false);
             out.setAllowsChildren(isDir);
@@ -432,14 +433,8 @@ function ctxSyncToEditorCallback(src, evd, this) %#ok<INUSL>
 this.navigator.setSyncToEditor(src.isSelected);
 end
 
-function ctxPathElementCallback(src, evd, this, path)
+function ctxPathElementCallback(src, evd, this, path) %#ok<INUSL>
 this.setRootPath(path);
 end
 
-function out = getChildNodeValues(node)
-out = {};
-for i = 1:node.getChildCount
-    out{i} = get(node.getChildAt(i-1), 'Value'); %#ok<AGROW>
-end
-end
 

@@ -13,6 +13,7 @@ classdef Navigator < handle
         frame
         fileNavigator
         classesNavigator
+        codeNavigator
         % Whether to keep node selections in sync with Matlab's editor
         syncToEditor = getpref(PREFGROUP, 'files_syncToEditor', false);
         editorTracker;
@@ -26,6 +27,7 @@ classdef Navigator < handle
         function this = Navigator()
             this.fileNavigator = mprojectnavigator.internal.FileNavigatorWidget(this);
             this.classesNavigator = mprojectnavigator.internal.ClassesNavigatorWidget(this);
+            this.codeNavigator = mprojectnavigator.internal.CodeRootsNavigatorWidget(this);
             this.codebase = mprojectnavigator.internal.CodeBase;
             this.initializeGui();
         end
@@ -51,6 +53,7 @@ classdef Navigator < handle
             
             tabbedPane.add('Files', this.fileNavigator.panel);
             tabbedPane.add('Classes', this.classesNavigator.panel);
+            tabbedPane.add('Code', this.codeNavigator.panel);
             tabSelection = getpref(PREFGROUP, 'nav_TabSelection', []);
             if ~isempty(tabSelection)
                 try
@@ -168,7 +171,6 @@ end
 
 function tabbedPaneStateCallback(tabbedPane, evd) %#ok<INUSD>
 tabIndex = tabbedPane.getSelectedIndex;
-fprintf('Tab selection changed: %d\n', tabIndex);
 setpref(PREFGROUP, 'nav_TabSelection', tabIndex);
 end
 

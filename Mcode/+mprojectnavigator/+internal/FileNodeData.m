@@ -3,6 +3,7 @@ classdef FileNodeData < mprojectnavigator.internal.NodeData
     properties
         % The path to the file on disk (not the node TreePath)
         path        char
+        basename    char
         isDummy     logical
         isDir       logical
         isFile      logical

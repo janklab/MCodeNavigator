@@ -9,6 +9,7 @@ classdef ClassesNodeData < mprojectnavigator.internal.NodeData
     % in ClassesNavigatorWidget. Some may not be meaningful depending on the
     % context in which the object is used.
     properties
+        % The type of node this is (an internal identifier)
         type char
         % Fully-qualified name of this thing. Must uniquely identify a node
         % within the code navigator widget, within a type, for types that are

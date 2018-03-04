@@ -972,7 +972,7 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
             end
         end
         
-        function out = labelForMethod(this, defn) %#ok<INUSL>
+        function out = labelForMethod(this, defn)
             inputArgStr = ifthen(isequal(defn.InputNames, {'rhs1'}), '...', ...
                 strjoin(defn.InputNames, ', '));
             baseLabel = sprintf('%s (%s)', defn.Name, inputArgStr);
@@ -1440,22 +1440,6 @@ if isempty(defns)
     out = {};
 else
     out = {defns.Name};
-end
-end
-
-%{
-function out = getChildNodeNames(node)
-out = {};
-for i = 1:node.getChildCount
-    out{i} = get(node.getChildAt(i-1), 'Name'); %#ok<AGROW>
-end
-end
-%}
-
-function out = getChildNodeValues(node)
-out = {};
-for i = 1:node.getChildCount
-    out{i} = get(node.getChildAt(i-1), 'Value'); %#ok<AGROW>
 end
 end
 
