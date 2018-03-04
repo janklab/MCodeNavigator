@@ -1,26 +1,28 @@
 TODO
 =============
 
+* "private" node disappears on second expansion of packages
+* USER classes node does not pick up packages newly added to the Matlab PATH
+ * e.g. if you launch MProjectNavigator, and then load up Janklab
 * BUG: Scroll-to--node is not working in classes view when there are a lot of nodes in the tree, such as when you have the MATLAB globals expanded
 * Multiple pinned roots in file navigator
  * Or new "code roots" navigator
-* "New..." action in file navigator
-* Class names in Superclasses list should be fully-qualified
-* Delete files from file navigator
 * Option to hide inherited properties/methods in Classes view
-* Open files in external programs from file navigator
+* Persist files/classes tab selection across restarts
+* File Navigator file actions
+ * "New..." action in file navigator
+ * Delete files from file navigator
+ * Open file in external program
 * Transparent icons/greyed text for Hidden items
  * Requires a custom variant of the Silk icon set
 * An inheritance hierarchy browser for classes
 * Switch to using what() for class/function metadata discovery
-* Persist files/classes tab selection across restarts
-* On-node "loading" indicator, so you can see when things are auto-loading without being expanded yet
 * Callbacks throw errors when you rename internal MProjectNavigator classes that are currently under view
  * This might not be a bug; that might just be a consequence of messing with the internals of running code.
-* Change logging to use SLF4M
 
 # To Maybe Do
 
+* On-node "loading" indicator, so you can see when things are auto-loading without being expanded yet
 * "About" box
 * Better error reporting for the `FevalAction`. Right now errors are silently swallowed.
 * Multi-column tree view using JIDE's widgets

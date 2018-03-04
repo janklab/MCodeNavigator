@@ -32,7 +32,7 @@ classdef Logger
         function out = getLogger(identifier)
         % Gets the named Logger
         jLogger = org.slf4j.LoggerFactory.getLogger(identifier);
-        out = mprojectnavigator.Logger(jLogger);
+        out = mprojectnavigator.internal.Logger(jLogger);
         end
         
     end

@@ -13,7 +13,7 @@ else
     callerClass = regexprep(caller, '/.*', '');
 end
 
-logger = mprojectnavigator.Logger.getLogger(callerClass);
+logger = mprojectnavigator.internal.Logger.getLogger(callerClass);
 
 switch logLevel
     case 'error'

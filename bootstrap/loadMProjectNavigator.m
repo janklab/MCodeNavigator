@@ -27,11 +27,11 @@ function loadMProjectNavigator(varargin)
     classpathHacker = mprojectnavigator.internal.StaticClasspathHacker;
     classpathHacker.addToStaticClasspath(jarFile);
     
-    mprojectnavigator.Log4jConfigurator.configureBasicConsoleLogging;
+    mprojectnavigator.internal.Log4jConfigurator.configureBasicConsoleLogging;
     if doDebug
         % Need to set this now so it's active during the initial
         % MProjectNavigator call.
-        mprojectnavigator.Log4jConfigurator.setLevels({'root','DEBUG'});
+        mprojectnavigator.internal.Log4jConfigurator.setLevels({'root','DEBUG'});
     end
     
     MProjectNavigator -registerhotkey
