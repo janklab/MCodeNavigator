@@ -79,10 +79,12 @@ classdef CodeRootsNavigatorWidget < mprojectnavigator.internal.TreeWidget
         function out = buildCodePathNode(this, codePath)
             [parentDir,baseName] = fileparts(codePath);
             dirParts = strsplit(parentDir, filesep);
-            parentDirReverse = strjoin(reverse(dirParts), '/');
+            parentDirReverse = strjoin(flip(dirParts), '/');
             label = sprintf('%s - (%s)', baseName, parentDirReverse);
             nodeData = CodeRootsNodeData('codepath', label);
             nodeData.path = codePath;
+            nodeData.isDir = true;
+            nodeData.isFile = false;
             icon = myIconPath('folder');
             out = this.createNode('codepath', label, nodeData, [], icon);
         end
@@ -196,12 +198,66 @@ classdef CodeRootsNavigatorWidget < mprojectnavigator.internal.TreeWidget
             end
         end
         
+        function treeMousePressed(this, hTree, eventData) %#ok<INUSL>
+            % Mouse click callback
+            import javax.swing.*
+            
+            % Get the clicked node
+            clickX = eventData.getX;
+            clickY = eventData.getY;
+            jtree = eventData.getSource;
+            treePath = jtree.getPathForLocation(clickX, clickY);
+            % This method of detecting right-clicks avoids confusion with Cmd-clicks on Mac
+            isRightClick = eventData.getButton == java.awt.event.MouseEvent.BUTTON3;
+            if isRightClick
+                % Right-click
+                if ~isempty(treePath)
+                    node = treePath.getLastPathComponent;
+                    nodeData = get(node, 'userdata');
+                else
+                    node = [];
+                    nodeData = [];
+                end
+                jmenu = this.setupTreeContextMenu(node, nodeData);
+                jmenu.show(jtree, clickX, clickY);
+                jmenu.repaint;
+            elseif eventData.getClickCount == 2
+                % Double-click
+                if isempty(treePath)
+                    % Click was not on a node
+                    return;
+                end
+                node = treePath.getLastPathComponent;
+                nodeData = get(node, 'userdata');
+                if nodeData.isDummy
+                    return;
+                end
+                if nodeData.isDir
+                    % Let default "expand node" behavior handle it
+                else
+                    % File node was double-clicked
+                    edit(nodeData.path);
+                end
+            else
+                % Ignore
+            end
+        end
+        
+        function out = setupTreeContextMenu(this, node, nodeData)
+            import javax.swing.*
+            
+            fileShellName = mprojectnavigator.internal.Utils.osFileBrowserName;
+            
+            if ~isempty(node) && ~this.isInSelection(node)
+                this.setSelectedNode(node);
+            end
+            
+            jmenu = JPopupMenu;
+            menuItemBogus = JMenuItem('Bogus');
+            
+            jmenu.add(menuItemBogus);
+            
+            out = jmenu;
+        end
     end
-end
-
-function out = reverse(x)
-out = x;
-for i = 1:numel(x)
-    out(i) = x(end-(i-1));
-end
 end

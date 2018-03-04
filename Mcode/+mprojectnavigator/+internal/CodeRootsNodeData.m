@@ -18,8 +18,9 @@ classdef CodeRootsNodeData < mprojectnavigator.internal.NodeData
         % Path to the file or directory this node represents
         path        char
         basename    char
-        isDir       logical
-        isFile      logical
+        isDir       logical = false
+        isFile      logical = false
+        isDummy     logical = false
     end
     
     methods

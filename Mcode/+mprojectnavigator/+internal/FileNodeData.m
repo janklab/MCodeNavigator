@@ -1,6 +1,7 @@
 classdef FileNodeData < mprojectnavigator.internal.NodeData
 
     properties
+        type        char     = 'file'
         % The path to the file on disk (not the node TreePath)
         path        char
         basename    char

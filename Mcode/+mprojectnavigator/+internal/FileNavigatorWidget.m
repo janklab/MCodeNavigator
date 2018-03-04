@@ -126,17 +126,14 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
             set(out, 'userdata', nodeData);
         end
         
-        function repopulateNode(this, node)
-            tree.removeAllChildren(node);
-            this.refreshNode(node);
-        end
-        
-        function populateNode(this, node)
-            this.refreshNode(node);
-        end
-        
-        function refreshNode(this, node)
-            this.refreshFileNode(node);
+        function refreshNodeSingle(this, node)
+            nodeData = get(node, 'userdata');
+            switch nodeData.type
+                case 'root'             % NOP: its contents are static
+                case 'file';            this.refreshFileNode(node);
+                otherwise
+                    refreshNodeSingle@mprojectnavigator.internal.TreeWidget(this, node);
+            end
         end
         
         function refreshFileNode(this, node)
@@ -164,15 +161,10 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
             end
         end
         
-        function nodeExpanded(this, src, evd) %#ok<INUSL>
-            this.refreshNode(evd.getCurrentNode);
-        end
-        
         function treeMousePressed(this, hTree, eventData) %#ok<INUSL>
             % Mouse click callback
             import javax.swing.*
             
-            %fprintf('mousePressed()\n');
             % Get the clicked node
             clickX = eventData.getX;
             clickY = eventData.getY;
@@ -204,10 +196,7 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
                     return;
                 end
                 if nodeData.isDir
-                    % Toggle expansion
-                    % Actually, that's the default behavior for JTree, so do
-                    % nothing.
-                    % this.setRootPath(nodeData.path);
+                    % Let default "expand node" behavior handle it
                 else
                     % File node was double-clicked
                     edit(nodeData.path);
@@ -246,7 +235,7 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
             isTargetFile = (~isempty(nodeData) && nodeData.isFile);
             isTargetDir = (~isempty(nodeData) && nodeData.isDir);
             isTargetFileOrDir = (~isempty(nodeData) && (nodeData.isFile || nodeData.isDir));
-            isTargetEditable =  isTargetFile || ~isempty(this.treePeer.getSelectedNodes);
+            isTargetEditable =  isTargetFile;
             isTargetMfile = isTargetFile && endsWith(nodeData.path, '.m', 'IgnoreCase',true);
             isDocable = isTargetDir || isTargetMfile;
             isMlintable = isTargetDir || isTargetMfile;
