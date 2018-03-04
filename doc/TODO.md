@@ -8,7 +8,6 @@ TODO
 * Multiple pinned roots in file navigator
  * Or new "code roots" navigator
 * Option to hide inherited properties/methods in Classes view
-* Persist files/classes tab selection across restarts
 * File Navigator file actions
  * "New..." action in file navigator
  * Delete files from file navigator

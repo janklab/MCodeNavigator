@@ -51,6 +51,16 @@ classdef Navigator < handle
             
             tabbedPane.add('Files', this.fileNavigator.panel);
             tabbedPane.add('Classes', this.classesNavigator.panel);
+            tabSelection = getpref(PREFGROUP, 'nav_TabSelection', []);
+            if ~isempty(tabSelection)
+                try
+                    tabbedPane.setSelectedIndex(tabSelection);
+                catch
+                    % quash
+                end
+            end
+            hTabbedPane = handle(tabbedPane, 'CallbackProperties');
+            hTabbedPane.StateChangedCallback = @tabbedPaneStateCallback;
             
             myFrame.getContentPane.add(tabbedPane, BorderLayout.CENTER);
             
@@ -154,5 +164,11 @@ loc = frame.getLocation;
 siz = frame.getSize;
 framePosn = [loc.x loc.y siz.width siz.height];
 setpref(PREFGROUP, 'nav_Position', framePosn);
+end
+
+function tabbedPaneStateCallback(tabbedPane, evd) %#ok<INUSD>
+tabIndex = tabbedPane.getSelectedIndex;
+fprintf('Tab selection changed: %d\n', tabIndex);
+setpref(PREFGROUP, 'nav_TabSelection', tabIndex);
 end
 
