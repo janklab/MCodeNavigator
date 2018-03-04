@@ -512,20 +512,24 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
                 nodesToAdd{end+1} = this.buildClassNode(classList(i).Name); %#ok<AGROW>
                 nodesToAddValues{end+1} = classBasenames{i}; %#ok<AGROW>
             end
-            classChildNodeNamesToRemove = setdiff(classChildNodeValues, classValues);
-            nodesToRemoveValues = [nodesToRemoveValues classChildNodeNamesToRemove];
+            classChildNodeValuesToRemove = setdiff(classChildNodeValues, classValues);
+            nodesToRemoveValues = [nodesToRemoveValues classChildNodeValuesToRemove];
             % Detect functions to add/remove
             functionList = sortDefnsByName(pkg.FunctionList);
             functionNames = metaObjNames(functionList);
-            functionChildNodeValues = selectRegexp(childNodeValues, '^[^@+]');
+            functionChildNodeValues = selectRegexp(childNodeValues, '^\w[^@+]');
             ixToAdd = find(~ismember(functionNames, functionChildNodeValues));
             for i = 1:numel(ixToAdd)
                 ix = ixToAdd(i);
                 nodesToAdd{end+1} = this.buildMethodNode(functionList(ix), packageName); %#ok<AGROW>
                 nodesToAddValues{end+1} = functionNames{ix}; %#ok<AGROW>
             end
-            functionChildNodeNamesToRemove = setdiff(functionChildNodeValues, functionNames);
-            nodesToRemoveValues = [nodesToRemoveValues functionChildNodeNamesToRemove];
+            functionChildNodeValuesToRemove = setdiff(functionChildNodeValues, functionNames);
+            if ~isempty(functionChildNodeValuesToRemove)
+                % This isempty() check is needed to work around a weird edge
+                % case with cell array expansion
+                nodesToRemoveValues = [nodesToRemoveValues functionChildNodeValuesToRemove];
+            end
             if isempty(pkgPrivateDirs)
                 if ismember('<pkgprivate>', childNodeValues)
                     nodesToRemoveValues{end+1} = '<pkgprivate>';
@@ -536,8 +540,8 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
                 end
             end
             % Remove dummy node
-            if ismember('dummy', childNodeValues)
-                nodesToRemoveValues{end+1} = 'dummy';
+            if ismember('<dummy>', childNodeValues)
+                nodesToRemoveValues{end+1} = '<dummy>';
             end
             % Do the adding and removal
             % TODO: Figure out how to insert new nodes in the right order WRT
@@ -1403,12 +1407,14 @@ else
 end
 end
 
+%{
 function out = getChildNodeNames(node)
 out = {};
 for i = 1:node.getChildCount
     out{i} = get(node.getChildAt(i-1), 'Name'); %#ok<AGROW>
 end
 end
+%}
 
 function out = getChildNodeValues(node)
 out = {};
