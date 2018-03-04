@@ -1,8 +1,8 @@
-classdef CodeNodeData < mprojectnavigator.internal.NodeData
-    % Node user data for CodeNavigatorWidget
+classdef ClassesNodeData < mprojectnavigator.internal.NodeData
+    % Node user data for ClassesNavigatorWidget
     
     % These properties are a union of the properties used for all types of nodes
-    % in CodeNavigatorWidget. Some may not be meaningful depending on the
+    % in ClassesNavigatorWidget. Some may not be meaningful depending on the
     % context in which the object is used.
     properties
         type char
@@ -28,13 +28,12 @@ classdef CodeNodeData < mprojectnavigator.internal.NodeData
     end
     
     methods
-        function this = CodeNodeData(type, name)
+        function this = ClassesNodeData(type, name)
             if nargin == 0
                 return
             end
             this.type = type;
-            if nargin >= 2;     this.name = name;  end
-            
+            if nargin >= 2;     this.name = name;  end            
         end
     end
 end

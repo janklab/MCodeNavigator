@@ -1,4 +1,4 @@
-classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
+classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
     % A navigator for Mcode definitions (packages/classes/functions)
     %
     % TODO: Get this to recognize newly-added/removed classes and update the
@@ -25,7 +25,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
     end
     
     methods
-        function this = CodeNavigatorWidget(parentNavigator)
+        function this = ClassesNavigatorWidget(parentNavigator)
             this.navigator = parentNavigator;
             this.initializeGui;
         end
@@ -157,7 +157,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         end
         
         function out = buildRootNode(this)
-            nodeData = CodeNodeData('root', 'root');
+            nodeData = ClassesNodeData('root', 'root');
             out = this.oldUitreenode('<dummy>', 'Definitions', [], true);
             out.setAllowsChildren(true);
             set(out, 'userdata', nodeData);
@@ -170,7 +170,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         
         function out = buildCodePathsNode(this, label, paths)
             % A node representing a codebase with a list of paths
-            nodeData = CodeNodeData('codepaths', label);
+            nodeData = ClassesNodeData('codepaths', label);
             nodeData.paths = paths;
             icon = myIconPath('topfolder');
             out = this.createNode('codepaths', label, nodeData, [], icon);
@@ -178,7 +178,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         
         function out = buildCodePathsGlobalsNode(this, paths, found)
             % A node representing global definitions under a codepath set
-            nodeData = CodeNodeData('codepaths_globals');
+            nodeData = ClassesNodeData('codepaths_globals');
             nodeData.paths = paths;
             nodeData.found = found;
             icon = myIconPath('folder');
@@ -187,7 +187,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         
         function out = buildGlobalClassesNode(this, classNames)
             mustBeA(classNames, 'cellstr');
-            nodeData = CodeNodeData('global_classes');
+            nodeData = ClassesNodeData('global_classes');
             nodeData.classNames = sortCaseInsensitive(classNames);
             icon = myIconPath('folder');
             out = this.createNode('Classes', 'Classes', nodeData, [], icon);
@@ -195,7 +195,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         
         function out = buildGlobalFunctionsNode(this, functionNames)
             mustBeA(functionNames, 'cellstr');
-            nodeData = CodeNodeData('global_functions');
+            nodeData = ClassesNodeData('global_functions');
             nodeData.functionNames = sortCaseInsensitive(functionNames);
             icon = myIconPath('folder');
             out = this.createNode('Functions', 'Functions', nodeData, [], icon);
@@ -204,7 +204,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         function out = buildPackageNode(this, packageName)
             mustBeA(packageName, 'char');
             tag = ['+' packageName];
-            nodeData = CodeNodeData('package', packageName);
+            nodeData = ClassesNodeData('package', packageName);
             nodeData.name = packageName;
             nodeData.basename = regexprep(packageName, '.*\.', '');
             icon = myIconPath('folder');
@@ -215,7 +215,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         function out = buildPackagePrivateNode(this, packageName)
             mustBeA(packageName, 'char');
             label = 'private';
-            nodeData = CodeNodeData('package_private', packageName);
+            nodeData = ClassesNodeData('package_private', packageName);
             nodeData.package = packageName;
             icon = myIconPath('none');
             out = this.createNode('<pkgprivate>', label, nodeData, [], icon);
@@ -223,25 +223,30 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         end
         
         function out = buildErrorMessageNode(this, message)
-            nodeData = CodeNodeData('error_message');
+            nodeData = ClassesNodeData('error_message');
             nodeData.label = message;
             icon = myIconPath('error');
             out = this.createNode(message, message, nodeData, false, icon);
         end
         
         function out = buildDummyNode(this)
-            nodeData = CodeNodeData('<dummy>');
+            nodeData = ClassesNodeData('<dummy>');
             icon = myIconPath('none');
             out = this.createNode('<dummy>', 'Loading...', nodeData, false, icon);
         end
         
-        function out = buildClassNode(this, className)
+        function out = buildClassNode(this, className, showFqName)
+            if nargin < 3 || isempty(showFqName);  showFqName = false;  end
             mustBeA(className, 'char');
             classBaseName = regexprep(className, '.*\.', '');
-            nodeData = CodeNodeData('class');
+            nodeData = ClassesNodeData('class');
             nodeData.name = className;
             nodeData.basename = classBaseName;
-            label = ['@' classBaseName];
+            if showFqName
+                label = ['@' className];
+            else
+                label = ['@' classBaseName];
+            end
             out = this.createNode(label, label, nodeData);
             % Get ready for file change notifications: List the files that go in
             % to this class definition, and register them
@@ -253,7 +258,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         end
         
         function out = buildPackagePrivateThingNode(this, name, path, key)
-            nodeData = CodeNodeData('package_private_thing', key);
+            nodeData = ClassesNodeData('package_private_thing', key);
             nodeData.basename = name;
             nodeData.path = path;
             nodeData.isFile = true;
@@ -265,7 +270,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         
         function out = buildMethodGroupNode(this, parentDefinition)
             mustBeA(parentDefinition, 'meta.class');
-            nodeData = CodeNodeData('method_group');
+            nodeData = ClassesNodeData('method_group');
             nodeData.definingClass = parentDefinition.Name;
             label = 'Methods';
             icon = myIconPath('none');
@@ -280,7 +285,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             else
                 fqName = [defn.DefiningClass.Name '.' defn.Name];
             end
-            nodeData = CodeNodeData('method', fqName);
+            nodeData = ClassesNodeData('method', fqName);
             nodeData.basename = regexprep(defn.Name, '.*\.', '');
             nodeData.package = packageName;
             if isempty(defn.DefiningClass)
@@ -299,7 +304,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             % Build function node
             % Only works for global functions, not functions inside a package
             mustBeA(functionName, 'char');
-            nodeData = CodeNodeData('function');
+            nodeData = ClassesNodeData('function');
             nodeData.name = functionName;
             nodeData.basename = functionName;
             nodeData.package = [];
@@ -310,7 +315,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         
         function out = buildPropertyGroupNode(this, parentDefinition)
             mustBeA(parentDefinition, 'meta.class');
-            nodeData = CodeNodeData('property_group');
+            nodeData = ClassesNodeData('property_group');
             nodeData.definingClass = parentDefinition.Name;
             label = 'Properties';
             icon = myIconPath('none');
@@ -319,7 +324,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         
         function out = buildPropertyNode(this, defn, klassDefn)
             mustBeA(defn, 'meta.property');
-            nodeData = CodeNodeData('property');
+            nodeData = ClassesNodeData('property');
             nodeData.defn = defn;
             nodeData.basename = defn.Name;
             nodeData.name = [klassDefn.Name '.' defn.Name];
@@ -361,7 +366,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         
         function out = buildEventGroupNode(this, parentDefinition)
             mustBeA(parentDefinition, 'meta.class');
-            nodeData = CodeNodeData('event_group');
+            nodeData = ClassesNodeData('event_group');
             nodeData.definingClass = parentDefinition.Name;
             label = 'Events';
             icon = myIconPath('none');
@@ -370,7 +375,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         
         function out = buildEventNode(this, defn)
             mustBeA(defn, 'meta.event');
-            nodeData = CodeNodeData('event');
+            nodeData = ClassesNodeData('event');
             nodeData.defn = defn;
             nodeData.basename = defn.Name;
             nodeData.name = defn.Name; % hack
@@ -382,7 +387,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         
         function out = buildSuperclassGroupNode(this, parentDefinition)
             mustBeA(parentDefinition, 'meta.class');
-            nodeData = CodeNodeData('superclass_group');
+            nodeData = ClassesNodeData('superclass_group');
             nodeData.type = 'superclass_group';
             nodeData.definingClass = parentDefinition.Name;
             superclassNames = metaObjNames(parentDefinition.SuperclassList);
@@ -395,7 +400,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         
         function out = buildEnumerationGroupNode(this, parentDefinition)
             mustBeA(parentDefinition, 'meta.class');
-            nodeData = CodeNodeData('enumeration_group');
+            nodeData = ClassesNodeData('enumeration_group');
             nodeData.definingClass = parentDefinition.Name;
             label = 'Enumerations';
             icon = myIconPath('none');
@@ -404,7 +409,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         
         function out = buildEnumerationNode(this, defn)
             mustBeA(defn, 'meta.EnumeratedValue');
-            nodeData = CodeNodeData('enumeration');
+            nodeData = ClassesNodeData('enumeration');
             nodeData.defn = defn;
             nodeData.name = defn.Name;
             label = defn.Name;
@@ -966,7 +971,7 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             [~,ixToRemove] = ismember(defnsToRemove, childNodeValues);
             [~,loc] = ismember(defnsToAdd, defnNames);
             for i = 1:numel(defnsToAdd)
-                nodesToAdd{end+1} = this.buildClassNode(defnList(loc(i)).Name); %#ok<AGROW>
+                nodesToAdd{end+1} = this.buildClassNode(defnList(loc(i)).Name, true); %#ok<AGROW>
             end
             % Handle dummy node
             [tf,ixDummy] = ismember('<dummy>', childNodeValues);
@@ -1271,7 +1276,7 @@ function ctxShowHiddenCallback(src, evd, this, nodeData) %#ok<INUSD,INUSL>
 this.setShowHidden(src.isSelected);
 end
 
-function editNode(this, nodeData)
+function editNode(~, nodeData)
 switch nodeData.type
     case 'class'
         edit(nodeData.name);

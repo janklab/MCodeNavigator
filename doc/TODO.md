@@ -15,6 +15,9 @@ TODO
 * Switch to using what() for class/function metadata discovery
 * Persist files/classes tab selection across restarts
 * On-node "loading" indicator, so you can see when things are auto-loading without being expanded yet
+* Callbacks throw errors when you rename internal MProjectNavigator classes that are currently under view
+ * This might not be a bug; that might just be a consequence of messing with the internals of running code.
+* Change logging to use SLF4M
 
 # To Maybe Do
 

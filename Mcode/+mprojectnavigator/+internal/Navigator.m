@@ -12,7 +12,7 @@ classdef Navigator < handle
     properties
         frame
         fileNavigator
-        codeNavigator
+        classesNavigator
         % Whether to keep node selections in sync with Matlab's editor
         syncToEditor = getpref(PREFGROUP, 'files_syncToEditor', false);
         editorTracker;
@@ -25,7 +25,7 @@ classdef Navigator < handle
     methods
         function this = Navigator()
             this.fileNavigator = mprojectnavigator.internal.FileNavigatorWidget(this);
-            this.codeNavigator = mprojectnavigator.internal.CodeNavigatorWidget(this);
+            this.classesNavigator = mprojectnavigator.internal.ClassesNavigatorWidget(this);
             this.codebase = mprojectnavigator.internal.CodeBase;
             this.initializeGui();
         end
@@ -50,7 +50,7 @@ classdef Navigator < handle
             tabbedPane = JTabbedPane;
             
             tabbedPane.add('Files', this.fileNavigator.panel);
-            tabbedPane.add('Classes', this.codeNavigator.panel);
+            tabbedPane.add('Classes', this.classesNavigator.panel);
             
             myFrame.getContentPane.add(tabbedPane, BorderLayout.CENTER);
             
@@ -74,7 +74,7 @@ classdef Navigator < handle
         
         function dispose(this)
             this.fileNavigator.dispose;
-            this.codeNavigator.dispose;
+            this.classesNavigator.dispose;
             this.tearDownEditorTracking;
             this.frame.dispose;
             this.frame = [];
@@ -112,7 +112,7 @@ classdef Navigator < handle
                 this.fileNavigator.revealFile(file);
                 % Find out what that file defines, and update the code navigator
                 defn = this.codebase.defnForMfile(file);
-                this.codeNavigator.revealDefn(defn, file);
+                this.classesNavigator.revealDefn(defn, file);
             catch err
                 % Ignore all errors. These can happen if the user is working on
                 % a file that's in flux and has an invalid definition, which is
@@ -125,7 +125,7 @@ classdef Navigator < handle
         function editorFileSaved(this, file)
             [~,basename,ext] = fileparts(file);
             logdebugf('editorFileSaved: %s', [basename ext]);
-            this.codeNavigator.fileChanged(file);
+            this.classesNavigator.fileChanged(file);
         end
 
         function setUpEditorTracking(this)
