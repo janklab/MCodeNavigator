@@ -50,7 +50,8 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.TreeWidget
         
         function revealFile(this, file)
             if ~strncmpi(file, this.rootPath, numel(this.rootPath))
-                logdebugf('revealFile(): Ignoring file outside of file navigator root: %s', file);
+                logdebugf('revealFile(): Ignoring file outside of file navigator root: %s (root=%s)', ...
+                    file, this.rootPath);
                 return;
             end
             relPath = file(numel(this.rootPath)+2:end);

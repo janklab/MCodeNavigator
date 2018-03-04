@@ -259,5 +259,13 @@ classdef CodeRootsNavigatorWidget < mprojectnavigator.internal.TreeWidget
             
             out = jmenu;
         end
+        
+        function revealFile(this, file)
+        logdebugf('revealFile(): function called: %s', file);
+        %TODO: Rest of this function
+        % Find whether it's under a code root
+        
+        % Expand that code root to reveal the file
+        end
     end
 end

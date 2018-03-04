@@ -1093,23 +1093,26 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
                     root = this.treePeer.getRoot;
                     scopeNodeName = ifthen(isequal(defn.scope, 'system'), 'MATLAB', 'USER');
                     scopeNode = getChildNodeByName(root, scopeNodeName);
+                    if isempty(scopeNode)
+                        keyboard
+                    end
                     this.populateNode(scopeNode);
                     if ~isequal(defn.type, 'package') && isempty(defn.package)
-                        parentNode = getChildNodeByName(scopeNode, '<Global>');
+                        parentNode = getChildNodeByValue(scopeNode, '<Global>');
                         this.refreshNode(parentNode, {'force','populate'});
                     else
                         parentNode = scopeNode;
                         this.refreshNode(parentNode, {'force','populate'});
                         if this.flatPackageView
                             if ~isempty(defn.package)
-                                parentNode = getChildNodeByName(scopeNode, ['+' defn.package]);
+                                parentNode = getChildNodeByValue(scopeNode, ['+' defn.package]);
                                 this.refreshNode(parentNode, {'force','populate'});
                             end
                         else
                             pkgParts = strsplit(defn.package, '.');
                             for i = 1:numel(pkgParts)
                                 nextPackageDown = ['+' strjoin(pkgParts(1:i), '.')];
-                                nextParentNode = getChildNodeByName(parentNode, nextPackageDown);
+                                nextParentNode = getChildNodeByValue(parentNode, nextPackageDown);
                                 if isempty(nextParentNode)
                                     logwarnf('Definition not found in code base: missing parent package for %s', ...
                                         defn.name);
@@ -1183,28 +1186,6 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
             end
         end
     end
-end
-
-function [out,i] = getChildNodeByName(node, name)
-out = [];
-for i = 1:node.getChildCount
-    child = node.getChildAt(i-1);
-    if isequal(char(child.getName), name)
-        out = child;
-        return
-    end
-end
-end
-
-function [out,i] = getChildNodeByValue(node, value)
-out = [];
-for i = 1:node.getChildCount
-    child = node.getChildAt(i-1);
-    if isequal(char(child.getValue), value)
-        out = child;
-        return
-    end
-end
 end
 
 function out = scanCodeRoots(paths, mode)

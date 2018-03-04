@@ -11,17 +11,17 @@ classdef Log4jConfigurator
     %
     % Examples:
     %
-    % mprojectnavigator.Log4jConfigurator.setLevels({'root','DEBUG'});
+    % mprojectnavigator.internal.Log4jConfigurator.setLevels({'root','DEBUG'});
     %
-    % mprojectnavigator.Log4jConfigurator.setLevels({
+    % mprojectnavigator.internal.Log4jConfigurator.setLevels({
     %     'root'    'INFO'
     %     'net.apjanke.mprojectnavigator.swing'  'DEBUG'
     %     });
     %
-    % mprojectnavigator.Log4jConfigurator.prettyPrintLogConfiguration
+    % mprojectnavigator.internal.Log4jConfigurator.prettyPrintLogConfiguration
     %
     % % Display fully-qualified class/category names in the log output:
-    % mprojectnavigator.Log4jConfigurator.setRootAppenderPattern(...
+    % mprojectnavigator.internal.Log4jConfigurator.setRootAppenderPattern(...
     %    ['%d{HH:mm:ss.SSS} %p %c - %m' sprintf('\n')]);
     
     methods (Static)
@@ -65,7 +65,7 @@ classdef Log4jConfigurator
             out = eval(['org.apache.log4j.Level.' levelName]);
         end
         
-        function setLevels(levels, summat)
+        function setLevels(levels)
             % Set the logging levels for multiple loggers
             %
             % setLevels(levels)
@@ -82,7 +82,7 @@ classdef Log4jConfigurator
                 else
                     logger = org.apache.log4j.LogManager.getLogger(logName);
                 end
-                level = mprojectnavigator.Log4jConfigurator.getLog4jLevel(levelName);
+                level = mprojectnavigator.internal.Log4jConfigurator.getLog4jLevel(levelName);
                 logger.setLevel(level);
             end
         end

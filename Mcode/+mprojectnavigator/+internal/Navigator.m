@@ -15,7 +15,7 @@ classdef Navigator < handle
         classesNavigator
         codeNavigator
         % Whether to keep node selections in sync with Matlab's editor
-        syncToEditor = getpref(PREFGROUP, 'files_syncToEditor', false);
+        syncToEditor = getpref(PREFGROUP, 'files_syncToEditor', true);
         editorTracker;
         codebase;
     end
@@ -123,14 +123,25 @@ classdef Navigator < handle
             end
             try
                 this.fileNavigator.revealFile(file);
-                % Find out what that file defines, and update the code navigator
-                defn = this.codebase.defnForMfile(file);
-                this.classesNavigator.revealDefn(defn, file);
             catch err
                 % Ignore all errors. These can happen if the user is working on
                 % a file that's in flux and has an invalid definition, which is
                 % a common case when developing code
-                logdebugf('editorFrontFileChanged(): caught error while revealing file; ignoring. Error: %s', ...
+                logdebugf('editorFrontFileChanged(): caught error while revealing filein File Navigator; ignoring. Error: %s', ...
+                    err.message);
+            end
+            try
+                % Find out what that file defines, and update the code navigator
+                defn = this.codebase.defnForMfile(file);
+                this.classesNavigator.revealDefn(defn, file);
+            catch err
+                logdebugf('editorFrontFileChanged(): caught error while revealing file in Classes Navigator; ignoring. Error: %s', ...
+                    err.message);
+            end
+            try
+                this.codeNavigator.revealFile(file);
+            catch err
+                logdebugf('editorFrontFileChanged(): caught error while revealing file in Code Navigator; ignoring. Error: %s', ...
                     err.message);
             end
         end
