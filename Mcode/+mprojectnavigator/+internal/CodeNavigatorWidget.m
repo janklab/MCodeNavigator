@@ -385,9 +385,12 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             nodeData = CodeNodeData('superclass_group');
             nodeData.type = 'superclass_group';
             nodeData.definingClass = parentDefinition.Name;
-            label = 'Superclasses';
+            superclassNames = metaObjNames(parentDefinition.SuperclassList);
+            superclassBaseNames = regexprep(superclassNames, '.*\.', '');
+            upwardThickArrow = char(hex2dec('21E7'));
+            label = [upwardThickArrow ': ' strjoin(superclassBaseNames, ', ')];
             icon = myIconPath('none');
-            out = this.createNode(label, label, nodeData, [], icon);
+            out = this.createNode('Superclasses', label, nodeData, [], icon);
         end
         
         function out = buildEnumerationGroupNode(this, parentDefinition)
@@ -558,7 +561,18 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
                 this.treePeer.remove(node, dummyNode);
             end
             % TODO: Figure out how to get the ordering right on these groups
-            % when adding to an existing list. (minor issue)
+            % when adding to an existing list. (cosmetic issue)
+            % Superclasses
+            child = getChildNodeByValue(node, 'Superclasses');
+            if isempty(superclasses)
+                if ~isempty(child)
+                    this.treePeer.remove(node, child);
+                end
+            else
+                if isempty(child)
+                    this.treePeer.add(node, this.buildSuperclassGroupNode(klass));
+                end
+            end
             % Properties
             child = getChildNodeByValue(node, 'Properties');
             if isempty(properties)
@@ -605,17 +619,6 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             else
                 if isempty(child)
                     this.treePeer.add(node, this.buildEnumerationGroupNode(klass));
-                end
-            end
-            % Superclasses
-            child = getChildNodeByValue(node, 'Superclasses');
-            if isempty(superclasses)
-                if ~isempty(child)
-                    this.treePeer.remove(node, child);
-                end
-            else
-                if isempty(child)
-                    this.treePeer.add(node, this.buildSuperclassGroupNode(klass));
                 end
             end
         end
@@ -1307,7 +1310,7 @@ end
 function ctxViewDocCallback(src, evd, this, nodeData) %#ok<INUSL>
 switch nodeData.type
     case 'class'
-        doc(nodeData.className);
+        doc(nodeData.name);
     case 'function'
         doc(nodeData.functionName);
     case {'method', 'property', 'event', 'enumeration'}
@@ -1332,10 +1335,10 @@ end
 
 function ctxRevealInDesktopCallback(src, evd, this, nodeData) %#ok<INUSL>
 if isequal(nodeData.type, 'class')
-    w = which(nodeData.className);
+    w = which(nodeData.name);
     if strfind(w, 'is a built-in')
         uiwait(errordlg({sprintf('Cannot reveal %s because it is a built-in', ...
-            nodeData.className)}, 'Error'));
+            nodeData.name); ''; 'Sorry.'}, 'Error'));
     else
         mprojectnavigator.internal.Utils.guiRevealFileInDesktopFileBrowser(w);
     end
