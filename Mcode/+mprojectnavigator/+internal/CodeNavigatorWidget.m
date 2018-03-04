@@ -567,7 +567,9 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
                 end
             else
                 if isempty(child)
-                    this.treePeer.add(node, this.buildPropertyGroupNode(klass));
+                    newPropertiesNode = this.buildPropertyGroupNode(klass);
+                    this.treePeer.add(node, newPropertiesNode);
+                    this.expandNode(newPropertiesNode);
                 end
             end
             % Methods
@@ -578,7 +580,9 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
                 end
             else
                 if isempty(child)
-                    this.treePeer.add(node, this.buildMethodGroupNode(klass));
+                    newMethodsNode = this.buildMethodGroupNode(klass);
+                    this.treePeer.add(node, newMethodsNode);
+                    this.expandNode(newMethodsNode);
                 end
             end
             % Events

@@ -1,11 +1,13 @@
 TODO
 =============
 
+* Replace "Subclasses" node label with a "< class1, class2, ..." display
 * BUG: Scroll-to--node is not working in classes view when there are a lot of nodes in the tree, such as when you have the MATLAB globals expanded
 * Multiple pinned roots in file navigator
  * Or new "code roots" navigator
 * "New..." action in file navigator
 * Delete files from file navigator
+* Option to hide inherited properties/methods in Classes view
 * Open files in external programs from file navigator
 * Transparent icons/greyed text for Hidden items
  * Requires a custom variant of the Silk icon set

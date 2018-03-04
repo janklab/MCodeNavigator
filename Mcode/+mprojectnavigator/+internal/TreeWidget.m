@@ -193,9 +193,15 @@ classdef (Abstract) TreeWidget < handle
             % Get the TreePath to a node in this tree
             
             % This is a hack needed because the straight TreePath(rawNodePath)
-            % constructor doesn't work, probably due to Matlab/Java autoboxing issues
+            % constructor doesn't work, maybe due to Matlab/Java autoboxing issues
+            % with Object vs Object[].
+            treePath = this.jTree.getPathForRow(0);
+            while treePath.getPathCount > 1
+                treePath = treePath.getParentPath;
+            end
+            % Now treePath is the path to the root node.
             rawNodePath = node.getPath;
-            nodePath = this.jTree.getPathForRow(0);
+            nodePath = treePath;
             for i = 2:numel(rawNodePath)
                 nodePath = nodePath.pathByAddingChild(rawNodePath(i));
             end
