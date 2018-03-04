@@ -162,16 +162,16 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
             out.setAllowsChildren(true);
             set(out, 'userdata', nodeData);
             
-            pathInfo = mprojectnavigator.internal.CodeBase.matlabPathInfo();
-            out.add(this.buildCodePathsNode('USER', pathInfo.user));
-            out.add(this.buildCodePathsNode('MATLAB', pathInfo.system));
+            out.add(this.buildCodePathsNode('USER'));
+            out.add(this.buildCodePathsNode('MATLAB'));
             nodeData.isPopulated = true;
         end
         
-        function out = buildCodePathsNode(this, label, paths)
+        function out = buildCodePathsNode(this, pathsType)
             % A node representing a codebase with a list of paths
+            label = pathsType;
             nodeData = ClassesNodeData('codepaths', label);
-            nodeData.paths = paths;
+            nodeData.pathsType = pathsType;
             icon = myIconPath('topfolder');
             out = this.createNode('codepaths', label, nodeData, [], icon);
         end
@@ -635,14 +635,23 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
         
         function refreshCodePathsNode(this, node)
             nodeData = get(node, 'userdata');
-            
+            pathsType = nodeData.pathsType;
+            pathInfo = mprojectnavigator.internal.CodeBase.matlabPathInfo();
+            switch pathsType
+                case 'USER'
+                    paths = pathInfo.user;
+                case 'MATLAB'
+                    paths = pathInfo.system;
+                otherwise
+                    error('Invalid pathsType: %s', pathsType);
+            end
             listMode = ifthen(this.flatPackageView, 'flat', 'nested');
-            found = scanCodeRoots(nodeData.paths, listMode);
+            found = scanCodeRoots(paths, listMode);
             % "Globals" node
             globalsNode = getChildNodeByValue(node, '<Global>');
             if ~isempty(found.mfiles) || ~isempty(found.classdirs)
                 if isempty(globalsNode)
-                    globalsNode = this.buildCodePathsGlobalsNode(nodeData.paths, found);
+                    globalsNode = this.buildCodePathsGlobalsNode(paths, found);
                     this.treePeer.insert(node, globalsNode, 0);
                 end
             else

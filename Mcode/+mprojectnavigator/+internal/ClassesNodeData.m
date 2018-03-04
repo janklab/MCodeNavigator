@@ -1,5 +1,9 @@
 classdef ClassesNodeData < mprojectnavigator.internal.NodeData
     % Node user data for ClassesNavigatorWidget
+    %
+    % Programmers' note: this class is really sloppy; it's the union of a bunch
+    % of different case-specific data types. Don't use this as an example of how
+    % to write good code.
     
     % These properties are a union of the properties used for all types of nodes
     % in ClassesNavigatorWidget. Some may not be meaningful depending on the
@@ -12,8 +16,12 @@ classdef ClassesNodeData < mprojectnavigator.internal.NodeData
         name        char
         % Label to be displayed to the user in the tree node
         label       char
+        % Base name (non-qualified) of the package or class or whatever
         basename    char
         package     char
+        % For CodePaths nodes, whether it's USER or MATLAB paths
+        pathsType   char
+        % For CodePathsGlobals nodes, paths to find stuff on
         paths
         found
         defn

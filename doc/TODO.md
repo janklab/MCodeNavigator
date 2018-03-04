@@ -1,8 +1,6 @@
 TODO
 =============
 
-* USER classes node does not pick up packages newly added to the Matlab PATH
- * e.g. if you launch MProjectNavigator, and then load up Janklab
 * BUG: Scroll-to--node is not working in classes view when there are a lot of nodes in the tree, such as when you have the MATLAB globals expanded
 * Better sample classes, with human-understandable types, and various property/method attributes
 * Multiple pinned roots in file navigator
