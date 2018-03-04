@@ -203,12 +203,12 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         
         function out = buildPackageNode(this, packageName)
             mustBeA(packageName, 'char');
-            label = ['+' packageName];
+            tag = ['+' packageName];
             nodeData = CodeNodeData('package', packageName);
             nodeData.name = packageName;
             nodeData.basename = regexprep(packageName, '.*\.', '');
             icon = myIconPath('folder');
-            out = this.createNode(label, label, nodeData, [], icon);
+            out = this.createNode(tag, packageName, nodeData, [], icon);
             this.registerNode(nodeData, out);
         end
         
@@ -472,56 +472,55 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
         function refreshPackageNode(this, node)
             nodeData = get(node, 'userdata');
             packageName = nodeData.name;
-            childNodeNames = getChildNodeNames(node);
             childNodeValues = getChildNodeValues(node);
             nodesToAdd = {};
-            nodesToAddNames = {};
-            nodesToRemoveNames = cell(1, 0);
+            nodesToAddValues = {};
+            nodesToRemoveValues = cell(1, 0);
             pkg = meta.package.fromName(nodeData.name);
             pkgPrivateDirs = this.locatePrivateDirsForPackage(packageName);
             % Detect subpackages to add/remove
             if ~this.flatPackageView
                 pkgList = sortDefnsByName(pkg.PackageList);
                 subPkgNames = metaObjNames(pkgList);
-                subPkgLabels = strcat('+', subPkgNames);
+                subPkgTags = strcat('+', subPkgNames);
                 for i = 1:numel(pkgList)
                     pkgKey = ['+' pkgList(i).Name];
-                    if ~ismember(pkgKey, childNodeNames)
+                    if ~ismember(pkgKey, childNodeValues)
                         nodesToAdd{end+1} = this.buildPackageNode(pkgList(i).Name); %#ok<AGROW>
-                        nodesToAddNames{end+1} = pkgKey; %#ok<AGROW>
+                        nodesToAddValues{end+1} = pkgKey; %#ok<AGROW>
                     end
                 end
-                pkgChildNodeNames = selectRegexp(childNodeNames, '^+');
-                pkgChildNodeNamesToRemove = setdiff(pkgChildNodeNames, subPkgLabels);
-                nodesToRemoveNames = [nodesToRemoveNames pkgChildNodeNamesToRemove];
+                pkgChildNodeValues = selectRegexp(childNodeValues, '^+');
+                pkgChildNodeValuesToRemove = setdiff(pkgChildNodeValues, subPkgTags);
+                nodesToRemoveValues = [nodesToRemoveValues pkgChildNodeValuesToRemove];
             end
             % Detect classes to add/remove
             classList = sortDefnsByName(pkg.ClassList);
             classBasenames = regexprep(metaObjNames(classList), '.*\.', '');
-            classLabels = strcat('@', classBasenames);
-            classChildNodeNames = selectRegexp(childNodeNames, '^@');
-            ixToAdd = find(~ismember(classLabels, childNodeValues));
+            classValues = strcat('@', classBasenames);
+            classChildNodeValues = selectRegexp(childNodeValues, '^@');
+            ixToAdd = find(~ismember(classValues, childNodeValues));
             for i = 1:numel(ixToAdd)
                 nodesToAdd{end+1} = this.buildClassNode(classList(i).Name); %#ok<AGROW>
-                nodesToAddNames{end+1} = classBasenames{i}; %#ok<AGROW>
+                nodesToAddValues{end+1} = classBasenames{i}; %#ok<AGROW>
             end
-            classChildNodeNamesToRemove = setdiff(classChildNodeNames, classLabels);
-            nodesToRemoveNames = [nodesToRemoveNames classChildNodeNamesToRemove];
+            classChildNodeNamesToRemove = setdiff(classChildNodeValues, classValues);
+            nodesToRemoveValues = [nodesToRemoveValues classChildNodeNamesToRemove];
             % Detect functions to add/remove
             functionList = sortDefnsByName(pkg.FunctionList);
             functionNames = metaObjNames(functionList);
-            functionChildNodeNames = selectRegexp(childNodeValues, '^[^@+]');
-            ixToAdd = find(~ismember(functionNames, functionChildNodeNames));
+            functionChildNodeValues = selectRegexp(childNodeValues, '^[^@+]');
+            ixToAdd = find(~ismember(functionNames, functionChildNodeValues));
             for i = 1:numel(ixToAdd)
                 ix = ixToAdd(i);
                 nodesToAdd{end+1} = this.buildMethodNode(functionList(ix), packageName); %#ok<AGROW>
-                nodesToAddNames{end+1} = functionNames{ix}; %#ok<AGROW>
+                nodesToAddValues{end+1} = functionNames{ix}; %#ok<AGROW>
             end
-            functionChildNodeNamesToRemove = setdiff(functionChildNodeNames, functionNames);
-            nodesToRemoveNames = [nodesToRemoveNames functionChildNodeNamesToRemove];
+            functionChildNodeNamesToRemove = setdiff(functionChildNodeValues, functionNames);
+            nodesToRemoveValues = [nodesToRemoveValues functionChildNodeNamesToRemove];
             if isempty(pkgPrivateDirs)
                 if ismember('<pkgprivate>', childNodeValues)
-                    nodesToRemoveNames{end+1} = '<pkgprivate>';
+                    nodesToRemoveValues{end+1} = '<pkgprivate>';
                 end
             else
                 if ~ismember('<pkgprivate>', childNodeValues)
@@ -530,12 +529,12 @@ classdef CodeNavigatorWidget < mprojectnavigator.internal.TreeWidget
             end
             % Remove dummy node
             if ismember('dummy', childNodeValues)
-                nodesToRemoveNames{end+1} = 'dummy';
+                nodesToRemoveValues{end+1} = 'dummy';
             end
             % Do the adding and removal
             % TODO: Figure out how to insert new nodes in the right order WRT
             % existing nodes
-            [~,ixNodesToRemove] = ismember(nodesToRemoveNames, childNodeValues);
+            [~,ixNodesToRemove] = ismember(nodesToRemoveValues, childNodeValues);
             this.treePeer.remove(node, ixNodesToRemove-1);
             this.treePeer.add(node, [nodesToAdd{:}]);
         end
