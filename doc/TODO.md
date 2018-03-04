@@ -14,8 +14,6 @@ TODO
  * Requires a custom variant of the Silk icon set
 * An inheritance hierarchy browser for classes
 * Switch to using what() for class/function metadata discovery
-* Callbacks throw errors when you rename internal MProjectNavigator classes that are currently under view
- * This might not be a bug; that might just be a consequence of messing with the internals of running code.
 
 # To Maybe Do
 
