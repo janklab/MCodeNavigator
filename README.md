@@ -24,8 +24,7 @@ I use this primarily on Mac, but it should work on all OSes that Matlab runs on.
 * Download the distribution and unzip it (or clone the repo from GitHub)
 * Add this to your `startup.m` file:
 ```
-cd </path/to/unzipped/distribution>/MProjectNavigatory/bootstrap
-loadMProjectNavigator
+run('</path/to/unzipped/distribution>/MProjectNavigatory/bootstrap/loadMProjectNavigator')
 ```
 
 Alternately, if you don't want to modify your `startup.m` file, you can just run `loadMProjectNavigator` each time you want to use the tool. That function takes care of adding all the paths and other initialization. See it for details.
@@ -37,9 +36,11 @@ MLProjectNavigator saves some of its settings in Matlab's prefs() database. If y
 All usage is done through a single function, `MProjectNavigator`. Call it to display the navigator window, hide it, or configure it.
 
 ```
-MProjectNavigator               % Displays the tool
-MProjectNavigator -hide         % Hides the tool
-MProjectNavigator -pin <path>   % Change the pinned directory in the file navigator
+MProjectNavigator                   % Display the tool
+MProjectNavigator -hide             % Hide the tool
+MProjectNavigator -pin <path>       % Change the pinned directory in the file navigator
+MProjectNavigator -dispose          % Totally shut down the tool, not just hide it
+MProjectNavigator -deletesettings   % Delete all persistent settings for the tool
 ```
 
 There's also a keyboard shortcut! Press `Ctrl-Shift-P` to show or hide the navigator window.

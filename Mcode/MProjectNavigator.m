@@ -7,27 +7,29 @@ function MProjectNavigator(varargin)
 %
 % MProjectNavigator
 % MProjectNavigator -pin <path>
+% MProjectNavigator -dispose
 % MProjectNavigator -deletesettings
 %
-% For this to work, its JAR dependencies must be on the Java classpath. You can
-% set this up by running loadMProjectNavigator(), found in this project's
+% For this to work, MProjectNavigator must be loaded and initialized. You can
+% do this up by running loadMProjectNavigator(), found in this project's
 % "bootstrap/" directory.
 %
-% Alternately, you can invoke MProjectNavigator with its hotkey, Ctrl-Shift-P.
+% Alternately, instead of calling the MProjectNavigator() function, you can invoke 
+% MProjectNavigator with its hotkey, Ctrl-Shift-P.
 
 error(javachk('awt'));
 
     function out = myNavigator(newVal)
-        s = getappdata(0, 'MProjectNavigator');
-        if isempty(s)
-            s = struct;
-            s.NavigatorInstance = [];
-        end
-        out = s.NavigatorInstance;
-        if nargin > 0
-            s.NavigatorInstance = newVal;
-            setappdata(0, 'MProjectNavigator', s);
-        end
+    s = getappdata(0, 'MProjectNavigator');
+    if isempty(s)
+        s = struct;
+        s.NavigatorInstance = [];
+    end
+    out = s.NavigatorInstance;
+    if nargin > 0
+        s.NavigatorInstance = newVal;
+        setappdata(0, 'MProjectNavigator', s);
+    end
     end
 
 navigator = myNavigator;
@@ -52,19 +54,19 @@ switch varargin{1}
             return;
         end
         navigator.Visible = false;
+    case '-dispose'
+        disposeGui();
+    case '-deletesettings'
+        mprojectnavigator.internal.Persistence.deleteAllSettings();
+        fprintf('MProjectNavigator: All settings deleted.\n');
     case '-fresh'
         disposeGui();
         maybeInitializeGui();
         navigator.Visible = true;
-    case '-dispose'
-        disposeGui();        
     case '-registerhotkey'
         registerGlobalHotKey();
     case '-hotkeyinvoked'
         hotKeyInvoked();
-    case '-deletesettings'
-        mprojectnavigator.internal.Persistence.deleteAllSettings();
-        fprintf('MProjectNavigator: All settings deleted.\n');
     case '-editorfrontfile'
         editorFrontFile(varargin{2});
     case '-editorfilesaved'
@@ -79,52 +81,52 @@ end
 
 
     function disposeGui()
-        if ~isempty(navigator)
-            navigator.dispose();
-            navigator = [];
-            myNavigator(navigator);
-        end
+    if ~isempty(navigator)
+        navigator.dispose();
+        navigator = [];
+        myNavigator(navigator);
+    end
     end
 
     function maybeInitializeGui()
-        if isempty(navigator)
-            navigator = mprojectnavigator.internal.Navigator;
-            myNavigator(navigator);
-            registerHotKeyOnComponent(navigator.frame.getContentPane);
-        end
+    if isempty(navigator)
+        navigator = mprojectnavigator.internal.Navigator;
+        myNavigator(navigator);
+        registerHotKeyOnComponent(navigator.frame.getContentPane);
+    end
     end
 
     function hotKeyInvoked()
-        if isempty(navigator)
-            maybeInitializeGui();
-            navigator.Visible = true;
-        else
-            % Toggle visibility
-            navigator.Visible = ~navigator.Visible;
-        end
+    if isempty(navigator)
+        maybeInitializeGui();
+        navigator.Visible = true;
+    else
+        % Toggle visibility
+        navigator.Visible = ~navigator.Visible;
+    end
     end
 
     function editorFrontFile(file)
-        if ~isempty(navigator)
-            navigator.editorFrontFileChanged(file);
-        end
+    if ~isempty(navigator)
+        navigator.editorFrontFileChanged(file);
+    end
     end
 
     function editorFileSaved(file)
-        if ~isempty(navigator)
-            navigator.editorFileSaved(file);
-        end
+    if ~isempty(navigator)
+        navigator.editorFileSaved(file);
+    end
     end
 
     function setPinnedPath(newPath)
-        if ~isdir(newPath) %#ok
-            warning('''%s'' is not a directory', newPath);
-            return;
-        end
-        realPath = resolveRelativeDirPath(newPath);
-        if ~isempty(realPath)
-            navigator.fileNavigator.setRootPath(realPath);
-        end
+    if ~isdir(newPath) %#ok
+        warning('''%s'' is not a directory', newPath);
+        return;
+    end
+    realPath = resolveRelativeDirPath(newPath);
+    if ~isempty(realPath)
+        navigator.fileNavigator.setRootPath(realPath);
+    end
     end
 
 end
