@@ -335,17 +335,40 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
             this.registerNode(nodeData, out);
         end
         
-        function out = labelForProperty(this, defn, klassDefn) %#ok<INUSL>
+        function out = memberAccessLabel(~, accessDefn)
+        if ischar(accessDefn)
+            out = accessDefn;
+        elseif iscell(accessDefn)
+            s = cell(1, numel(accessDefn));
+            for i = 1:numel(accessDefn)
+                if ischar(accessDefn{i})
+                    s{i} = accessDefn{i};
+                elseif isa(accessDefn{i}, 'meta.class')
+                    s{i} = accessDefn{i}.Name;
+                else
+                    error('Unrecognized Member Access definition type: %s', class(accessDefn{i}));
+                end
+            end
+            out = strjoin(s, ', ');
+        end
+        end
+        
+        function out = labelForProperty(this, defn, klassDefn)
             mustBeA(defn, 'meta.property');
             mustBeA(klassDefn, 'meta.class');
             items = {};
             items{end+1} = defn.Name;
-            if isequal(defn.GetAccess, defn.SetAccess)
-                access = defn.GetAccess;
+            getAccess = this.memberAccessLabel(defn.GetAccess);
+            setAccess = this.memberAccessLabel(defn.SetAccess);
+            if isequal(getAccess, setAccess)
+                access = getAccess;
             else
-                access = sprintf('%s/%s', defn.GetAccess, defn.SetAccess);
+                access = sprintf('%s/%s', getAccess, setAccess);
             end
             access = strrep(access, 'public', '');
+            if ~isempty(access)
+                access = ['[' access ']'];
+            end
             items{end+1} = access;
             quals = {'Constant', 'Abstract', 'Transient', 'Hidden', ...
                 'AbortSet', 'NonCopyable'};
@@ -959,7 +982,7 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
             end
             items(cellfun(@isempty, items)) = [];
             if ~isequal(defn.Access, 'public')
-                items{end+1} = defn.Access;
+                items{end+1} = this.memberAccessLabel(defn.Access);
             end
             quals = {'Static' 'Abstract' 'Sealed' 'Hidden'};
             for i = 1:numel(quals)

@@ -1,6 +1,7 @@
 TODO
 =============
 
+* Superclass classes should be arranged in order of inheritance, not alphabetically, for both node label and child nodes
 * BUG: Scroll-to--node is not working in classes view when there are a lot of nodes in the tree, such as when you have the MATLAB globals expanded
 * Better sample classes, with human-understandable types, and various property/method attributes
 * Multiple pinned roots in file navigator
