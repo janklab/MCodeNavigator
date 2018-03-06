@@ -52,8 +52,8 @@ classdef Navigator < handle
             tabbedPane = JTabbedPane;
             
             tabbedPane.add('Files', this.fileNavigator.panel);
-            tabbedPane.add('Classes', this.classesNavigator.panel);
             tabbedPane.add('Code', this.codeNavigator.panel);
+            tabbedPane.add('Classes', this.classesNavigator.panel);
             tabSelection = getpref(PREFGROUP, 'nav_TabSelection', []);
             if ~isempty(tabSelection)
                 try

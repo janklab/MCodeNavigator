@@ -1,12 +1,8 @@
-classdef CodeRootsNavigatorWidget < mprojectnavigator.internal.TreeWidget
-    
-    properties
-        navigator
-    end
+classdef CodeRootsNavigatorWidget < mprojectnavigator.internal.FileWidgetBase
     
     methods
         function this = CodeRootsNavigatorWidget(parentNavigator)
-            this.navigator = parentNavigator;
+            this = this@mprojectnavigator.internal.FileWidgetBase(parentNavigator);
             this.initializeGui;
         end
         
@@ -26,6 +22,20 @@ classdef CodeRootsNavigatorWidget < mprojectnavigator.internal.TreeWidget
             this.completeRefreshGui;
         end
         
+        function out = getFileRootNodes(this)
+            root = this.treePeer.getRoot;
+            user = root.getChildAt(0);
+            matlab = root.getChildAt(1);
+            out = {};
+            for i = 1:user.getChildCount
+                out{end+1} = user.getChildAt(i-1);
+            end
+            for i = 1:matlab.getChildCount
+                out{end+1} = matlab.getChildAt(i-1);
+            end
+            out = [out{:}];
+        end
+        
         function completeRefreshGui(this)
             root = this.buildRootNode();
             this.treePeer.setRoot(root);
@@ -33,6 +43,7 @@ classdef CodeRootsNavigatorWidget < mprojectnavigator.internal.TreeWidget
             % Expand the root node one level, and expand the USER node
             this.expandNode(root);
             this.expandNode(root.getChildAt(0));
+            this.populateNode(root.getChildAt(1));
         end
         
         function out = createNode(this, tag, label, nodeData, allowsChildren, icon)
@@ -198,74 +209,12 @@ classdef CodeRootsNavigatorWidget < mprojectnavigator.internal.TreeWidget
             end
         end
         
-        function treeMousePressed(this, hTree, eventData) %#ok<INUSL>
-            % Mouse click callback
+        function addSubclassContextMenuItems(this, jmenu, node, nodeData) %#ok<INUSD>
             import javax.swing.*
-            
-            % Get the clicked node
-            clickX = eventData.getX;
-            clickY = eventData.getY;
-            jtree = eventData.getSource;
-            treePath = jtree.getPathForLocation(clickX, clickY);
-            % This method of detecting right-clicks avoids confusion with Cmd-clicks on Mac
-            isRightClick = eventData.getButton == java.awt.event.MouseEvent.BUTTON3;
-            if isRightClick
-                % Right-click
-                if ~isempty(treePath)
-                    node = treePath.getLastPathComponent;
-                    nodeData = get(node, 'userdata');
-                else
-                    node = [];
-                    nodeData = [];
-                end
-                jmenu = this.setupTreeContextMenu(node, nodeData);
-                jmenu.show(jtree, clickX, clickY);
-                jmenu.repaint;
-            elseif eventData.getClickCount == 2
-                % Double-click
-                if isempty(treePath)
-                    % Click was not on a node
-                    return;
-                end
-                node = treePath.getLastPathComponent;
-                nodeData = get(node, 'userdata');
-                if nodeData.isDummy
-                    return;
-                end
-                if nodeData.isDir
-                    % Let default "expand node" behavior handle it
-                else
-                    % File node was double-clicked
-                    edit(nodeData.path);
-                end
-            else
-                % Ignore
+
+            function setCallback(item, callback)
+                set(handle(item,'CallbackProperties'), 'ActionPerformedCallback', callback);
             end
-        end
-        
-        function out = setupTreeContextMenu(this, node, nodeData)
-            import javax.swing.*
-            
-            fileShellName = mprojectnavigator.internal.Utils.osFileBrowserName;
-            
-            if ~isempty(node) && ~this.isInSelection(node)
-                this.setSelectedNode(node);
-            end
-            
-            jmenu = JPopupMenu;
-            menuItemBogus = JMenuItem('Bogus');
-            
-            jmenu.add(menuItemBogus);
-            
-            out = jmenu;
-        end
-        
-        function revealFile(this, file)
-        logdebugf('revealFile(): function called: %s', file);
-        %TODO: Rest of this function
-        % Find whether it's under a code root
-        
-        % Expand that code root to reveal the file
         end
     end
 end

@@ -66,7 +66,7 @@ classdef (Abstract) TreeWidget < handle
             pause(0.0005); % Pause to allow lazy-loaded children to be filled in
             if isequal(mode, 'recurse')
                 for i = 1:node.getChildCount
-                    this.expandNode(node.getChildAt(i-1), recurse);
+                    this.expandNode(node.getChildAt(i-1), 'recurse');
                 end
             end
         end
