@@ -124,6 +124,59 @@ classdef Utils
             cmd = sprintf('start powershell.exe -noexit -command "cd ''%s''"', dir);
             system(cmd);
         end
+        
+        function out = memberAccessLabel(accessDefn)
+            %MEMBERACCESSLABEL Display label for a member access definition
+            if ischar(accessDefn)
+                out = accessDefn;
+            elseif iscell(accessDefn)
+                s = cell(1, numel(accessDefn));
+                for i = 1:numel(accessDefn)
+                    if ischar(accessDefn{i})
+                        s{i} = accessDefn{i};
+                    elseif isa(accessDefn{i}, 'meta.class')
+                        s{i} = accessDefn{i}.Name;
+                    else
+                        error('Unrecognized Member Access definition type: %s', class(accessDefn{i}));
+                    end
+                end
+                out = strjoin(s, ', ');
+            end
+        end
+        
+        function out = methodAccessLabel(access)
+            out = mprojectnavigator.internal.Utils.memberAccessLabel(access);
+            if isequal(out, 'public')
+                out = '';
+            end
+        end
+        
+        function out = propertyAccessLabel(getAccess, setAccess)
+            %PROPERTYACCESSLABEL Display label for a property access definition
+            getAccessLabel = mprojectnavigator.internal.Utils.memberAccessLabel(getAccess);
+            setAccessLabel = mprojectnavigator.internal.Utils.memberAccessLabel(setAccess);
+            if isequal(getAccessLabel, setAccessLabel)
+                access = getAccessLabel;
+            else
+                access = sprintf('%s/%s', getAccessLabel, setAccessLabel);
+            end
+            access = strrep(access, 'public', '');
+            out = access;
+        end
+        
+        function out = eventAccessLabel(notifyAccess, listenAccess)
+            %EVENTACCESSLABEL Display label for an event access definition
+            notifyAccessLabel = mprojectnavigator.internal.Utils.memberAccessLabel(notifyAccess);
+            listenAccessLabel = mprojectnavigator.internal.Utils.memberAccessLabel(listenAccess);
+            if isequal(notifyAccessLabel, listenAccessLabel)
+                access = notifyAccessLabel;
+            else
+                access = sprintf('%s/%s', notifyAccessLabel, listenAccessLabel);
+            end
+            access = strrep(access, 'public', '');
+            out = access;
+        end
+        
     end
     
     methods (Access=private)

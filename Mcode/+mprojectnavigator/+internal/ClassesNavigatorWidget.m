@@ -92,6 +92,7 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
             menuItemEdit = JMenuItem('Edit');
             menuItemViewDoc = JMenuItem('View Doc');
             menuItemMethodsView = JMenuItem('Methods View');
+            menuItemMethodsView2 = JMenuItem('Methods View 2');
             menuItemViewInheritance = JMenuItem('View Inheritance Tree');
             menuItemRevealInDesktop = JMenuItem(sprintf('Reveal in %s', fileShellName));
             menuItemFullyExpandNode = JMenuItem('Fully Expand');
@@ -130,6 +131,7 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
             setCallback(menuItemEdit, {@ctxEditCallback, this, nodeData});
             setCallback(menuItemViewDoc, {@ctxViewDocCallback, this, nodeData});
             setCallback(menuItemMethodsView, {@ctxMethodsViewCallback, this, nodeData});
+            setCallback(menuItemMethodsView2, {@ctxMethodsView2Callback, this, nodeData});
             setCallback(menuItemViewInheritance, {@ctxViewInheritanceCallback, this, nodeData});
             setCallback(menuItemRevealInDesktop, {@ctxRevealInDesktopCallback, this, nodeData});
             setCallback(menuItemFullyExpandNode, {@ctxFullyExpandNodeCallback, this, node, nodeData});
@@ -146,6 +148,7 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
             end
             if isTargetClass
                 jmenu.add(menuItemMethodsView);
+                jmenu.add(menuItemMethodsView2);
                 jmenu.add(menuItemViewInheritance);
             end
             if isTargetRevealable
@@ -358,37 +361,13 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
             this.registerNode(nodeData, out);
         end
         
-        function out = memberAccessLabel(~, accessDefn)
-        if ischar(accessDefn)
-            out = accessDefn;
-        elseif iscell(accessDefn)
-            s = cell(1, numel(accessDefn));
-            for i = 1:numel(accessDefn)
-                if ischar(accessDefn{i})
-                    s{i} = accessDefn{i};
-                elseif isa(accessDefn{i}, 'meta.class')
-                    s{i} = accessDefn{i}.Name;
-                else
-                    error('Unrecognized Member Access definition type: %s', class(accessDefn{i}));
-                end
-            end
-            out = strjoin(s, ', ');
-        end
-        end
-        
-        function out = labelForProperty(this, defn, klassDefn)
+        function out = labelForProperty(this, defn, klassDefn) %#ok<INUSL>
             mustBeA(defn, 'meta.property');
             mustBeA(klassDefn, 'meta.class');
             items = {};
             items{end+1} = defn.Name;
-            getAccess = this.memberAccessLabel(defn.GetAccess);
-            setAccess = this.memberAccessLabel(defn.SetAccess);
-            if isequal(getAccess, setAccess)
-                access = getAccess;
-            else
-                access = sprintf('%s/%s', getAccess, setAccess);
-            end
-            access = strrep(access, 'public', '');
+            access = mprojectnavigator.internal.Utils.propertyAccessLabel(defn.GetAccess, ...
+                defn.SetAccess);
             if ~isempty(access)
                 access = ['[' access ']'];
             end
@@ -1006,7 +985,7 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
             end
             items(cellfun(@isempty, items)) = [];
             if ~isequal(defn.Access, 'public')
-                items{end+1} = this.memberAccessLabel(defn.Access);
+                items{end+1} = mprojectnavigator.internal.Utils.memberAccessLabel(defn.Access);
             end
             quals = {'Static' 'Abstract' 'Sealed' 'Hidden'};
             for i = 1:numel(quals)
@@ -1415,6 +1394,16 @@ switch nodeData.type
     otherwise
         % Shouldn't get here
         logdebug('Unrecognized node type for methods view: %s', nodeData.type);
+end
+end
+
+function ctxMethodsView2Callback(src, evd, this, nodeData) %#ok<INUSL>
+switch nodeData.type
+    case 'class'
+        mprojectnavigator.methodsview2(nodeData.name);
+    otherwise
+        % Shouldn't get here
+        logdebug('Unrecognized node type for methods view 2: %s', nodeData.type);
 end
 end
 
