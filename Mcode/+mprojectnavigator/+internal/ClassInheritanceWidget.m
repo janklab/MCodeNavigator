@@ -33,10 +33,7 @@ classdef ClassInheritanceWidget < mprojectnavigator.internal.TreeWidget
         function completeRefreshGui(this)
             root = this.buildClassNode(this.rootClassDefn);
             this.treePeer.setRoot(root);
-            pause(0.005); % Allow widgets to catch up
-            drawnow;
             this.expandNode(root, 'recurse');
-            pause(0.005); % Allow widgets to catch up
         end
         
         function out = createNode(this, tag, label, nodeData, allowsChildren, icon)

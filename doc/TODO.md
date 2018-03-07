@@ -19,8 +19,10 @@ TODO
 * Auto-detect whether a given dir has relevant doco before enabling "View Doc" on it
 * Better methodsview widget
  * with Hidden / Inherited / Defining Class columns
+ * options to show/hide Hidden/Inherited/protected/private methods
  * with right-click to Edit or View Doc
  * Include properties?
+* Turning on/off "Show Hidden Items" option in classes view cause the tree to reset. Fix this to preserve the expansion state.
 
 # To Maybe Do
 
