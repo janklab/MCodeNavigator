@@ -161,5 +161,5 @@ end
 end
 
 function ctxMethodsViewCallback(src, evd, this, nodeData) %#ok<INUSL>
-methodsview(nodeData.name);
+mprojectnavigator.methodsview2(nodeData.name);
 end

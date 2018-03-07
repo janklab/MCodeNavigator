@@ -92,7 +92,6 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
             menuItemEdit = JMenuItem('Edit');
             menuItemViewDoc = JMenuItem('View Doc');
             menuItemMethodsView = JMenuItem('Methods View');
-            menuItemMethodsView2 = JMenuItem('Methods View 2');
             menuItemViewInheritance = JMenuItem('View Inheritance Tree');
             menuItemRevealInDesktop = JMenuItem(sprintf('Reveal in %s', fileShellName));
             menuItemFullyExpandNode = JMenuItem('Fully Expand');
@@ -130,8 +129,7 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
             end
             setCallback(menuItemEdit, {@ctxEditCallback, this, nodeData});
             setCallback(menuItemViewDoc, {@ctxViewDocCallback, this, nodeData});
-            setCallback(menuItemMethodsView, {@ctxMethodsViewCallback, this, nodeData});
-            setCallback(menuItemMethodsView2, {@ctxMethodsView2Callback, this, nodeData});
+            setCallback(menuItemMethodsView, {@ctxMethodsView2Callback, this, nodeData});
             setCallback(menuItemViewInheritance, {@ctxViewInheritanceCallback, this, nodeData});
             setCallback(menuItemRevealInDesktop, {@ctxRevealInDesktopCallback, this, nodeData});
             setCallback(menuItemFullyExpandNode, {@ctxFullyExpandNodeCallback, this, node, nodeData});
@@ -148,7 +146,6 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
             end
             if isTargetClass
                 jmenu.add(menuItemMethodsView);
-                jmenu.add(menuItemMethodsView2);
                 jmenu.add(menuItemViewInheritance);
             end
             if isTargetRevealable
