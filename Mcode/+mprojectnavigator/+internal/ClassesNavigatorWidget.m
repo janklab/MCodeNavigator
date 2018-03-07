@@ -57,7 +57,7 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
             end
             this.showHidden = newState;
             setpref(PREFGROUP, 'code_showHidden', this.showHidden);
-            this.completeRefreshGui;
+            this.gentleRecursiveRefresh([], 'force');
         end
         
         function completeRefreshGui(this)

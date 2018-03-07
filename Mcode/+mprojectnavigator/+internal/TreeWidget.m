@@ -106,7 +106,7 @@ classdef (Abstract) TreeWidget < handle
         end
         
         function refreshNode(this, node, mode)
-            if nargin < 3;  mode = '';  end
+            if nargin < 3 || isempty(mode);  mode = '';  end
             mode = cellstr(mode);
             doForce = ismember('force', mode);
             doPopulate = ismember('populate', mode);
@@ -146,19 +146,24 @@ classdef (Abstract) TreeWidget < handle
             this.refreshNode(node, {'populate','force'});
         end
         
-        function gentleRecursiveRefresh(this, node)
+        function gentleRecursiveRefresh(this, node, mode)
             % Refresh all nodes that are already populated.
             % This will pick up updates to dirty nodes anywhere on the tree
             % TODO: Since this is for a user-driven refresh, might want to
             % either ignore the dirty flag, or just mark the entire tree dirty
             % before doing this, so we're sure to get fresh data
+            if nargin < 2;  node = [];  end
+            if nargin < 3;  mode = [];  end
+            if isempty(node)
+                node = this.treePeer.getRoot;
+            end
             nodeData = get(node, 'userdata');
             if ~nodeData.isPopulated
                 return;
             else
-                this.refreshNode(node);
+                this.refreshNode(node, mode);
                 for i = 1:node.getChildCount
-                    this.gentleRecursiveRefresh(node.getChildAt(i-1));
+                    this.gentleRecursiveRefresh(node.getChildAt(i-1), mode);
                 end
             end
         end
