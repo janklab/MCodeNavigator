@@ -1,7 +1,7 @@
 TODO
 =============
 
-* BUG: Scroll-to--node is not working in classes view when there are a lot of nodes in the tree, such as when you have the MATLAB globals expanded
+* BUG: Scroll-to-node is not working in classes view when there are a lot of nodes in the tree, such as when you have the MATLAB globals expanded
 * Better sample classes, with human-understandable types, and various property/method attributes
 * Option to hide inherited properties/methods in Classes view
 * Disable/Hide "Edit", "View Doc" context menu items when clicking on folders in file navigator
