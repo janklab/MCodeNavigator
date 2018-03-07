@@ -201,9 +201,7 @@ function out = gentleClassFromName(className)
 % There doesn't seem to be any way to quell the exception raised by
 % `meta.class.fromName` on bad definitions, so just temporarily turn off the
 % debugger breakpoint.
-origDebuggerState = dbstatus('-completenames');
-RAII.dbstop = onCleanup(@() dbstop(origDebuggerState));
-dbclear if all error
+RAII.dbstop = withNoDbstopIfAllError; %#ok<STRNU>
 
 try
     out = meta.class.fromName(className);

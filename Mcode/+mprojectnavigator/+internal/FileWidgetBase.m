@@ -245,6 +245,7 @@ end
 end
 
 function ctxViewDocCallback(src, evd, this, nodeData) %#ok<INUSL>
+RAII.dbstop = withNoDbstopIfAllError; %#ok<STRNU>
 doc(nodeData.path);
 end
 

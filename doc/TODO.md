@@ -4,18 +4,18 @@ TODO
 * BUG: Scroll-to-node is not working in classes view when there are a lot of nodes in the tree, such as when you have the MATLAB globals expanded
 * Better sample classes, with human-understandable types, and various property/method attributes
 * File Navigator file actions
- * "New..." action in file navigator
- * Delete files from file navigator
+ * "New..." with various options
+ * Delete
  * Open file in external program...
- * These should all be supported in Code view, too
+ * These should be supported in Code view, too, as appropriate
 * Transparent icons/greyed text for Hidden items
  * Requires a custom variant of the Silk icon set
 * Matlab file icon for ".m" files
  * Probably requires a custom variant of the Silk icon set, too
  * Requires displaying icons per file type/extension logic
 * Switch to using what() for class/function metadata discovery
-* "View Doc" in file browser may need to guard against "dbstop if all error" triggering inside doc()
 * Auto-detect whether a given dir has relevant doco before enabling "View Doc" on it
+ * Docability condition: if there are any .m files or subpackages in the dir
 * Better class structure/methodsview widget
  * Include properties
  * with Hidden / Inherited / Defining Class columns
