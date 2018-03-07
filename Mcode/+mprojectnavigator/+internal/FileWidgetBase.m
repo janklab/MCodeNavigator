@@ -152,8 +152,8 @@ classdef FileWidgetBase < mprojectnavigator.internal.TreeWidget
             isTargetFileOrDir = (~isempty(nodeData) && (nodeData.isFile || nodeData.isDir));
             isTargetEditable =  isTargetFile;
             isTargetMfile = isTargetFile && endsWith(nodeData.path, '.m', 'IgnoreCase',true);
-            isDocable = isTargetDir || isTargetMfile;
-            isMlintable = isTargetDir || isTargetMfile;
+            isDocable = isTargetMfile || (isTargetDir && isDirDocable(nodeData.path));
+            isMlintable = isDocable;
             menuItemEdit.setEnabled(isTargetEditable);
             menuItemViewDoc.setEnabled(isTargetDir || isTargetMfile);
             menuItemMlintReport.setEnabled(isTargetDir || isTargetMfile);
@@ -308,4 +308,16 @@ function ctxSyncToEditorCallback(src, evd, this) %#ok<INUSL>
 this.navigator.setSyncToEditor(src.isSelected);
 end
 
-
+function out = isDirDocable(path)
+d = dir([path '/*.m']);
+if ~isempty(d)
+    out = true;
+    return
+end
+d = dir([path '/+*']);
+if ~isempty(d)
+    out = true;
+    return
+end
+out = false;
+end

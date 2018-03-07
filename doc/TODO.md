@@ -21,8 +21,6 @@ TODO
  * Probably requires a custom variant of the Silk icon set, too
  * Requires displaying icons per file type/extension logic
 * Switch to using what() for class/function metadata discovery
-* Auto-detect whether a given dir has relevant doco before enabling "View Doc" on it
- * Docability condition: if there are any .m files or subpackages in the dir
 
 # To Maybe Do
 

@@ -1,5 +1,5 @@
 classdef a_classdef_with_hidden_items
-    
+    %A_CLASSDEF_WITH_HIDDEN_ITEMS Has hidden methods and properties
     properties
         foo
         bar

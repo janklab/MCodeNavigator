@@ -1,5 +1,5 @@
 classdef a_classdef_with_dir
-
+%A_CLASSDEF_WITH_DIR A classdef class with a corresponding @classdir
     properties
 	x
     end

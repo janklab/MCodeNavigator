@@ -1,4 +1,5 @@
 classdef a_classdef_with_only_hidden_items
+    %Has only hidden methods and properties
     
     properties (Hidden)
         foo
