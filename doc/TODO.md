@@ -4,6 +4,11 @@ TODO
 * BUG: Scroll-to-node is not working in classes view when there are a lot of nodes in the tree, such as when you have the MATLAB globals expanded.
 * BUG: Might have a memory leak. I sometimes get an out of Java heap space OOM error when hacking on this for a while.
 * BUG: `*.bak` and other files with odd extensions might confuse the class view.
+* Better class structure/methodsview widget
+ * Include properties
+ * with Hidden / Inherited / Defining Class columns
+ * options to show/hide Hidden/Inherited/protected/private methods
+ * with right-click to Edit or View Doc
 * Better sample classes, with human-understandable types, and various property/method attributes
 * File Navigator file actions
  * "New..." with various options
@@ -18,11 +23,6 @@ TODO
 * Switch to using what() for class/function metadata discovery
 * Auto-detect whether a given dir has relevant doco before enabling "View Doc" on it
  * Docability condition: if there are any .m files or subpackages in the dir
-* Better class structure/methodsview widget
- * Include properties
- * with Hidden / Inherited / Defining Class columns
- * options to show/hide Hidden/Inherited/protected/private methods
- * with right-click to Edit or View Doc
 
 # To Maybe Do
 
