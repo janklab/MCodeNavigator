@@ -1197,7 +1197,7 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
             this.scrollToNode(defnNode);
         end
         
-        function showInheritanceForClass(this, className)
+        function showInheritanceForClass(this, className) %#ok<INUSL>
             classDefn = meta.class.fromName(className);
             inheritanceWidget = mprojectnavigator.internal.ClassInheritanceWidget(classDefn);
             inheritanceWidget.initializeGui;
@@ -1440,20 +1440,8 @@ function ctxRefreshCallback(src, evd, this) %#ok<INUSL>
 this.gentleRecursiveRefresh(this.treePeer.getRoot);
 end
 
-function ctxViewInheritanceCallback(src, evd, this, nodeData)
+function ctxViewInheritanceCallback(src, evd, this, nodeData) %#ok<INUSL>
 this.showInheritanceForClass(nodeData.name);
-end
-
-function out = rejectInheritedDefinitions(defnList, parentDefn)
-% Filters out definitions that were inherited from another class/definer
-if isempty(defnList)
-    out = defnList;
-    return;
-end
-definer = [ defnList.DefiningClass ];
-definerName = { definer.Name };
-tfInherited = ~strcmp(definerName, parentDefn.Name);
-out = defnList(~tfInherited);
 end
 
 function out = sortDefnsByName(defns)
