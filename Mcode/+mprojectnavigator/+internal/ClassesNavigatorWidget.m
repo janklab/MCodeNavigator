@@ -264,11 +264,13 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
             nodeData.name = className;
             nodeData.basename = classBaseName;
             if showFqName
-                label = ['@' className];
+                value = ['@' className];
+                label = className;
             else
-                label = ['@' classBaseName];
+                value = ['@' classBaseName];
+                label = classBaseName;
             end
-            out = this.createNode(label, label, nodeData);
+            out = this.createNode(value, label, nodeData);
             % Get ready for file change notifications: List the files that go in
             % to this class definition, and register them
             % Hack: for now, just register the constructor, and be sloppy about
