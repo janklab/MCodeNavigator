@@ -3,6 +3,10 @@ MProjectNavigator CHANGELOG
 
 ## Version 0.4.0 (Date TBD)
 
+* Added a Code Roots navigator view
+* Added class inheritance tree viewer
+* Some bug fixes, of course
+
 ## Version 0.3.0 (Date 2018-02-16)
 
 * Added syncing of file navigator to Matlab editor open/front file
