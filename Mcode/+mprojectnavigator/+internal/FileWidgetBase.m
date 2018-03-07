@@ -37,7 +37,7 @@ classdef FileWidgetBase < mprojectnavigator.internal.TreeWidget
                 end
             end
             if isempty(fileRootNode)
-                logdebugf('revealFile(): Ignoring file outside of file navigator roots: %s', ...
+                logdebug('revealFile(): Ignoring file outside of file navigator roots: %s', ...
                     file);
                 return;
             end

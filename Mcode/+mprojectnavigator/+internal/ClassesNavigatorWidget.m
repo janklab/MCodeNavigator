@@ -987,10 +987,10 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
             defn = getMetaDefnByName(klassDefn.MethodList, nodeData.basename);
             label = this.labelForProperty(defn, klassDefn);
             if ~isequal(label, node.getName)
-                logdebugf('New property label: %s', label);
+                logdebug('New property label: %s', label);
                 this.setNodeName(node, label);
             else
-                logdebugf('Keeping existing property label: %s', label);
+                logdebug('Keeping existing property label: %s', label);
             end
         end
         
@@ -1107,25 +1107,25 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
             
             % Fast path: look up by file
             if ~isempty(file) && this.fileToNodeMap.containsKey(file)
-                logdebugf('revealDefn: fast path by file: %s', file);
+                logdebug('revealDefn: fast path by file: %s', file);
                 defnNode = this.fileToNodeMap.get(file);
             elseif isempty(defn)
                 % Ignore empty definitions. That means it's a file outside of
                 % our code base. Or it's a function in a private/ folder, which
                 % we can't currently see.
-                logdebugf('revealDefn: ignoring empty definition: %s', file);
+                logdebug('revealDefn: ignoring empty definition: %s', file);
                 return;
             else
                 id = idForDefn(defn);
                 node = this.defnMap.get(id);
                 if ~isempty(node)
                     % Easy case: the node already exists
-                    logdebugf('revealDefn: fast path by id: %s', file);
+                    logdebug('revealDefn: fast path by id: %s', file);
                     defnNode = node;
                 else
                     % Hard case: we may need to start at the top and expand nodes in
                     % order to vivify the node for this definition
-                    logdebugf('revealDefn: hard path: %s', file);
+                    logdebug('revealDefn: hard path: %s', file);
                     root = this.treePeer.getRoot;
                     scopeNodeName = ifthen(isequal(defn.scope, 'system'), 'MATLAB', 'USER');
                     scopeNode = getChildNodeByName(root, scopeNodeName);
@@ -1188,7 +1188,7 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
             if isempty(defnNode)
                 % This is not a warning; it can happen when there's an invalid
                 % definition in user code. Ignore.
-                logdebugf('Definition node did not populate as expected: %s', id);
+                logdebug('Definition node did not populate as expected: %s', id);
                 return;
             end
             parent = defnNode.getParent;
@@ -1371,7 +1371,7 @@ switch nodeData.type
             edit(nodeData.path);
         else
             % Shouldn't get here
-            logerrorf('Editing is not supported for node type %s', nodeData.type);
+            logerror('Editing is not supported for node type %s', nodeData.type);
         end
 end
 end
@@ -1402,7 +1402,7 @@ switch nodeData.type
         doc(qualifiedName);
     otherwise
         % Shouldn't get here
-        logerrorf('Doc viewing is not supported for node type %s', nodeData.type);
+        logerror('Doc viewing is not supported for node type %s', nodeData.type);
 end
 end
 
@@ -1412,7 +1412,7 @@ switch nodeData.type
         methodsview(nodeData.name);
     otherwise
         % Shouldn't get here
-        logdebugf('Unrecognized node type for methods view: %s', nodeData.type);
+        logdebug('Unrecognized node type for methods view: %s', nodeData.type);
 end
 end
 

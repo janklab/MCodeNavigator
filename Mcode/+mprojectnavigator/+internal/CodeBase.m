@@ -207,7 +207,7 @@ try
     out = meta.class.fromName(className);
 catch err
     % quash
-    logdebugf('%s: loading class definition for ''%s'' failed. (Error: %s). Ignoring', ...
+    logdebug('%s: loading class definition for ''%s'' failed. (Error: %s). Ignoring', ...
         'gentleClassFromName()', className, err.message);
     out = [];
 end

@@ -1,15 +1,16 @@
-function trace(msg, varargin)
-% Log a TRACE level message from caller.
+function logtrace(format, varargin)
+% Log a TRACE level message from caller, with printf style formatting.
 %
-% jl.log.trace(msg, varargin)
+% logtrace(msg, varargin)
 %
-% This accepts a message with SLF4J style formatting, using '{}' as placeholders for
-% values to be interpolated into the message.
+% This accepts a message with printf style formatting, using '%...' formatting
+% controls as placeholders.
 %
 % Examples:
 %
-% jl.log.trace('Some message. value1={} value2={}', 'foo', 42);
+% logtrace('Some message. value1=%s value2=%d', 'foo', 42);
 
-loggerCallImpl('trace', msg, varargin);
+msg = sprintf(format, varargin{:});
+loggerCallImpl('trace', msg);
 
 end

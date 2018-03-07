@@ -47,7 +47,7 @@ classdef Logger
         this.jLogger = jLogger;
         end
         
-        function error(this, msg, varargin)
+        function errorj(this, msg, varargin)
         % Log a message at the ERROR level.
         if ~this.jLogger.isErrorEnabled()
             return
@@ -55,16 +55,16 @@ classdef Logger
         this.jLogger.error(msg, varargin{:});
         end
         
-        function errorf(this, format, varargin)
+        function error(this, format, varargin)
         % Log a message at the ERROR level, with sprintf formatting.
         if ~this.jLogger.isErrorEnabled()
             return
         end
         msg = sprintf(format, varargin{:});
-        this.error(msg);
+        this.errorj(msg);
         end
         
-        function warn(this, msg, varargin)
+        function warnj(this, msg, varargin)
         % Log a message at the WARN level.
         if ~this.jLogger.isWarnEnabled()
             return
@@ -72,16 +72,16 @@ classdef Logger
         this.jLogger.warn(msg, varargin{:});
         end
         
-        function warnf(this, format, varargin)
+        function warn(this, format, varargin)
         % Log a message at the WARN level, with sprintf formatting.
         if ~this.jLogger.isWarnEnabled()
             return
         end
         msg = sprintf(format, varargin{:});
-        this.warn(msg);
+        this.warnj(msg);
         end
         
-        function info(this, msg, varargin)
+        function infoj(this, msg, varargin)
         % Log a message at the INFO level.
         if ~this.jLogger.isInfoEnabled()
             return
@@ -89,16 +89,16 @@ classdef Logger
         this.jLogger.info(msg, varargin{:});
         end
         
-        function infof(this, format, varargin)
+        function info(this, format, varargin)
         % Log a message at the INFO level, with sprintf formatting.
         if ~this.jLogger.isInfoEnabled()
             return
         end
         msg = sprintf(format, varargin{:});
-        this.info(msg);
+        this.infoj(msg);
         end
         
-        function debug(this, msg, varargin)
+        function debugj(this, msg, varargin)
         % Log a message at the DEBUG level.
         if ~this.jLogger.isDebugEnabled()
             return
@@ -106,16 +106,16 @@ classdef Logger
         this.jLogger.debug(msg, varargin{:});
         end
         
-        function debugf(this, format, varargin)
+        function debug(this, format, varargin)
         % Log a message at the DEBUG level, with sprintf formatting.
         if ~this.jLogger.isDebugEnabled()
             return
         end
         msg = sprintf(format, varargin{:});
-        this.debug(msg);
+        this.debugj(msg);
         end
         
-        function trace(this, msg, varargin)
+        function tracej(this, msg, varargin)
         % Log a message at the TRACE level.
         if ~this.jLogger.isTraceEnabled()
             return
@@ -123,13 +123,13 @@ classdef Logger
         this.jLogger.trace(msg, varargin{:});
         end
         
-        function tracef(this, format, varargin)
+        function trace(this, format, varargin)
         % Log a message at the TRACE level, with sprintf formatting.
         if ~this.jLogger.isTraceEnabled()
             return
         end
         msg = sprintf(format, varargin{:});
-        this.trace(msg);
+        this.tracej(msg);
         end
         
         function out = isErrorEnabled(this)

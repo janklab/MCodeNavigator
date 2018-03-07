@@ -17,7 +17,7 @@ switch label
         file = [resourceDir '/icons/broken-image.png'];
         isFullPath = true;
     otherwise
-        logdebugf('Unrecognized icon name: ''%s''', label);
+        logdebug('Unrecognized icon name: ''%s''', label);
         file = [resourceDir '/icons/broken-image.png'];
         isFullPath = true;
 end

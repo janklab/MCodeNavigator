@@ -1,15 +1,16 @@
-function error(msg, varargin)
-%ERROR Log an ERROR level message from caller.
+function logerror(format, varargin)
+% Log an ERROR level message from caller, with printf style formatting.
 %
-% jl.log.error(msg, varargin)
+% logerror(msg, varargin)
 %
-% This accepts a message with SLF4J style formatting, using '{}' as placeholders for
-% values to be interpolated into the message.
+% This accepts a message with printf style formatting, using '%...' formatting
+% controls as placeholders.
 %
 % Examples:
 %
-% jl.log.error('Some message. value1={} value2={}', 'foo', 42);
+% logerror('Some message. value1=%s value2=%d', 'foo', 42);
 
-loggerCallImpl('error', msg, varargin);
+msg = sprintf(format, varargin{:});
+loggerCallImpl('error', msg);
 
 end

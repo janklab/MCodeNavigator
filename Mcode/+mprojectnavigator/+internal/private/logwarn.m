@@ -1,15 +1,16 @@
-function warn(msg, varargin)
-%WARN Log a WARN level message from caller.
+function logwarn(format, varargin)
+% Log a WARN level message from caller, with printf style formatting.
 %
-% jl.log.warn(msg, varargin)
+% logwarn(msg, varargin)
 %
-% This accepts a message with SLF4J style formatting, using '{}' as placeholders for
-% values to be interpolated into the message.
+% This accepts a message with printf style formatting, using '%...' formatting
+% controls as placeholders.
 %
 % Examples:
 %
-% jl.log.warn('Some message. value1={} value2={}', 'foo', 42);
+% logwarn('Some message. value1=%s value2=%d', 'foo', 42);
 
-loggerCallImpl('warn', msg, varargin);
+msg = sprintf(format, varargin{:});
+loggerCallImpl('warn', msg);
 
 end

@@ -140,7 +140,7 @@ classdef ClassInheritanceWidget < mprojectnavigator.internal.TreeWidget
                 case 'class'
                     edit(nodeData.name);
                 otherwise
-                    logdebugf('Unrecognized node type for editNode(): %s', nodeData.type);
+                    logdebug('Unrecognized node type for editNode(): %s', nodeData.type);
             end
         end
     end
@@ -156,7 +156,7 @@ switch nodeData.type
         doc(nodeData.name);
     otherwise
         % Shouldn't get here
-        logdebugf('Doc viewing is not supported for node type %s', nodeData.type);
+        logdebug('Doc viewing is not supported for node type %s', nodeData.type);
 end
 end
 

@@ -115,13 +115,13 @@ classdef Navigator < handle
                 return;
             end
             [~,basename,ext] = fileparts(file);
-            logdebugf('editorFrontFileChanged: %s', [basename ext]);
+            logdebug('editorFrontFileChanged: %s', [basename ext]);
             % Avoid doing expensive tree expansion for Matlab files that tend to
             % pop up in the debugger due to Matlab's self-hosting nature and
             % their internal use of try/catch
             % TODO: Allow navigation to them if they're already visible
             if ismember(file, this.NoAutoloadFiles)
-                logdebugf('editorFrontFileChanged: skipping autoload of known-funny file %s', ...
+                logdebug('editorFrontFileChanged: skipping autoload of known-funny file %s', ...
                     file);
                 return;
             end
@@ -131,7 +131,7 @@ classdef Navigator < handle
                 % Ignore all errors. These can happen if the user is working on
                 % a file that's in flux and has an invalid definition, which is
                 % a common case when developing code
-                logdebugf('editorFrontFileChanged(): caught error while revealing filein File Navigator; ignoring. Error: %s', ...
+                logdebug('editorFrontFileChanged(): caught error while revealing filein File Navigator; ignoring. Error: %s', ...
                     err.message);
             end
             try
@@ -139,20 +139,20 @@ classdef Navigator < handle
                 defn = this.codebase.defnForMfile(file);
                 this.classesNavigator.revealDefn(defn, file);
             catch err
-                logdebugf('editorFrontFileChanged(): caught error while revealing file in Classes Navigator; ignoring. Error: %s', ...
+                logdebug('editorFrontFileChanged(): caught error while revealing file in Classes Navigator; ignoring. Error: %s', ...
                     err.message);
             end
             try
                 this.codeNavigator.revealFile(file);
             catch err
-                logdebugf('editorFrontFileChanged(): caught error while revealing file in Code Navigator; ignoring. Error: %s', ...
+                logdebug('editorFrontFileChanged(): caught error while revealing file in Code Navigator; ignoring. Error: %s', ...
                     err.message);
             end
         end
         
         function editorFileSaved(this, file)
             [~,basename,ext] = fileparts(file);
-            logdebugf('editorFileSaved: %s', [basename ext]);
+            logdebug('editorFileSaved: %s', [basename ext]);
             this.classesNavigator.fileChanged(file);
         end
 
