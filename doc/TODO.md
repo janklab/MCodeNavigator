@@ -1,7 +1,8 @@
 TODO
 =============
 
-* BUG: Scroll-to-node is not working in classes view when there are a lot of nodes in the tree, such as when you have the MATLAB globals expanded
+* BUG: Scroll-to-node is not working in classes view when there are a lot of nodes in the tree, such as when you have the MATLAB globals expanded.
+* BUG: Might have a memory leak. I sometimes get an out of Java heap space OOM error when hacking on this for a while.
 * Better sample classes, with human-understandable types, and various property/method attributes
 * File Navigator file actions
  * "New..." with various options
