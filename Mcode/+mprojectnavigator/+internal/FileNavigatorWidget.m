@@ -7,7 +7,6 @@ classdef FileNavigatorWidget < mprojectnavigator.internal.FileWidgetBase
     methods
         function this = FileNavigatorWidget(parentNavigator)
             this = this@mprojectnavigator.internal.FileWidgetBase(parentNavigator);
-            this.initializeGui;
         end
         
         function initializeGui(this)

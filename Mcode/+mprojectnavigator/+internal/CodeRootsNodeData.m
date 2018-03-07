@@ -9,8 +9,6 @@ classdef CodeRootsNodeData < mprojectnavigator.internal.NodeData
     % in ClassesNavigatorWidget. Some may not be meaningful depending on the
     % context in which the object is used.
     properties
-        % The type of node this is (an internal identifier)
-        type        char
         % Fully-qualified name of whatever this node is holding
         name        char
         % For CodePaths nodes, whether it's USER or MATLAB paths

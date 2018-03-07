@@ -54,6 +54,7 @@ classdef FileWidgetBase < mprojectnavigator.internal.TreeWidget
                         % children are loaded.
                         if iPathPart < nPathParts
                             this.expandNode(child);
+                            this.refreshNode(child, 'force');
                         end
                         foundChild = child;
                         found = true;
@@ -68,7 +69,7 @@ classdef FileWidgetBase < mprojectnavigator.internal.TreeWidget
                 [found,foundChild] = findPathComponentInChildren(node, part, ...
                     iPathPart, numel(relPathParts));
                 if ~found
-                    logwarnf('Could not find file path in tree: %s', path);
+                    logwarnf('Could not find file path in tree: %s', file);
                     return;
                 end
                 node = foundChild;

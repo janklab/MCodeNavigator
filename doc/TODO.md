@@ -1,12 +1,8 @@
 TODO
 =============
 
-* I think view syncing might be broken
- * Needs to be added to Code navigator, too, anyway
 * BUG: Scroll-to--node is not working in classes view when there are a lot of nodes in the tree, such as when you have the MATLAB globals expanded
 * Better sample classes, with human-understandable types, and various property/method attributes
-* Figure out how to get File and CodeRoots navigators to share right-click menu code.
- * CodeRoots is a file browser, really, so it should support all the same actions. And I don't want to just copy-and-paste the menu.
 * Option to hide inherited properties/methods in Classes view
 * Disable/Hide "Edit", "View Doc" context menu items when clicking on folders in file navigator
 * File Navigator file actions
@@ -19,7 +15,6 @@ TODO
 * Matlab file icon for ".m" files
  * Probably requires a custom variant of the Silk icon set, too
  * Requires displaying icons per file type/extension logic
-* An inheritance hierarchy browser for classes
 * Switch to using what() for class/function metadata discovery
 * Get FileNavigator tree idiom back in line with TreeWidget's overridable methods and expand/refresh/refreshSingleNode idiom
 * "View Doc" in file browser may need to guard against "dbstop if all error" triggering inside doc()

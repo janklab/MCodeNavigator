@@ -51,6 +51,10 @@ classdef Navigator < handle
             myFrame.setIconImages(mainFrame.getIconImages);
             tabbedPane = JTabbedPane;
             
+            this.fileNavigator.initializeGui;
+            this.codeNavigator.initializeGui;
+            this.classesNavigator.initializeGui;
+            
             tabbedPane.add('Files', this.fileNavigator.panel);
             tabbedPane.add('Code', this.codeNavigator.panel);
             tabbedPane.add('Classes', this.classesNavigator.panel);

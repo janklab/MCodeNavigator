@@ -4,6 +4,8 @@ classdef NodeData < handle
     % Stick this in the UserData property of a UITreeNode
     
     properties
+        % The type of node (an internal identifier)
+        type            char
         % Indicates the node is currently in the process of being refreshed
         isRefreshing    logical = false
         % Indicates the node has been populated with data, at least initially

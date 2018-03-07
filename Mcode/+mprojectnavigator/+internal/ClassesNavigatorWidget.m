@@ -27,7 +27,6 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
     methods
         function this = ClassesNavigatorWidget(parentNavigator)
             this.navigator = parentNavigator;
-            this.initializeGui;
         end
         
         function initializeGui(this)
@@ -82,6 +81,8 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
             jmenu = JPopupMenu;
             menuItemEdit = JMenuItem('Edit');
             menuItemViewDoc = JMenuItem('View Doc');
+            menuItemMethodsView = JMenuItem('Methods View');
+            menuItemViewInheritance = JMenuItem('View Inheritance Tree');
             menuItemRevealInDesktop = JMenuItem(sprintf('Reveal in %s', fileShellName));
             menuItemFullyExpandNode = JMenuItem('Fully Expand');
             menuOptions = JMenu('Options');
@@ -116,6 +117,8 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
             end
             setCallback(menuItemEdit, {@ctxEditCallback, this, nodeData});
             setCallback(menuItemViewDoc, {@ctxViewDocCallback, this, nodeData});
+            setCallback(menuItemMethodsView, {@ctxMethodsViewCallback, this, nodeData});
+            setCallback(menuItemViewInheritance, {@ctxViewInheritanceCallback, this, nodeData});
             setCallback(menuItemRevealInDesktop, {@ctxRevealInDesktopCallback, this, nodeData});
             setCallback(menuItemFullyExpandNode, {@ctxFullyExpandNodeCallback, this, node, nodeData});
             setCallback(menuItemFlatPackageView, {@ctxFlatPackageViewCallback, this, nodeData});
@@ -127,6 +130,10 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
             end
             if isTargetDocable
                 jmenu.add(menuItemViewDoc);
+            end
+            if isTargetClass
+                jmenu.add(menuItemMethodsView);
+                jmenu.add(menuItemViewInheritance);
             end
             if isTargetRevealable
                 jmenu.add(menuItemRevealInDesktop);
@@ -531,9 +538,9 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
             classValues = strcat('@', classBasenames);
             classChildNodeValues = selectRegexp(childNodeValues, '^@');
             ixToAdd = find(~ismember(classValues, childNodeValues));
-            for i = 1:numel(ixToAdd)
-                nodesToAdd{end+1} = this.buildClassNode(classList(i).Name); %#ok<AGROW>
-                nodesToAddValues{end+1} = classBasenames{i}; %#ok<AGROW>
+            for ix = ixToAdd(:)'
+                nodesToAdd{end+1} = this.buildClassNode(classList(ix).Name); %#ok<AGROW>
+                nodesToAddValues{end+1} = classBasenames{ix}; %#ok<AGROW>
             end
             classChildNodeValuesToRemove = setdiff(classChildNodeValues, classValues);
             nodesToRemoveValues = [nodesToRemoveValues classChildNodeValuesToRemove];
@@ -542,8 +549,7 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
             functionNames = metaObjNames(functionList);
             functionChildNodeValues = selectRegexp(childNodeValues, '^\w[^@+]');
             ixToAdd = find(~ismember(functionNames, functionChildNodeValues));
-            for i = 1:numel(ixToAdd)
-                ix = ixToAdd(i);
+            for ix = ixToAdd(:)'
                 nodesToAdd{end+1} = this.buildMethodNode(functionList(ix), packageName); %#ok<AGROW>
                 nodesToAddValues{end+1} = functionNames{ix}; %#ok<AGROW>
             end
@@ -1039,17 +1045,17 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
             clickY = eventData.getY;
             jtree = eventData.getSource;
             treePath = jtree.getPathForLocation(clickX, clickY);
+            if ~isempty(treePath)
+                node = treePath.getLastPathComponent;
+                nodeData = get(node, 'userdata');
+            else
+                node = [];
+                nodeData = [];
+            end
             % This method of detecting right-clicks avoids confusion with Cmd-clicks on Mac
             isRightClick = eventData.getButton == java.awt.event.MouseEvent.BUTTON3;
             if isRightClick
                 % Right-click
-                if ~isempty(treePath)
-                    node = treePath.getLastPathComponent;
-                    nodeData = get(node, 'userdata');
-                else
-                    node = [];
-                    nodeData = [];
-                end
                 jmenu = this.setupTreeContextMenu(node, nodeData);
                 jmenu.show(jtree, clickX, clickY);
                 jmenu.repaint;
@@ -1060,8 +1066,6 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
                     % Click was not on a node
                     return;
                 end
-                node = treePath.getLastPathComponent;
-                nodeData = get(node, 'userdata');
                 editNode(this, nodeData);
             end
         end
@@ -1161,6 +1165,13 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
             this.scrollToNode(defnNode);
         end
         
+        function showInheritanceForClass(this, className)
+            classDefn = meta.class.fromName(className);
+            inheritanceWidget = mprojectnavigator.internal.ClassInheritanceWidget(classDefn);
+            inheritanceWidget.initializeGui;
+            inheritanceWidget.showInDialog;            
+        end
+
         function fileChanged(this, file)
             % File-changed callback
             if this.fileToNodeMap.containsKey(file)
@@ -1359,6 +1370,16 @@ switch nodeData.type
 end
 end
 
+function ctxMethodsViewCallback(src, evd, this, nodeData) %#ok<INUSL>
+switch nodeData.type
+    case 'class'
+        methodsview(nodeData.name);
+    otherwise
+        % Shouldn't get here
+        logdebugf('Unrecognized node type for methods view: %s', nodeData.type);
+end
+end
+
 function ctxRevealInDesktopCallback(src, evd, this, nodeData) %#ok<INUSL>
 if isequal(nodeData.type, 'class')
     w = which(nodeData.name);
@@ -1381,6 +1402,10 @@ end
 
 function ctxRefreshCallback(src, evd, this) %#ok<INUSL>
 this.gentleRecursiveRefresh(this.treePeer.getRoot);
+end
+
+function ctxViewInheritanceCallback(src, evd, this, nodeData)
+this.showInheritanceForClass(nodeData.name);
 end
 
 function out = rejectInheritedDefinitions(defnList, parentDefn)

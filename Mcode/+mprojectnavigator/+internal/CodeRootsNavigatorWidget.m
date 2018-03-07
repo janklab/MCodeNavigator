@@ -46,11 +46,11 @@ classdef CodeRootsNavigatorWidget < mprojectnavigator.internal.FileWidgetBase
             this.populateNode(root.getChildAt(1));
         end
         
-        function out = createNode(this, tag, label, nodeData, allowsChildren, icon)
+        function out = createNode(this, value, label, nodeData, allowsChildren, icon)
             if nargin < 5 || isempty(allowsChildren); allowsChildren = true; end
             if nargin < 6 || isempty(icon);  icon = [];  end
             
-            out = this.oldUitreenode(tag, label, icon, true);
+            out = this.oldUitreenode(value, label, icon, true);
             out.setAllowsChildren(allowsChildren);
             set(out, 'userdata', nodeData);
             if allowsChildren

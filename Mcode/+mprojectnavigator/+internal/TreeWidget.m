@@ -16,7 +16,6 @@ classdef (Abstract) TreeWidget < handle
     
     methods
         function this = TreeWidget()
-            this.initializeGui();
         end
         
         function initializeGui(this)
@@ -25,7 +24,6 @@ classdef (Abstract) TreeWidget < handle
             import java.awt.*
             
             peer = javaObjectEDT('net.apjanke.mprojectnavigator.swing.UITreePeer2');
-            %try peer = javaObjectEDT(peer); catch; end
             this.treePeer = peer;
             peer_h = handle(peer, 'CallbackProperties');
             this.treePeerHandle = peer_h;
@@ -89,7 +87,7 @@ classdef (Abstract) TreeWidget < handle
             catch err
                 nodeData.isRefreshing = false;
                 % Display errors in the GUI
-                warning('Error while refreshing node ''%s'': %s', nodeData.name, ...
+                warning('Error while refreshing node of type ''%s'': %s', nodeData.type, ...
                     err.message);
                 this.treePeer.removeAllChildren(node);
                 this.treePeer.add(node, this.buildErrorMessageNode(['ERROR: ' err.message]));
@@ -165,23 +163,15 @@ classdef (Abstract) TreeWidget < handle
             end
         end
         
-        function removeNodesByIndex(this, node, ix)
+        function removeNodesByIndex(this, node, ix) %#ok<INUSL>
         % Remove nodes, properly updating the tree
-        %
-        % BUG: This is not currently working! The attempted removal has no
-        % effect.
-        %
-        % This is a hack needed because the Matlab UITreePeer class does not
-        % seem to fire nodesWereRemoved() events when calling its remove()
-        % method instead of removeAll.
         %
         % nodesWereRemoved(node, indexes) takes the parent node the nodes were
         % removed from, and an array of child indexes under it
         ix = ix - 1; % Switch to zero-indexing for Java
-        for i = 1:numel(ix)
+        for i = numel(ix):-1:1
             EDT('remove', node, ix(i));
         end
-        EDT('nodesWereRemoved', this.treePeer, node, ix);
         end
         
         function setNodeName(this, node, name)
@@ -242,7 +232,7 @@ classdef (Abstract) TreeWidget < handle
         function treeMouseMoved(this, src, evd) %#ok<INUSD>
         end
         
-        function nodeSelected(this, src, evd, bogus) %#ok<INUSD>
+        function nodeSelected(this, src, evd) %#ok<INUSD>
         end
         
         function fireNodeChanged(this, node)

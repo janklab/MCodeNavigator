@@ -1,7 +1,6 @@
 classdef FileNodeData < mprojectnavigator.internal.NodeData
 
     properties
-        type        char     = 'file'
         % The path to the file on disk (not the node TreePath)
         path        char
         basename    char
@@ -14,9 +13,7 @@ classdef FileNodeData < mprojectnavigator.internal.NodeData
         function this = FileNodeData(path, isDir)
             if nargin >= 1;   this.path = path;  end
             if nargin >= 2;   this.isDir = isDir;  end
-        end
-        
-        function WHATEVER(foo)
-        end
+            this.type = 'file';
+        end        
     end
 end
