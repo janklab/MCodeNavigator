@@ -17,6 +17,7 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
     properties (SetAccess = private)
         flatPackageView = getpref(PREFGROUP, 'code_flatPackageView', false);
         showHidden = getpref(PREFGROUP, 'code_showHidden', false);
+        showInherited = getpref(PREFGROUP, 'code_showInherited', false);
         navigator;
         % A Map<String,Node> of definition IDs to nodes in tree
         defnMap = java.util.HashMap;
@@ -60,6 +61,15 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
             this.gentleRecursiveRefresh([], 'force');
         end
         
+        function setShowInherited(this, newState)
+            if newState == this.showInherited
+                return;
+            end
+            this.showInherited = newState;
+            setpref(PREFGROUP, 'code_showInherited', this.showInherited);
+            this.gentleRecursiveRefresh([], 'force');
+        end
+        
         function completeRefreshGui(this)
             root = this.buildRootNode();
             this.treePeer.setRoot(root);
@@ -90,6 +100,8 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
             menuItemFlatPackageView.setSelected(this.flatPackageView);
             menuItemShowHidden = JCheckBoxMenuItem('Show Hidden Items');
             menuItemShowHidden.setSelected(this.showHidden);
+            menuItemShowInherited = JCheckBoxMenuItem('Show Inherited Items');
+            menuItemShowInherited.setSelected(this.showInherited);
             menuItemRefresh = JMenuItem('Refresh');
             
             nd = nodeData;
@@ -123,6 +135,7 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
             setCallback(menuItemFullyExpandNode, {@ctxFullyExpandNodeCallback, this, node, nodeData});
             setCallback(menuItemFlatPackageView, {@ctxFlatPackageViewCallback, this, nodeData});
             setCallback(menuItemShowHidden, {@ctxShowHiddenCallback, this, nodeData});
+            setCallback(menuItemShowInherited, {@ctxShowInheritedCallback, this, nodeData});
             setCallback(menuItemRefresh, {@ctxRefreshCallback, this})
             
             if isTargetEditable
@@ -148,6 +161,7 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
             %end
             menuOptions.add(menuItemFlatPackageView);
             menuOptions.add(menuItemShowHidden);
+            menuOptions.add(menuItemShowInherited);
             menuOptions.addSeparator;
             menuOptions.add(menuItemRefresh);
             jmenu.add(menuOptions);
@@ -588,11 +602,11 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
                 error('Failed getting class definition for class ''%s''', nodeData.name);
             end
             properties = this.maybeRejectHidden(...
-                rejectInheritedDefinitions(klass.PropertyList, klass));
+                this.maybeRejectInheritedDefinitions(klass.PropertyList, klass));
             methods = this.maybeRejectHidden(...
-                rejectInheritedDefinitions(klass.MethodList, klass));
+                this.maybeRejectInheritedDefinitions(klass.MethodList, klass));
             events = this.maybeRejectHidden(...
-                rejectInheritedDefinitions(klass.EventList, klass));
+                this.maybeRejectInheritedDefinitions(klass.EventList, klass));
             enumerations = klass.EnumerationMemberList;
             superclasses = klass.SuperclassList;
             dummyNode = getChildNodeByValue(node, '<dummy>');
@@ -825,8 +839,9 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
             else
                 pkgName = classDefn.ContainingPackage.Name;
             end
-            defnList = rejectInheritedDefinitions(classDefn.MethodList, classDefn);
-            defnList = sortDefnsByName(this.maybeRejectHidden(defnList));
+            defnList = this.maybeRejectInheritedDefinitions(classDefn.MethodList, classDefn);
+            defnList = this.maybeRejectHidden(defnList);
+            defnList = sortDefnsByName(defnList);
             % Hide well-known auto-defined methods
             for i = numel(defnList):-1:1
                 if isequal(defnList(i).Name, 'empty') && defnList(i).Static ...
@@ -860,8 +875,9 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
             childNodeValues = getChildNodeValues(node);
             nodesToAdd = {};
             classDefn = meta.class.fromName(nodeData.definingClass);
-            defnList = rejectInheritedDefinitions(classDefn.PropertyList, classDefn);
-            defnList = sortDefnsByName(this.maybeRejectHidden(defnList));
+            defnList = this.maybeRejectInheritedDefinitions(classDefn.PropertyList, classDefn);
+            defnList = this.maybeRejectHidden(defnList);
+            defnList = sortDefnsByName(defnList);
             
             defnNames = metaObjNames(defnList);
             childDefnNames = setdiff(childNodeValues, '<dummy>');
@@ -887,7 +903,7 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
             childNodeValues = getChildNodeValues(node);
             nodesToAdd = {};
             classDefn = meta.class.fromName(nodeData.definingClass);
-            defnList = rejectInheritedDefinitions(classDefn.EventList, classDefn);
+            defnList = ths.maybeRejectInheritedDefinitions(classDefn.EventList, classDefn);
             defnList = sortDefnsByName(this.maybeRejectHidden(defnList));
             
             defnNames = metaObjNames(defnList);
@@ -1035,6 +1051,22 @@ classdef ClassesNavigatorWidget < mprojectnavigator.internal.TreeWidget
             else
                 out = defns(~[defns.Hidden]);
             end
+        end
+        
+        function out = maybeRejectInheritedDefinitions(this, defnList, parentDefn)
+            % Filters out definitions that were inherited from another class/definer
+            if this.showInherited
+                out = defnList;
+                return;
+            end
+            if isempty(defnList)
+                out = defnList;
+                return;
+            end
+            definer = [ defnList.DefiningClass ];
+            definerName = { definer.Name };
+            tfInherited = ~strcmp(definerName, parentDefn.Name);
+            out = defnList(~tfInherited);
         end
         
         function treeMousePressed(this, hTree, eventData) %#ok<INUSL>
@@ -1306,6 +1338,10 @@ end
 
 function ctxShowHiddenCallback(src, evd, this, nodeData) %#ok<INUSD,INUSL>
 this.setShowHidden(src.isSelected);
+end
+
+function ctxShowInheritedCallback(src, evd, this, nodeData) %#ok<INUSD,INUSL>
+this.setShowInherited(src.isSelected);
 end
 
 function editNode(~, nodeData)

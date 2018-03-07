@@ -3,7 +3,6 @@ TODO
 
 * BUG: Scroll-to-node is not working in classes view when there are a lot of nodes in the tree, such as when you have the MATLAB globals expanded
 * Better sample classes, with human-understandable types, and various property/method attributes
-* Option to hide inherited properties/methods in Classes view
 * File Navigator file actions
  * "New..." action in file navigator
  * Delete files from file navigator
@@ -18,7 +17,7 @@ TODO
 * "View Doc" in file browser may need to guard against "dbstop if all error" triggering inside doc()
 * Auto-detect whether a given dir has relevant doco before enabling "View Doc" on it
 * Better class structure/methodsview widget
-* Include properties
+ * Include properties
  * with Hidden / Inherited / Defining Class columns
  * options to show/hide Hidden/Inherited/protected/private methods
  * with right-click to Edit or View Doc
