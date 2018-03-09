@@ -63,7 +63,7 @@ I learned how to do the Matlab/Java tree programming from Yair Altman's <a href=
 
 ## License
 
-MProjectNavigator is licensed under the 3-Clause BSD License.
+MProjectNavigator is licensed under the 2-Clause BSD License.
 
 This program uses icons from the <a href="http://www.famfamfam.com/lab/icons/silk/">Silk icon set</a> by Mark James. They are licensed under the <a href="https://creativecommons.org/licenses/by/3.0/">Creative Commons Attribution 3.0 License</a>.
 
@@ -72,6 +72,8 @@ This program uses icons from the <a href="http://www.famfamfam.com/lab/icons/sil
 I think I have a memory leak somewhere. I occasionally get a Java out of memory error when I've been running it for a while. (Though this usually happens when I've viewed large trees, like the MATLAB class definitions in flat package view.)
 
 The icons don't look quite right on Windows in HiDPI mode (e.g. on a 27" Retina 5K iMac). They're too small.
+
+See [doc/TODO.md] for more bugs.
 
 ## Wishlist
 
