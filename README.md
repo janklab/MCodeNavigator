@@ -73,7 +73,7 @@ I think I have a memory leak somewhere. I occasionally get a Java out of memory 
 
 The icons don't look quite right on Windows in HiDPI mode (e.g. on a 27" Retina 5K iMac). They're too small.
 
-See [doc/TODO.md] for more bugs.
+See [the TODO](doc/TODO.md) for more bugs.
 
 ## Wishlist
 
