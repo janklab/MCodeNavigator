@@ -1,6 +1,9 @@
 MProjectNavigator CHANGELOG
 ============================
 
+## Version 0.5.0 (Date TBD)
+
+
 ## Version 0.4.0 (Date 2018-03-09)
 
 * Added a Code Roots navigator view
