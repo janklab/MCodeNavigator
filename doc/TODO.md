@@ -6,7 +6,7 @@ TODO
 * BUG: Scroll-to-node is not working in classes view when there are a lot of nodes in the tree, such as when you have the MATLAB globals expanded.
 * BUG: Might have a memory leak. I sometimes get an out of Java heap space OOM error when hacking on this for a while. Or things will get real slow after doing multiple `methodsview2` calls.
 * BUG: `*.bak` and other files with odd extensions might confuse the class view.
-* Add context menu to methodsview2 with Edit and Doc options
+* Add context menu to methodsview2 with Edit and View Doc options
 * Column resize weights/autosize in `methodsview2`
 * Better sample classes, with human-understandable types, and various property/method attributes
 * File Navigator file actions
