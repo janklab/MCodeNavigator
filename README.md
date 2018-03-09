@@ -65,7 +65,7 @@ I learned how to do the Matlab/Java tree programming from Yair Altman's <a href=
 
 MProjectNavigator is licensed under the 2-Clause BSD License.
 
-This program uses icons from the <a href="http://www.famfamfam.com/lab/icons/silk/">Silk icon set</a> by Mark James. They are licensed under the <a href="https://creativecommons.org/licenses/by/3.0/">Creative Commons Attribution 3.0 License</a>.
+MProjectNavigator uses icons from the <a href="http://www.famfamfam.com/lab/icons/silk/">Silk icon set</a> by Mark James. They are licensed under the <a href="https://creativecommons.org/licenses/by/3.0/">Creative Commons Attribution 3.0 License</a>.
 
 ## Bugs
 
