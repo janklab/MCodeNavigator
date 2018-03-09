@@ -63,6 +63,10 @@ switch varargin{1}
         disposeGui();
         maybeInitializeGui();
         navigator.Visible = true;
+    case '-separate'
+        % This is for debugging and screenshots only; it doesn't really work
+        newNavigator = mprojectnavigator.internal.Navigator;
+        newNavigator.Visible = true;
     case '-registerhotkey'
         registerGlobalHotKey();
     case '-hotkeyinvoked'

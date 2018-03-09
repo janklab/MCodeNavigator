@@ -1,8 +1,6 @@
 TODO
 =============
 
-* Update the screenshots!
-
 * BUG: Scroll-to-node is not working in classes view when there are a lot of nodes in the tree, such as when you have the MATLAB globals expanded.
 * BUG: Might have a memory leak. I sometimes get an out of Java heap space OOM error when hacking on this for a while. Or things will get real slow after doing multiple `methodsview2` calls.
 * BUG: `*.bak` and other files with odd extensions might confuse the class view.

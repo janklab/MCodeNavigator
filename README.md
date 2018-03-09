@@ -1,7 +1,7 @@
 MProjectNavigator
 =====================
 
-![MProjectNavigator Screnshots](doc/images/combined-macOS.png)
+![MProjectNavigator Screnshots](doc/images/MProjectNavigator-screenshot-scaled.png)
 
 MProjectNavigator is a GUI tool for viewing a Matlab project's source tree. This is for use within the Matlab desktop IDE.
 
