@@ -89,6 +89,10 @@ classdef CodeRootsNavigatorWidget < mprojectnavigator.internal.FileWidgetBase
         
         function out = buildCodePathNode(this, codePath)
             [parentDir,baseName] = fileparts(codePath);
+						homeDir = getenv('HOME');
+						if startsWith(parentDir, homeDir)
+							parentDir = ['~' parentDir(numel(homeDir)+1:end)];
+						end
             dirParts = strsplit(parentDir, filesep);
             parentDirReverse = strjoin(flip(dirParts), '/');
             label = sprintf('%s - (%s)', baseName, parentDirReverse);
