@@ -13,7 +13,7 @@ This program makes extensive use of undocumented, unsupported Matlab features. U
 
 ## Note for MathWorks File Exchange users
 
-If you downloaded this package from the File Exchange, you probably got the wrong version! The File Exchange download link will get the latest development version from the master branch; this may be unstable. You probably want one of the versioned releases instead. Download the latest release from the [GitHub releases page](https://github.com/apjanke/MProjectNavigator/releases) instead.
+If you downloaded this package from the File Exchange, you probably got the wrong version! The File Exchange download link will get the latest development version from the master branch; this may be unstable. You probably want one of the versioned releases instead. Download the latest release from the [GitHub Releases page](https://github.com/apjanke/MProjectNavigator/releases) instead.
 
 ## Requirements
 

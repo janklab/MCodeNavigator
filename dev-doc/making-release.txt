@@ -5,7 +5,7 @@ To make a release:
 
 * Update `VERSION` with the right version, removing "-SNAPSHOT"
 * Update `doc/CHANGELOG.md` to finalize changes for this version
-* `git commit`
+* `git commit -m 'prepare release X.Y.Z`
 * Make a git "vX.Y.Z" version tag (with `git tag -a`)
 * Create a git "vX.Y-fixes" branch if this is a new major or minor version
 * `make dist`

@@ -1,8 +1,10 @@
 MProjectNavigator CHANGELOG
 ============================
 
-## Version 0.5.0 (Date TBD)
+## Version 1.0.0
 
+* Moved Classes view to front of the list
+* Abbreviate home directory as "~" in code roots display
 
 ## Version 0.4.0 (Date 2018-03-09)
 
