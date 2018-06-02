@@ -11,6 +11,10 @@ When working in an IDE, I like having a tool that displays the entire source tre
 
 This program makes extensive use of undocumented, unsupported Matlab features. Use at your own risk, do not use in production code, and use caution when using its source code as an example.
 
+## Note for MathWorks File Exchange users
+
+If you downloaded this package from the File Exchange, you probably got the wrong version! The File Exchange download link will get the latest development version from the master branch; this may be unstable. You probably want one of the versioned releases instead. Download the latest release from the [GitHub releases page](https://github.com/apjanke/MProjectNavigator/releases) instead.
+
 ## Requirements
 
 Requires Matlab.
