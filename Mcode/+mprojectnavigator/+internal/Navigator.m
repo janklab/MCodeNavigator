@@ -55,8 +55,8 @@ classdef Navigator < handle
             this.codeNavigator.initializeGui;
             this.classesNavigator.initializeGui;
             
-            tabbedPane.add('Code', this.codeNavigator.panel);
             tabbedPane.add('Classes', this.classesNavigator.panel);
+            tabbedPane.add('Code', this.codeNavigator.panel);
             tabbedPane.add('Files', this.fileNavigator.panel);
             tabSelection = getpref(PREFGROUP, 'nav_TabSelection', []);
             if ~isempty(tabSelection)
