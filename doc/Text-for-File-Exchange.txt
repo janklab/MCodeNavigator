@@ -1,6 +1,6 @@
 Summary:
 
-A project-browser GUI tool for Matlab
+A code-browser GUI tool for Matlab
 
 Description:
 
