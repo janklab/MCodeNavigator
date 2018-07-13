@@ -1,7 +1,7 @@
 MCodeNavigator CHANGELOG
 ============================
 
-## Version 1.1.0 (Date TBD)
+## Version 1.1.0 (Date 2018-07-13)
 
 * Renamed project from MProjectNavigator to MCodeNavigator
 
