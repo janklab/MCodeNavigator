@@ -1,10 +1,10 @@
 # This Makefile is just for building the release distribution.
-# It's not needed for just building MProjectNavigator; that's
+# It's not needed for just building MCodeNavigator; that's
 # done with Matlab and IntelliJ.
 
 .PHONY: dist
 
-PROGRAM=MProjectNavigator
+PROGRAM=MCodeNavigator
 VERSION=$(shell cat VERSION)
 DIST=dist/${PROGRAM}-${VERSION}
 FILES=README.md LICENSE.txt lib Mcode bootstrap doc 

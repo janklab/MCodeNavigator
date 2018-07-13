@@ -7,8 +7,8 @@ function installProjectJars()
     distDir = fileparts(fileparts(fileparts(thisFile)));
     relJarLibDir = 'lib/java';
     jarLibDir = [distDir  '/' relJarLibDir];
-    relJarBuildDir = 'src/java/MProjectNavigator/out/artifacts/MProjectNavigator';
-    relJarFile = [relJarBuildDir '/MProjectNavigator.jar'];
+    relJarBuildDir = 'src/java/MCodeNavigator/out/artifacts/MCodeNavigator';
+    relJarFile = [relJarBuildDir '/MCodeNavigator.jar'];
     jarFile = [distDir '/' relJarFile];
     copyfile(jarFile, jarLibDir, 'f');
     fprintf('Installed %s -> %s\n', relJarFile, relJarLibDir);

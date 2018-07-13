@@ -23,9 +23,9 @@ Thumbs.db
 *.m~
 
 # IntelliJ
-/src/java/MProjectNavigator/out
-/src/java/MProjectNavigator/.idea/workspace.xml
+/src/java/MCodeNavigator/out
+/src/java/MCodeNavigator/.idea/workspace.xml
 
 # Build artifacts
 dist/
-src/java/MProjectNavigator/out
+src/java/MCodeNavigator/out
