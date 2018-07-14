@@ -1,5 +1,5 @@
 function MCodeNavigator(varargin)
-%MCodeNavigator Viewer GUI tool for a Matlab project structure
+%MCODENAVIGATOR Viewer GUI tool for a Matlab code base
 %
 % MCodeNavigator(varargin)
 %
@@ -19,24 +19,28 @@ function MCodeNavigator(varargin)
 
 error(javachk('awt'));
 
-    function out = myNavigator(newVal)
+    function [out,out2] = myNavigator(newNavigator, newFrame)
     s = getappdata(0, 'MCodeNavigator');
     if isempty(s)
         s = struct;
         s.NavigatorInstance = [];
+        s.NavigatorFrame = [];
     end
     out = s.NavigatorInstance;
+    out2 = s.NavigatorFrame;
     if nargin > 0
-        s.NavigatorInstance = newVal;
+        s.NavigatorInstance = newNavigator;
+        s.NavigatorFrame = newFrame;
         setappdata(0, 'MCodeNavigator', s);
     end
     end
 
-navigator = myNavigator;
+[navigator,navigatorFrame] = myNavigator;
+
 
 if nargin == 0
     maybeInitializeGui();
-    navigator.Visible = true;
+    navigatorFrame.Visible = true;
     return;
 end
 
@@ -53,7 +57,7 @@ switch varargin{1}
         if isempty(navigator)
             return;
         end
-        navigator.Visible = false;
+        navigatorFrame.Visible = false;
     case '-dispose'
         disposeGui();
     case '-deletesettings'
@@ -62,11 +66,12 @@ switch varargin{1}
     case '-fresh'
         disposeGui();
         maybeInitializeGui();
-        navigator.Visible = true;
+        navigatorFrame.Visible = true;
     case '-separate'
         % This is for debugging and screenshots only; it doesn't really work
         newNavigator = mcodenavigator.internal.Navigator;
-        newNavigator.Visible = true;
+        newNavigatorFrame = mcodenavigator.internal.NavigatorFrame(newNavigator);
+        newNavigatorFrame.Visible = true;
     case '-registerhotkey'
         registerGlobalHotKey();
     case '-hotkeyinvoked'
@@ -84,29 +89,31 @@ switch varargin{1}
 end
 
 
-    function disposeGui()
-    if ~isempty(navigator)
-        navigator.dispose();
-        navigator = [];
-        myNavigator(navigator);
-    end
-    end
-
     function maybeInitializeGui()
     if isempty(navigator)
         navigator = mcodenavigator.internal.Navigator;
-        myNavigator(navigator);
-        registerHotKeyOnComponent(navigator.frame.getContentPane);
+        navigatorFrame = mcodenavigator.internal.NavigatorFrame(navigator);
+        myNavigator(navigator, navigatorFrame);
+        registerHotKeyOnComponent(navigatorFrame.frame.getContentPane);
+    end
+    end
+
+    function disposeGui()
+    if ~isempty(navigator)
+        navigatorFrame.dispose();
+        navigator = [];
+        navigatorFrame = [];
+        myNavigator(navigator, navigatorFrame);
     end
     end
 
     function hotKeyInvoked()
     if isempty(navigator)
         maybeInitializeGui();
-        navigator.Visible = true;
+        navigatorFrame.Visible = true;
     else
         % Toggle visibility
-        navigator.Visible = ~navigator.Visible;
+        navigatorFrame.Visible = ~navigatorFrame.Visible;
     end
     end
 

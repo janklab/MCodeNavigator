@@ -34,7 +34,7 @@ function loadMCodeNavigator(varargin)
         mcodenavigator.internal.Log4jConfigurator.setLevels({'root','DEBUG'});
     end
     
-    MCodeNavigator -registerhotkey
+    MCodeNavigator -registerhotkey    
     
     if doDevKit
         devKitPath = fullfile(distDir, 'dev-tools');
