@@ -1,8 +1,11 @@
 classdef Navigator < handle
-    % The whole Navigator UI, corresponding to a frame with multiple panels
+    %NAVIGATOR The whole Navigator UI
     %
     % This is intended to be a singleton, with only one active at a time in a
     % Matlab session.
+    %
+    % It is implemented as a Panel instead of a Frame so it can be stuffed into
+    % either a JFrame or a Matlab DTClient.
     
     properties (Constant)
         NoAutoloadFiles = {

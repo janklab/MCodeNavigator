@@ -54,7 +54,7 @@ end
     function maybeInitializeGui()
     if isempty(navigator)
         navigator = mcodenavigator.internal.Navigator;
-        navigatorDtClient = %TODO;
+        navigatorDtClient = %TODO: finish this
         myNavigator(navigator, navigatorDtClient);
     end
     end

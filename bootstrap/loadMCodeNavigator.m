@@ -40,4 +40,6 @@ function loadMCodeNavigator(varargin)
         devKitPath = fullfile(distDir, 'dev-tools');
         addpath(fullfile(devKitPath, 'Mcode'));
     end
+    
+    fprintf('MCodeNavigator loaded. Press Ctrl-Shift-P to bring it up.\n');
 end
