@@ -31,8 +31,16 @@ classdef Log4jConfigurator
             % This sets up a basic log4j configuration, with log output going to the
             % console, and the root logger set to the INFO level.
             %
-            % Don't call this or other configureXxx methods more than once per session;
-            % that could cause wonky logging output. This method is not idempotent.
+            % It is safe to call this method multiple times. If log4j has already
+            % been configured, this is a no-op.
+            rootLogger = org.apache.log4j.Logger.getRootLogger();
+            appenders = rootLogger.getAllAppenders();
+            if appenders.hasMoreElements()
+                % Log4j has already been configured. Don't re-configure it,
+                % because that could cause duplicate log output or other
+                % wonkiness.
+                return
+            end
             org.apache.log4j.BasicConfigurator.configure();
             rootLogger = org.apache.log4j.Logger.getRootLogger();
             rootLogger.setLevel(org.apache.log4j.Level.INFO);
